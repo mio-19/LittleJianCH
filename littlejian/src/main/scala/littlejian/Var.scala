@@ -2,6 +2,7 @@ package littlejian
 
 private val EMPTY_SYMBOL = Symbol("")
 
+// reference equality
 final class Var[T](identifier: Symbol, unifier: Unifier[T]) {
   def this(unifier: Unifier[T]) = {
     this(EMPTY_SYMBOL, unifier)

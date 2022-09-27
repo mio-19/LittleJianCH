@@ -2,12 +2,32 @@ package littlejian
 
 import scala.collection.parallel.immutable.{ParSeq, ParHashMap}
 
-type EqState = Subst
+final case class EqState(subst: Subst)
 
-type NotEqState = ParSeq[Subst]
+object EqState {
+  val empty: EqState = EqState(Subst.empty)
+}
 
-type PredTypeState = ParHashMap[_, PredTypeTag]
+final case class NotEqState(clauses: ParSeq /*conj*/ [Subst /*disj not eq*/ ])
 
-type PredNotTypeState = ParHashMap[_, PredTypeTag]
+object NotEqState {
+  val empty: NotEqState = NotEqState(ParSeq.empty)
+}
+
+final case class PredTypeState(xs: ParHashMap[_, PredTypeTag])
+
+object PredTypeState {
+  val empty: PredTypeState = PredTypeState(ParHashMap.empty)
+}
+
+final case class PredNotTypeState(xs: ParHashMap[_, PredTypeTag])
+
+object PredNotTypeState {
+  val empty: PredNotTypeState = PredNotTypeState(ParHashMap.empty)
+}
 
 final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, predNotType: PredNotTypeState)
+
+object State {
+  val empty: State = State(eq = EqState.empty, notEq = NotEqState.empty, predType = PredTypeState.empty, predNotType = PredNotTypeState.empty)
+}

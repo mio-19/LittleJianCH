@@ -5,11 +5,20 @@ final case class UnifiableBox[T](x: VarOr[T], unifier: Unifier[T])
 // Monad
 type Unifying[T] = Subst => Option[(Subst, T)]
 
+object Unifying {
+  def success[T](x: T): Unifying[T] = s => Some(s, x)
+
+  def failure[T]: Unifying[T] = s => None
+
+  def guard(x: Boolean): Unifying[Unit] = if (x) success(()) else failure
+}
+
 implicit class UnifyingOps[T](self: Unifying[T]) {
   def map[U](f: T => U): Unifying[U] = subst => self(subst) match {
     case Some((s, x)) => Some((s, f(x)))
     case None => None
   }
+
   def flatMap[U](f: T => Unifying[U]): Unifying[U] = subst => self(subst) match {
     case Some((s, x)) => f(x)(s)
     case None => None
@@ -35,3 +44,17 @@ trait Unifier[T] {
 }
 
 implicit object UnifiableBoxUnifier extends Unifier[UnifiableBox[_]]
+
+trait EqualUnifier[T] extends Unifier[T] {
+  override def concreteUnify(self: T, other: T): Unifying[Unit] = Unifying.guard(self == other)
+}
+
+implicit object U$Symbol extends EqualUnifier[Symbol]
+
+implicit object U$String extends EqualUnifier[String]
+
+implicit object U$Unit extends EqualUnifier[Unit]
+
+implicit object U$Int extends EqualUnifier[Int]
+
+implicit object U$Boolean extends EqualUnifier[Boolean]

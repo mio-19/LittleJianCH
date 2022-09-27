@@ -1,4 +1,4 @@
-package littlejian.impl.naive
+package littlejian.search.naive
 
 import scala.collection.parallel.immutable.ParVector
 

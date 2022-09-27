@@ -1,6 +1,4 @@
-package littlejian.search
-
-import littlejian._
+package littlejian
 
 trait Searcher {
   def run(state: State, goal: Goal): Stream[State]

@@ -12,9 +12,11 @@ final case class GoalNotEq[T](x: VarOr[T], y: VarOr[T])(implicit unifier: Unifie
 
 import scala.reflect.ClassTag
 
-final case class GoalPredType[T](cls: ClassTag[_], x: VarOr[T])(implicit unifier: Unifier[T]) extends GoalBasic
+type PredTypeTag = ClassTag[_]
 
-final case class GoalPredNotType[T](cls: ClassTag[_], x: VarOr[T])(implicit unifier: Unifier[T]) extends GoalBasic
+final case class GoalPredType[T](tag: PredTypeTag, x: VarOr[T])(implicit unifier: Unifier[T]) extends GoalBasic
+
+final case class GoalPredNotType[T](tag: PredTypeTag, x: VarOr[T])(implicit unifier: Unifier[T]) extends GoalBasic
 
 sealed trait GoalControl extends Goal
 

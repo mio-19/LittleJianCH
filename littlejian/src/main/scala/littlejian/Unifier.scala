@@ -19,7 +19,7 @@ implicit class UnifyingOps[T](self: Unifying[T]) {
 trait Unifier[T] {
   final implicit val thisUnifier: Unifier[T] = this
 
-  def unify(self: VarOr[T], other: VarOr[T]): Unifying[Unit] = for {
+  final def unify(self: VarOr[T], other: VarOr[T]): Unifying[Unit] = for {
     selfpak <- Subst.walk(self)
     UnifiableBox(self, unifier) = selfpak
     otherpak <- Subst.walk(other)(unifier)

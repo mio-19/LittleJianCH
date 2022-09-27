@@ -1,6 +1,6 @@
 package littlejian
 
-import scala.collection.parallel.immutable.{ParSeq, ParHashMap}
+import scala.collection.parallel.immutable.{ParHashMap, ParVector}
 
 final case class EqState(subst: Subst)
 
@@ -8,22 +8,28 @@ object EqState {
   val empty: EqState = EqState(Subst.empty)
 }
 
-final case class NotEqState(clauses: ParSeq /*conj*/ [Subst /*disj not eq*/ ])
+final case class NotEqState(clauses: ParVector /*conj*/ [Subst /*disj not eq*/ ]) {
+  def onEq(eq: EqState): Option[NotEqState] = ???
+}
 
 object NotEqState {
-  val empty: NotEqState = NotEqState(ParSeq.empty)
+  val empty: NotEqState = NotEqState(ParVector.empty)
 }
 
-final case class PredTypeState(xs: ParHashMap[_, PredTypeTag])
+final case class PredTypeState(xs: ParVector[(Var[_], PredTypeTag)]) {
+  def onEq(eq: EqState): Option[PredTypeState] = ???
+}
 
 object PredTypeState {
-  val empty: PredTypeState = PredTypeState(ParHashMap.empty)
+  val empty: PredTypeState = PredTypeState(ParVector.empty)
 }
 
-final case class PredNotTypeState(xs: ParHashMap[_, PredTypeTag])
+final case class PredNotTypeState(xs: ParVector[(Var[_], PredTypeTag)]) {
+  def onEq(eq: EqState): Option[PredNotTypeState] = ???
+}
 
 object PredNotTypeState {
-  val empty: PredNotTypeState = PredNotTypeState(ParHashMap.empty)
+  val empty: PredNotTypeState = PredNotTypeState(ParVector.empty)
 }
 
 final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, predNotType: PredNotTypeState) {
@@ -34,6 +40,15 @@ final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, 
   def predTypeUpdated(predType: PredTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType)
 
   def predNotTypeUpdated(predNotType: PredNotTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType)
+
+  // Update Constraints
+  def onEq: Option[State] = for {
+    notEq <- notEq.onEq(eq)
+    predType <- predType.onEq(eq)
+    predNotType <- predNotType.onEq(eq)
+  } yield State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType)
+
+  def setEq(eq: EqState) = this.eqUpdated(eq).onEq
 }
 
 object State {

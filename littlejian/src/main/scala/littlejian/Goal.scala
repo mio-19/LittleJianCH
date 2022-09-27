@@ -10,7 +10,7 @@ sealed trait GoalBasic extends Goal {
 
 final case class GoalEq[T](x: VarOr[T], y: VarOr[T])(implicit unifier: Unifier[T]) extends GoalBasic {
   override def execute(state: State): Option[State] = unifier.unify(x, y)(state.eq.subst) match {
-    case Some(subst, ()) => Some(state.eqUpdated(EqState(subst)))
+    case Some(subst, ()) => state.setEq(EqState(subst))
     case None => None
   }
 }

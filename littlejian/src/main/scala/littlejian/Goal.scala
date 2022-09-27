@@ -4,7 +4,9 @@ import scala.collection.parallel.immutable.ParVector
 
 sealed trait Goal
 
-sealed trait GoalBasic extends Goal
+sealed trait GoalBasic extends Goal {
+  def execute(state: State): Option[State] = ??? // TODO
+}
 
 final case class GoalEq[T](x: VarOr[T], y: VarOr[T])(implicit unifier: Unifier[T]) extends GoalBasic
 
@@ -30,4 +32,6 @@ final case class GoalConj(xs: ParVector[Goal]) extends GoalControl
 
 object Goal {
   def conde(clauses: ParVector[ParVector[Goal]]): Goal = GoalDisj(clauses.map(GoalConj(_)))
+  val success: Goal = GoalConj(ParVector())
+  val failure: Goal = GoalDisj(ParVector())
 }

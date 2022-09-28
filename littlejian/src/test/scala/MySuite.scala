@@ -53,5 +53,14 @@ class MySuite extends munit.FunSuite {
     assertEquals(Set.from(run[Integer | String] { x =>
       x.isType[Integer] && x === (1: Integer)
     }), Set("1"))
+    assertEquals(Set.from(run[Integer | String] { x =>
+      x.isType[Integer] && x === "a"
+    }), Set())
+    assertEquals(Set.from(run[Integer | String] { x =>
+      x.isType[String] && x === "a"
+    }), Set("a"))
+    assertEquals(Set.from(run[Integer | String] { x =>
+      x.isNotType[String] && x === (1: Integer)
+    }), Set("1"))
   }
 }

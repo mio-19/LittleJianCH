@@ -5,7 +5,7 @@ import scala.collection.parallel.immutable.ParVector
 sealed trait Goal {
   def &&(other: Goal): Goal = GoalConj(ParVector(this, other))
 
-  def ||(other: Goal): Goal = GoalConj(ParVector(this, other))
+  def ||(other: Goal): Goal = GoalDisj(ParVector(this, other))
 }
 
 sealed trait GoalBasic extends Goal {

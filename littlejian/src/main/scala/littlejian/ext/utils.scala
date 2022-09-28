@@ -13,7 +13,6 @@ implicit class GoalOps(x: => Goal) {
 def hole[T]: VarOr[T] = new Var[T]()
 def fresh[T, U](block: VarOr[T] => U): U = block(hole)
 
-
 implicit class EqOps[T](x: VarOr[T]) {
   def ===(y: VarOr[T])(implicit unifier: Unifier[T]): Goal = GoalEq(x, y)
 

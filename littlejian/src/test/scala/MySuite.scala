@@ -46,5 +46,8 @@ class MySuite extends munit.FunSuite {
       val a = hole[SExp]
       a === "a" && x === cons(a, a)
     }, "(a . a)\n")
+    assertEquals(run {
+      conde(1, 2, 3, 4) : Rel[Int]
+    }, "1\n3\n2\n4\n")
   }
 }

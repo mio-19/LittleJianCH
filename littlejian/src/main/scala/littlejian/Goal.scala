@@ -24,8 +24,13 @@ import scala.reflect.ClassTag
 
 type PredTypeTag = ClassTag[_]
 
+def checkPredTypeTag[T](tag: PredTypeTag, x: Any): Boolean = tag.runtimeClass.isInstance(x)
+
 final case class GoalPredType[T](tag: PredTypeTag, x: VarOr[T]) extends GoalBasic {
-  override def execute(state: State): Option[State] = ???
+  override def execute(state: State): Option[State] = state.eq.subst.walk(x) match {
+    case v: Var[_] => Some(state.predTypeMap(_.insert(v, tag)))
+    case x => if (checkPredTypeTag(tag, x)) Some(state) else None
+  }
 }
 
 final case class GoalPredNotType[T](tag: PredTypeTag, x: VarOr[T]) extends GoalBasic {
@@ -52,8 +57,10 @@ final case class GoalConj(xs: ParVector[Goal]) extends GoalControl
 
 object GoalConj {
   def apply(xs: ParVector[Goal]) = new GoalConj(xs)
-  def apply(xs: Seq[Goal]) = new GoalConj(ParVector(xs*))
-  @targetName("applyMul") def apply(xs: Goal*) = new GoalConj(ParVector(xs*))
+
+  def apply(xs: Seq[Goal]) = new GoalConj(ParVector(xs *))
+
+  @targetName("applyMul") def apply(xs: Goal*) = new GoalConj(ParVector(xs *))
 }
 
 object Goal {

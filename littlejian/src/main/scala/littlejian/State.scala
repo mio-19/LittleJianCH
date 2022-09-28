@@ -17,6 +17,8 @@ object NotEqState {
 }
 
 final case class PredTypeState(xs: ParVector[(Var[_], PredTypeTag)]) {
+  def insert(v: Var[_], t: PredTypeTag): PredTypeState = PredTypeState((v, t) +: xs)
+
   def onEq(eq: EqState): Option[PredTypeState] = Some(this) // TODO
 }
 
@@ -38,6 +40,8 @@ final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, 
   def notEqUpdated(notEq: NotEqState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType)
 
   def predTypeUpdated(predType: PredTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType)
+  
+  def predTypeMap(f: PredTypeState=>PredTypeState): State = State(eq = eq, notEq = notEq, predType = f(predType), predNotType = predNotType)
 
   def predNotTypeUpdated(predNotType: PredNotTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType)
 

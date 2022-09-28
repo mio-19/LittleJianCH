@@ -30,5 +30,14 @@ class EvalSuite extends munit.FunSuite {
         _ <- x === list("quote", result)
       } yield result
     }), Set("a"))
+    assertEquals(Set.from(run {
+      evalo(list(), list("quote", "a"))
+    }), Set("a"))
+    assertEquals(Set.from(run {
+      evalo(list(), list("quote", "a", "b"))
+    }), Set())
+    assertEquals(Set.from(run {
+      evalo(list(), list("quote", list("a")))
+    }), Set("(a)"))
   }
 }

@@ -14,6 +14,8 @@ final case class GoalEq[T](x: VarOr[T], y: VarOr[T])(implicit unifier: Unifier[T
     case Some(subst, ()) => state.setEq(EqState(subst))
     case None => None
   }
+
+  override def toString: String = s"${x} === ${y}"
 }
 
 final case class GoalNotEq[T](x: VarOr[T], y: VarOr[T])(implicit unifier: Unifier[T]) extends GoalBasic {
@@ -21,6 +23,8 @@ final case class GoalNotEq[T](x: VarOr[T], y: VarOr[T])(implicit unifier: Unifie
     for {
       notEq <- NotEqState.create(state.eq, new NotEqRequest(x, y, unifier), state.notEq)
     } yield state.notEqUpdated(notEq)
+
+  override def toString: String = s"${x} =/= ${y}"
 }
 
 import scala.reflect.ClassTag
@@ -34,6 +38,8 @@ final case class GoalPredType[T](tag: PredTypeTag, x: VarOr[T]) extends GoalBasi
     case v: Var[_] => Some(state.predTypeMap(_.insert(v, tag)))
     case x => if (checkPredTypeTag(tag, x)) Some(state) else None
   }
+
+  override def toString: String = s"${x}.isType[${tag}]"
 }
 
 final case class GoalPredNotType[T](tag: PredTypeTag, x: VarOr[T]) extends GoalBasic {
@@ -41,6 +47,8 @@ final case class GoalPredNotType[T](tag: PredTypeTag, x: VarOr[T]) extends GoalB
     case v: Var[_] => Some(state.predNotTypeMap(_.insert(v, tag)))
     case x => if (!checkPredTypeTag(tag, x)) Some(state) else None
   }
+
+  override def toString: String = s"${x}.isNotType[${tag}]"
 }
 
 sealed trait GoalControl extends Goal
@@ -49,7 +57,14 @@ final class GoalDelay(x: => Goal) extends GoalControl {
   def get: Goal = x
 }
 
-final case class GoalDisj(xs: ParVector[Goal]) extends GoalControl
+final case class GoalDisj(xs: ParVector[Goal]) extends GoalControl {
+  private def flatten: ParVector[Goal] = xs.map({
+    case x: GoalDisj => x.flatten
+    case v => ParVector(v)
+  }).flatten
+
+  override def toString: String = s"conde(${this.flatten.mkString(", ")})"
+}
 
 object GoalDisj {
   def apply(xs: ParVector[Goal]) = new GoalDisj(xs)
@@ -59,7 +74,14 @@ object GoalDisj {
   @targetName("applyMul") def apply(xs: Goal*) = new GoalDisj(ParVector(xs *))
 }
 
-final case class GoalConj(xs: ParVector[Goal]) extends GoalControl
+final case class GoalConj(xs: ParVector[Goal]) extends GoalControl {
+  private def flatten: ParVector[Goal] = xs.map({
+    case x: GoalConj => x.flatten
+    case v => ParVector(v)
+  }).flatten
+
+  override def toString: String = s"begin(${this.flatten.mkString(", ")})"
+}
 
 object GoalConj {
   def apply(xs: ParVector[Goal]) = new GoalConj(xs)

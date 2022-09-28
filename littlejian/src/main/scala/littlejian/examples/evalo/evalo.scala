@@ -85,5 +85,34 @@ def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
     for {
       _ <- x === list("quote", result)
     } yield result
+  },
+  {
+    val a = hole[SExp]
+    val b = hole[SExp]
+    for {
+      _ <- x === list("cons", a, b)
+      a0 <- evalo(env, a)
+      b0 <- evalo(env, b)
+    } yield cons(a0, b0)
+  },
+  {
+    val p = hole[SExp]
+    val a = hole[SExp]
+    val b = hole[SExp]
+    for {
+      _ <- x === list("car", p)
+      p0 <- evalo(env, p)
+      _ <- p0 === cons(a, b)
+    } yield a
+  },
+  {
+    val p = hole[SExp]
+    val a = hole[SExp]
+    val b = hole[SExp]
+    for {
+      _ <- x === list("cdr", p)
+      p0 <- evalo(env, p)
+      _ <- p0 === cons(a, b)
+    } yield b
   }
 )

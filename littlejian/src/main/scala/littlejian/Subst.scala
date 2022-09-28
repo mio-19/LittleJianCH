@@ -13,6 +13,11 @@ implicit class SubstOps(self: Subst) {
     case box: UnifiableBox[_] => this.walk(box.x)(box.unifier).asInstanceOf[UnifiableBox[T]]
     case _ => UnifiableBox(x, unifier)
   }
+  
+  def getOption[T](x: Var[T]): Option[UnifiableBox[T]] = self.get(x) match {
+    case Some(box) => Some(this.walk(box.x)(box.unifier).asInstanceOf[UnifiableBox[T]])
+    case None => None
+  }
 
   def addEntry[T](v: Var[T], x: UnifiableBox[T]): Subst = if (self.contains(v)) throw new IllegalArgumentException("duplicate add") else self.updated(v, x)
 }

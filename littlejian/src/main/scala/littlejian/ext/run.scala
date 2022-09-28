@@ -16,22 +16,15 @@ def printConstraints(state: State): String = "" // TODO
 
 def printState(root: Var[_], state: State): String = printRoot(root, state) + printConstraints(state)
 
-def printSpace(root: Var[_], space: Seq[State]): String = space.map(s => printState(root, s) + "\n").fold("")(_ + _)
-
 // useful for maybe infinite spaces
 def displaySpace(root: Var[_], space: Stream[State]): Unit = space.foreach(s => println(printState(root, s)))
 
-def run[T](block: VarOr[T] => Goal)(implicit unifier: Unifier[T], searcher: Searcher): String = {
+def run[T](block: VarOr[T] => Goal)(implicit unifier: Unifier[T], searcher: Searcher): Stream[String] = {
   val root = new Var[T]()
-  printSpace(root, run(block(root)))
+  run(block(root)).map(printState(root, _))
 }
 
 def runDisplay[T](block: VarOr[T] => Goal)(implicit unifier: Unifier[T], searcher: Searcher): Unit = {
   val root = new Var[T]()
   displaySpace(root, run(block(root)))
-}
-
-def run[T](n: Int, block: VarOr[T] => Goal)(implicit unifier: Unifier[T], searcher: Searcher): String = {
-  val root = new Var[T]()
-  printSpace(root, run(block(root)).take(n))
 }

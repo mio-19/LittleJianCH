@@ -13,23 +13,23 @@ class MySuite extends munit.FunSuite {
     assertEquals(obtained, expected)
   }
   test("basics") {
-    assertEquals(run { (x: VarOr[Int]) => x === 42 }, "42\n")
-    assertEquals(run { (x: VarOr[Int]) => x === 42 && x === 32 }, "")
-    assertEquals(run { (x: VarOr[Int]) => x === 42 || x === 32 }, "42\n32\n")
-    assertEquals(run { (x: VarOr[LList[Int]]) =>
+    assertEquals(Set.from(run { (x: VarOr[Int]) => x === 42 }), Set("42"))
+    assertEquals(Set.from(run { (x: VarOr[Int]) => x === 42 && x === 32 }), Set())
+    assertEquals(Set.from(run { (x: VarOr[Int]) => x === 42 || x === 32 }), Set("42","32"))
+    assertEquals(Set.from(run { (x: VarOr[LList[Int]]) =>
       val head = hole[Int]
       val tail = hole[Int]
       x === LList(head, tail) && head === 42 && tail === 32
-    }, "LCons(42,LCons(32,LEmpty()))\n")
-    assertEquals(run (for {
+    }), Set("LCons(42,LCons(32,LEmpty()))"))
+    assertEquals(Set.from(run (for {
       _ <- Rel.success
       x = hole[LList[Int]]
       head = hole[Int]
       tail = hole[Int]
       _ <- x === LList(head, tail)
       _ <- head === 42 && tail === 32
-    } yield x), "LCons(42,LCons(32,LEmpty()))\n")
-    assertEquals(run[LList[Int]] { (x) =>
+    } yield x)), Set("LCons(42,LCons(32,LEmpty()))"))
+    assertEquals(Set.from(run[LList[Int]] { (x) =>
       val head = hole[Int]
       val tail = hole[Int]
       for {
@@ -37,17 +37,17 @@ class MySuite extends munit.FunSuite {
         _ <- head === 42
         _ <- tail === 32
       } yield ()
-    }, "LCons(42,LCons(32,LEmpty()))\n")
-    assertEquals(run[Option[VarOr[Int]]] { x => {
+    }), Set("LCons(42,LCons(32,LEmpty()))"))
+    assertEquals(Set.from(run[Option[VarOr[Int]]] { x => {
       val i = hole[Int]
       i === 53 && x === Some(i)
-    }}, "Some(53)\n")
-    assertEquals(run[SExp] { x =>
+    }}), Set("Some(53)"))
+    assertEquals(Set.from(run[SExp] { x =>
       val a = hole[SExp]
       a === "a" && x === cons(a, a)
-    }, "(a . a)\n")
-    assertEquals(run {
+    }), Set("(a . a)"))
+    assertEquals(Set.from(run {
       conde(1, 2, 3, 4) : Rel[Int]
-    }, "1\n3\n2\n4\n")
+    }), Set("1", "2", "3", "4"))
   }
 }

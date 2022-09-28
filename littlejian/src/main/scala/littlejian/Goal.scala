@@ -3,11 +3,7 @@ package littlejian
 import scala.annotation.targetName
 import scala.collection.parallel.immutable.ParVector
 
-sealed trait Goal {
-  def &&(other: Goal): Goal = GoalConj(ParVector(this, other))
-
-  def ||(other: Goal): Goal = GoalDisj(ParVector(this, other))
-}
+sealed trait Goal
 
 sealed trait GoalBasic extends Goal {
   def execute(state: State): Option[State]

@@ -1,7 +1,14 @@
 package littlejian.ext
 
 import littlejian._
+import scala.collection.parallel.immutable.ParVector
 import scala.reflect.ClassTag
+
+implicit class GoalOps(x: =>Goal) {
+  def &&(y: =>Goal): Goal = GoalConj(GoalDelay(x), GoalDelay(y))
+
+  def ||(y: =>Goal): Goal = GoalDisj(GoalDelay(x), GoalDelay(y))
+}
 
 def hole[T](implicit unifier: Unifier[T]) = new Var[T]()(unifier)
 def fresh[T, U](block: VarOr[T] => U)(implicit unifier: Unifier[T]): U = block(hole)

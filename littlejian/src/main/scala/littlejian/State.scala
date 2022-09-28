@@ -28,7 +28,9 @@ object NotEqState {
       tail <- traverse(xs.tail)
     } yield head +: tail
 
-  private def run(eq: EqState, x: ParVector[NotEqRequest[_]]): Option[ParVector[NotEqElem[_]]] = ???
+  private def exec[T](eq: EqState, x: NotEqRequest[T]): Option[ParVector/*disj*/[NotEqElem[_]]] = ???
+
+  private def run(eq: EqState, x: ParVector/*disj*/[NotEqRequest[_]]): Option[ParVector[NotEqElem[_]]] = traverse(x.map(exec(eq, _))).map(_.flatten)
 
   private def create(eq: EqState, xs: ParVector[ParVector[NotEqRequest[_]]]): Option[NotEqState] =
     traverse(xs.map(run(eq, _))).map(xs => NotEqState(xs.filter(_.nonEmpty)))

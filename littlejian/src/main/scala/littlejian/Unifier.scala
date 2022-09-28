@@ -2,8 +2,6 @@ package littlejian
 
 import scala.language.implicitConversions
 
-final case class UnifiableBox[T](x: VarOr[T], unifier: Unifier[T])
-
 // Monad
 type Unifying[T] = Subst => Option[(Subst, T)]
 
@@ -31,13 +29,11 @@ trait Unifier[T] {
   final implicit val thisUnifier: Unifier[T] = this
 
   final def unify(self: VarOr[T], other: VarOr[T]): Unifying[Unit] = for {
-    selfpak <- Subst.walk(self)
-    UnifiableBox(self, unifier) = selfpak
-    otherpak <- Subst.walk(other)(unifier)
-    UnifiableBox(other, _) = otherpak
+    self <- Subst.walk(self)
+    other <- Subst.walk(other)
     _ <- (self, other) match {
-      case (self: Var[_], _) => Subst.addEntry(self.asInstanceOf[Var[T]], otherpak)
-      case (_, other: Var[_]) => Subst.addEntry(other.asInstanceOf[Var[T]], selfpak)
+      case (self: Var[_], _) => Subst.addEntry(self.asInstanceOf[Var[T]], other)
+      case (_, other: Var[_]) => Subst.addEntry(other.asInstanceOf[Var[T]], self)
       case _ => concreteUnify(self.asInstanceOf[T], other.asInstanceOf[T])
     }
   } yield ()
@@ -58,10 +54,6 @@ def U$Or[T, U](t: Unifier[T], u: Unifier[U])(implicit tev: ClassTag[T], uev: Cla
   case (x: U, y: U) => u.unify(x, y)
   case (_: T, _: U) | (_: U, _: T) => Unifying.failure
   case (_, _) => throw new IllegalStateException("Unexpected")
-}
-
-implicit object UnifiableBoxUnifier extends Unifier[UnifiableBox[_]] {
-  def concreteUnify(self: UnifiableBox[_], other: UnifiableBox[_]): Unifying[Unit] = throw new IllegalStateException("not reachable")
 }
 
 trait EqualUnifier[T] extends Unifier[T] {

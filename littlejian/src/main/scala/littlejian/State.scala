@@ -8,19 +8,29 @@ object EqState {
   val empty: EqState = EqState(Subst.empty)
 }
 
-final case class NotEqState(clauses: ParVector /*conj*/ [Subst /*disj not eq*/ ]) {
-  def onEq(eq: EqState): Option[NotEqState] = Some(this) // TODO
+sealed class NotEqRequest[T](val x: VarOr[T], val y: VarOr[T], val unifier: Unifier[T])
+
+final case class NotEqElem[T](override val x: Var[T], override val y: VarOr[T], override val unifier: Unifier[T]) extends NotEqRequest[T](x, y, unifier)
+
+final case class NotEqState(clauses: ParVector /*conj*/ [ParVector[NotEqElem[_]] /*disj not eq*/ ]) {
+  def onEq(eq: EqState): Option[NotEqState] =
+    if (clauses.isEmpty) Some(this) else // optimize
+      NotEqState.create(eq, clauses)
 }
 
 object NotEqState {
   val empty: NotEqState = NotEqState(ParVector.empty)
+
+  private[littlejian] def create(eq: EqState, req: NotEqRequest[_], clauses: NotEqState): Option[NotEqState] = ???
+
+  private[littlejian] def create(eq: EqState, clauses: ParVector[ParVector[NotEqElem[_]]]): Option[NotEqState] = ???
 }
 
 final case class PredTypeState(xs: ParVector[(Var[_], PredTypeTag)]) {
   def insert(v: Var[_], t: PredTypeTag): PredTypeState = PredTypeState((v, t) +: xs)
 
   def onEq(eq: EqState): Option[PredTypeState] = {
-    if(xs.isEmpty) return Some(this) // optimize
+    if (xs.isEmpty) return Some(this) // optimize
     val (bound0, rest) = xs.partition(x => eq.subst.contains(x._1))
     val bound = bound0.map(x => (eq.subst.walk(x._1), x._2))
     val (vars, concretes) = bound.partition(x => x._1 match {
@@ -59,11 +69,7 @@ final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, 
 
   def notEqUpdated(notEq: NotEqState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType)
 
-  def predTypeUpdated(predType: PredTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType)
-
   def predTypeMap(f: PredTypeState => PredTypeState): State = State(eq = eq, notEq = notEq, predType = f(predType), predNotType = predNotType)
-
-  def predNotTypeUpdated(predNotType: PredNotTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType)
 
   def predNotTypeMap(f: PredNotTypeState => PredNotTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = f(predNotType))
 

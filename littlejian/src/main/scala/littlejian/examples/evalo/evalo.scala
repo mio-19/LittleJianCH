@@ -96,6 +96,13 @@ def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
     } yield cons(a0, b0)
   },
   {
+    val xs = hole[SExp]
+    for {
+      _ <- x === cons("list", xs)
+      xs0 <- mapo(evalo(env, _), xs)
+    } yield xs0
+  },
+  {
     val p = hole[SExp]
     val a = hole[SExp]
     val b = hole[SExp]

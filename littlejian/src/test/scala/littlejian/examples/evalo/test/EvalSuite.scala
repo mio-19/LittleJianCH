@@ -11,5 +11,17 @@ import littlejian.examples.evalo._
 class EvalSuite extends munit.FunSuite {
   test("basics") {
     assertEquals(Set.from(run { lookupo(list(cons("a", "b")), "a") }), Set("b"))
+    assertEquals(Set.from(run {
+      lookupo(list(cons("a", "b"), cons("a", "c")), "a")
+    }), Set("b"))
+    assertEquals(Set.from(run {
+      lookupo(list(cons("a", "b"), cons("a", "c")), "b")
+    }), Set())
+    assertEquals(Set.from(run {
+      evalo(list(cons("a", "b"), cons("a", "c")), "a")
+    }), Set("b"))
+    assertEquals(Set.from(run {
+      evalo(list(cons("a", "b"), cons("a", "c")), "b")
+    }), Set())
   }
 }

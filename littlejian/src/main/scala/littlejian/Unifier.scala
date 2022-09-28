@@ -1,5 +1,7 @@
 package littlejian
 
+import scala.language.implicitConversions
+
 final case class UnifiableBox[T](x: VarOr[T], unifier: Unifier[T])
 
 // Monad
@@ -44,8 +46,10 @@ trait Unifier[T] {
 }
 
 implicit class InfixUnify[T](self: VarOr[T])(implicit unifier: Unifier[T]) {
-  def unify(other: VarOr[T]) = unifier.unify(self, other)
+  def unify(other: VarOr[T]): Unifying[Unit] = unifier.unify(self, other)
 }
+
+implicit def U$VarOr[T](implicit unifier: Unifier[T]): Unifier[VarOr[T]] = (x, y) => unifier.unify(x, y)
 
 implicit object UnifiableBoxUnifier extends Unifier[UnifiableBox[_]] {
   def concreteUnify(self: UnifiableBox[_], other: UnifiableBox[_]): Unifying[Unit] = throw new IllegalStateException("not reachable")

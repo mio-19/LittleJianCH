@@ -2,6 +2,7 @@ import littlejian._
 import littlejian.ext._
 import littlejian.search.naive._
 import littlejian.data._
+import littlejian.unifier._
 
 
 class MySuite extends munit.FunSuite {
@@ -36,5 +37,9 @@ class MySuite extends munit.FunSuite {
         _ <- tail === 32
       } yield ()
     }, "LCons(42,LCons(32,LEmpty()))\n")
+    assertEquals(run { (x: VarOr[Option[VarOr[Int]]]) => {
+      val i = hole[Int]
+      i === 53 && x === Some(i)
+    }}, "Some(53)\n")
   }
 }

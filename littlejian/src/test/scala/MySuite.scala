@@ -12,5 +12,6 @@ class MySuite extends munit.FunSuite {
   test("basics") {
     assertEquals(run { (x: VarOr[Int]) => x === 42 }, "42\n")
     assertEquals(run { (x: VarOr[Int]) => x === 42 && x === 32 }, "")
+    assertEquals(run { (x: VarOr[Int]) => x === 42 || x === 32 }, "42\n32\n")
   }
 }

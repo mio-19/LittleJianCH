@@ -18,6 +18,6 @@ class MySuite extends munit.FunSuite {
       val head = hole[Int]
       val tail = hole[Int]
       x === LList(head, tail) && head === 42 && tail === 32
-    }, "LCons(42,LCons(32,LEmpty()))")
+    }, "LCons(42,LCons(32,LEmpty()))\n")
   }
 }

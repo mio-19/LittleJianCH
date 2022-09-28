@@ -3,8 +3,12 @@ package littlejian.ext
 import littlejian._
 import scala.reflect.ClassTag
 
-def ===[T](x: VarOr[T], y: VarOr[T])(implicit unifier: Unifier[T]): Goal = GoalEq(x, y)
-def =/=[T](x: VarOr[T], y: VarOr[T])(implicit unifier: Unifier[T]): Goal = GoalNotEq(x, y)
+
+implicit class EqOps[T](x: VarOr[T]) {
+  def ===(y: VarOr[T])(implicit unifier: Unifier[T]): Goal = GoalEq(x, y)
+
+  def =/=(y: VarOr[T])(implicit unifier: Unifier[T]): Goal = GoalNotEq(x, y)
+}
 
 implicit class TypePredOps[T](x: VarOr[T]) {
   def isType(t: ClassTag[_]): Goal = GoalPredType(t, x)
@@ -15,6 +19,13 @@ implicit class TypePredOps[T](x: VarOr[T]) {
 def begin(xs: => Goal*): Goal = GoalDelay(GoalConj(xs))
 
 def conde(xs: => Goal*): Goal = GoalDelay(GoalDisj(xs))
+
+implicit class EqRelOps[T](x: Rel[T]) {
+  def ===(y: Rel[T])(implicit unifier: Unifier[T]): Goal = begin(x.goal, y.goal, x.x === y.x)
+
+  def =/=(y: Rel[T])(implicit unifier: Unifier[T]): Goal = begin(x.goal, y.goal, x.x =/= y.x)
+}
+
 
 // print((1 to 10).map(x=>s"def begin[T](${(1 to x).map(i=>s"p${i.toString}: =>GoalWith[_], ").reduce(_+_)}r: GoalWith[T]): GoalWith[T] = GoalWith(begin(${(1 to x).map(i=>s"p${i.toString}.goal, ").reduce(_+_)}r.goal), r.x)\n").reduce(_+_))
 // print((1 to 10).map(x=>s"def conde[T](${(1 to x).map(i=>s"p${i.toString}: =>GoalWith[_], ").reduce(_+_)}r: GoalWith[T]): GoalWith[T] = GoalWith(conde(${(1 to x).map(i=>s"p${i.toString}.goal, ").reduce(_+_)}r.goal), r.x)\n").reduce(_+_))

@@ -44,15 +44,17 @@ object NotEqState {
     case (x, y: Var[T]) => Some(ParVector(NotEqElem(y, x, req.unifier)))
     case (x, y) => req.unifier.unify(x, y)(Subst.empty) match {
       case None => Some(ParVector.empty)
-      case Some((newSubst, ())) => if(newSubst.isEmpty) None else run(eq, newSubst.toSeq.map({ case (v, (unifier, x)) => NotEqRequestUnchecked(v, x, unifier) }))
+      case Some((newSubst, ())) => if (newSubst.isEmpty) None else run(eq, newSubst.toSeq.map({ case (v, (unifier, x)) => NotEqRequestUnchecked(v, x, unifier) }))
     }
   }
 
   private def run(eq: EqState, x: ParSeq /*disj*/ [NotEqRequest[_]]): Option[ParVector /*disj, empty means success*/ [NotEqElem[_]]] =
     if (x.isEmpty) throw new IllegalArgumentException("Empty vector")
-    else traverse(x.map(exec(eq, _))) match {
-      case Some(result) => if (result.exists(_.isEmpty)) Some(ParVector.empty) else Some(result.fold(ParVector.empty)(_ ++ _))
-      case None => None
+    else {
+      val result = x.map(exec(eq, _)).filter(_.isDefined).map(_.get)
+      if (result.isEmpty) None
+      else if (result.exists(_.isEmpty)) Some(ParVector.empty)
+      else Some(result.fold(ParVector.empty)(_ ++ _))
     }
 
   private def create(eq: EqState, xs: ParVector[ParVector[NotEqRequest[_]]]): Option[NotEqState] =

@@ -61,6 +61,8 @@ def mapo(f: VarOr[SExp] => Rel[SExp], xs: VarOr[SExp]): Rel[SExp] = conde(
   }
 )
 
+def evalo(env: VarOr[SExp], x: VarOr[SExp], result: VarOr[SExp]): Goal = evalo(env, x)(result)
+
 def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
   lookupo(env, x),
   {

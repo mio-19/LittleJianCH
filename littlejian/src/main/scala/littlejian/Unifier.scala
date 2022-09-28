@@ -73,4 +73,6 @@ implicit object U$Unit extends EqualUnifier[Unit]
 
 implicit object U$Int extends EqualUnifier[Int]
 
+implicit object U$Integer extends EqualUnifier[Integer]
+
 implicit object U$Boolean extends EqualUnifier[Boolean]

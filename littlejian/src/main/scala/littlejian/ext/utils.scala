@@ -28,9 +28,9 @@ implicit class EqOps[T](x: VarOr[T]) {
 }
 
 implicit class TypePredOps[T](x: VarOr[T]) {
-  def isType(t: ClassTag[_]): Goal = GoalPredType(t, x)
+  def isType[T](implicit t: ClassTag[T]): Goal = GoalPredType(t, x)
 
-  def isNotType(t: ClassTag[_]): Goal = GoalPredNotType(t, x)
+  def isNotType[T](implicit t: ClassTag[T]): Goal = GoalPredNotType(t, x)
 }
 
 def begin(xs: => Goal*): Goal = GoalDelay(GoalConj(xs))

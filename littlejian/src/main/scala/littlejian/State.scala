@@ -20,6 +20,7 @@ final case class PredTypeState(xs: ParVector[(Var[_], PredTypeTag)]) {
   def insert(v: Var[_], t: PredTypeTag): PredTypeState = PredTypeState((v, t) +: xs)
 
   def onEq(eq: EqState): Option[PredTypeState] = {
+    if(xs.isEmpty) return Some(this) // optimize
     val (bound0, rest) = xs.partition(x => eq.subst.contains(x._1))
     val bound = bound0.map(x => (eq.subst.walk(x._1), x._2))
     val (vars, concretes) = bound.partition(x => x._1 match {
@@ -38,6 +39,7 @@ final case class PredNotTypeState(xs: ParVector[(Var[_], PredTypeTag)]) {
   def insert(v: Var[_], t: PredTypeTag): PredNotTypeState = PredNotTypeState((v, t) +: xs)
 
   def onEq(eq: EqState): Option[PredNotTypeState] = {
+    if (xs.isEmpty) return Some(this) // optimize
     val (bound0, rest) = xs.partition(x => eq.subst.contains(x._1))
     val bound = bound0.map(x => (eq.subst.walk(x._1), x._2))
     val (vars, concretes) = bound.partition(x => x._1 match {

@@ -51,6 +51,15 @@ implicit class InfixUnify[T](self: VarOr[T])(implicit unifier: Unifier[T]) {
 
 implicit def U$VarOr[T](implicit unifier: Unifier[T]): Unifier[VarOr[T]] = (x, y) => unifier.unify(x, y)
 
+
+import scala.reflect.ClassTag
+def U$Or[T, U](t: Unifier[T], u: Unifier[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Unifier[T | U] = (x, y) => (x, y) match {
+  case (x: T, y: T) => t.unify(x, y)
+  case (x: U, y: U) => u.unify(x, y)
+  case (_: T, _: U) | (_: U, _: T) => Unifying.failure
+  case (_, _) => throw new IllegalStateException("Unexpected")
+}
+
 implicit object UnifiableBoxUnifier extends Unifier[UnifiableBox[_]] {
   def concreteUnify(self: UnifiableBox[_], other: UnifiableBox[_]): Unifying[Unit] = throw new IllegalStateException("not reachable")
 }

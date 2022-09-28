@@ -26,7 +26,15 @@ final case class Cons(a: VarOr[SExp], d: VarOr[SExp]) {
   override def toString: String = consToString(Vector(a), d)
 }
 
+implicit val U$Cons: Unifier[Cons] = (x, y) => for {
+  _ <- x.a.unify(y.a)
+  _ <- x.d.unify(y.d)
+} yield ()
+
 def cons(a: VarOr[SExp], d: VarOr[SExp]): SExp = Cons(a, d)
 
 private def convertList(xs: Seq[VarOr[SExp]]): SExp = if (xs.isEmpty) () else cons(xs.head, convertList(xs.tail))
 def list(xs: VarOr[SExp]*) = convertList(xs)
+
+
+implicit val U$SExp: Unifier[SExp] = U$Or(U$Cons, U$Or(U$Unit, U$String))

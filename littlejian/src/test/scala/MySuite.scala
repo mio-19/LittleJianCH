@@ -3,6 +3,7 @@ import littlejian.ext._
 import littlejian.search.naive._
 import littlejian.data._
 import littlejian.unifier._
+import littlejian.data.sexp._
 
 
 class MySuite extends munit.FunSuite {

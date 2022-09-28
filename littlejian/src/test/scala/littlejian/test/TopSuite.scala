@@ -9,11 +9,6 @@ import littlejian.unifier.*
 
 
 class TopSuite extends munit.FunSuite {
-  test("example test that succeeds") {
-    val obtained = 42
-    val expected = 42
-    assertEquals(obtained, expected)
-  }
   test("basics") {
     assertEquals(Set.from(run { (x: VarOr[Int]) => x === 42 }), Set("42"))
     assertEquals(Set.from(run { (x: VarOr[Int]) => x === 42 && x === 32 }), Set())

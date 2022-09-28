@@ -52,13 +52,13 @@ import scala.reflect.ClassTag
 
 def U$Union[T, U](t: Unifier[T], u: Unifier[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Unifier[T | U] = {
   if (tev.runtimeClass == uev.runtimeClass) throw new IllegalArgumentException("T == U")
-  (x, y) =>
-    (x, y) match {
-      case (x: T, y: T) => t.unify(x, y)
-      case (x: U, y: U) => u.unify(x, y)
-      case (_: T, _: U) | (_: U, _: T) => Unifying.failure
-      case (_, _) => throw new IllegalStateException("Unexpected")
-    }
+  val tc = tev.runtimeClass
+  val uc = uev.runtimeClass
+  (x, y) => {
+    if (tc.isInstance(x) && tc.isInstance(y)) t.unify(x.asInstanceOf[T], y.asInstanceOf[T])
+    else if (uc.isInstance(x) && uc.isInstance(y)) u.unify(x.asInstanceOf[U], y.asInstanceOf[U])
+    else Unifying.failure
+  }
 }
 
 trait EqualUnifier[T] extends Unifier[T] {

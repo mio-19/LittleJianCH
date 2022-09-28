@@ -1,12 +1,14 @@
-import littlejian._
-import littlejian.ext._
-import littlejian.search.naive._
-import littlejian.data._
-import littlejian.unifier._
-import littlejian.data.sexp._
+package littlejian
+
+import littlejian.*
+import littlejian.data.*
+import littlejian.data.sexp.*
+import littlejian.ext.*
+import littlejian.search.naive.*
+import littlejian.unifier.*
 
 
-class MySuite extends munit.FunSuite {
+class TopSuite extends munit.FunSuite {
   test("example test that succeeds") {
     val obtained = 42
     val expected = 42

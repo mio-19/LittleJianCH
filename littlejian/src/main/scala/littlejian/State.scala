@@ -9,7 +9,7 @@ object EqState {
 }
 
 final case class NotEqState(clauses: ParVector /*conj*/ [Subst /*disj not eq*/ ]) {
-  def onEq(eq: EqState): Option[NotEqState] = ???
+  def onEq(eq: EqState): Option[NotEqState] = Some(this) // TODO
 }
 
 object NotEqState {
@@ -17,7 +17,7 @@ object NotEqState {
 }
 
 final case class PredTypeState(xs: ParVector[(Var[_], PredTypeTag)]) {
-  def onEq(eq: EqState): Option[PredTypeState] = ???
+  def onEq(eq: EqState): Option[PredTypeState] = Some(this) // TODO
 }
 
 object PredTypeState {
@@ -25,7 +25,7 @@ object PredTypeState {
 }
 
 final case class PredNotTypeState(xs: ParVector[(Var[_], PredTypeTag)]) {
-  def onEq(eq: EqState): Option[PredNotTypeState] = ???
+  def onEq(eq: EqState): Option[PredNotTypeState] = Some(this) // TODO
 }
 
 object PredNotTypeState {

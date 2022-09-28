@@ -17,3 +17,15 @@ implicit def U$List[T](implicit unifier: Unifier[T]): Unifier[List[T]] = {
   }
   U
 }
+implicit def U$Seq[T](implicit unify: Unifier[T]): Unifier[Seq[T]] = {
+  implicit object U extends Unifier[Seq[T]] {
+    override def concreteUnify(self: Seq[T], other: Seq[T]): Unifying[Unit] =
+      if(self.isEmpty && other.isEmpty) Unifying.success(())
+      else if(self.nonEmpty && other.nonEmpty) for {
+        _ <- self.head.unify(other.head)
+        _ <- self.tail.unify(other.tail)
+      } yield ()
+      else Unifying.failure
+  }
+  U
+}

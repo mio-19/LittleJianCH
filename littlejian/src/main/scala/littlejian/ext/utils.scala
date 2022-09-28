@@ -3,6 +3,9 @@ package littlejian.ext
 import littlejian._
 import scala.reflect.ClassTag
 
+def hole[T](implicit unifier: Unifier[T]) = new Var[T]()(unifier)
+def fresh[T, U](block: VarOr[T] => U)(implicit unifier: Unifier[T]): U = block(hole)
+
 
 implicit class EqOps[T](x: VarOr[T]) {
   def ===(y: VarOr[T])(implicit unifier: Unifier[T]): Goal = GoalEq(x, y)

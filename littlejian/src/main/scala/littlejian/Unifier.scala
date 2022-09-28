@@ -40,10 +40,16 @@ trait Unifier[T] {
     }
   } yield ()
 
-  def concreteUnify(self: T, other: T): Unifying[Unit] = ???
+  def concreteUnify(self: T, other: T): Unifying[Unit]
 }
 
-implicit object UnifiableBoxUnifier extends Unifier[UnifiableBox[_]]
+implicit class InfixUnify[T](self: VarOr[T])(implicit unifier: Unifier[T]) {
+  def unify(other: VarOr[T]) = unifier.unify(self, other)
+}
+
+implicit object UnifiableBoxUnifier extends Unifier[UnifiableBox[_]] {
+  def concreteUnify(self: UnifiableBox[_], other: UnifiableBox[_]): Unifying[Unit] = throw new IllegalStateException("not reachable")
+}
 
 trait EqualUnifier[T] extends Unifier[T] {
   override def concreteUnify(self: T, other: T): Unifying[Unit] = Unifying.guard(self == other)

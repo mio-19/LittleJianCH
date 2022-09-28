@@ -14,7 +14,7 @@ private def consToString(xs: Vector[VarOr[SExp]], next: VarOr[SExp]): String = n
   case () => s"(${xs.map(_.toString).mkString(" ")})"
   case v: Var[SExp] => PrettyPrintContext.get match {
     case Some(context) => context.subst.getOption(v) match {
-      case Some(box) => box.x.toString
+      case Some(box) => consToString(xs, box.x)
       case None => consDot(xs, v)
     }
     case None => consDot(xs, v)

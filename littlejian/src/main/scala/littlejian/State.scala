@@ -39,11 +39,11 @@ object NotEqState {
     } yield head +: tail
 
   private def exec[T](eq: EqState, req: NotEqRequest[T]): Option[ParVector /*disj, empty means success*/ [NotEqElem[_]]] = (eq.subst.walk(req.x), eq.subst.walk(req.y)) match {
-    case (x: Var[T], y: Var[T]) if (x == y) => None
+    case (x: Var[T], y: Var[T]) if x == y => None
     case (x: Var[T], y) => Some(ParVector(NotEqElem(x, y, req.unifier)))
     case (x, y: Var[T]) => Some(ParVector(NotEqElem(y, x, req.unifier)))
     case (x, y) => req.unifier.unify(x, y)(Subst.empty) match {
-      case None => Some(ParVector())
+      case None => Some(ParVector.empty)
       case Some((newSubst, ())) => if(newSubst.isEmpty) None else run(eq, newSubst.toSeq.map({ case (v, (unifier, x)) => NotEqRequestUnchecked(v, x, unifier) }))
     }
   }

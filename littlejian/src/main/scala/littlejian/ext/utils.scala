@@ -18,8 +18,9 @@ implicit class GoalOps(x: => Goal) {
   def ||(y: => Goal): Goal = GoalDisj(GoalDelay(x), GoalDelay(y))
 }
 
-def hole[T]: VarOr[T] = new Var[T]()
-def fresh[T, U](block: VarOr[T] => U): U = block(hole)
+def hole[T]: VarOr[T] = new Var[T]
+def fresh[T](block: VarOr[T] => Goal): Goal = GoalDelay(block(hole))
+def fresh[T, U](block: VarOr[T] => Rel[U]): Rel[U] = block(hole)
 
 implicit class EqOps[T](x: VarOr[T]) {
   def ===(y: VarOr[T])(implicit unifier: Unifier[T]): Goal = GoalEq(x, y)

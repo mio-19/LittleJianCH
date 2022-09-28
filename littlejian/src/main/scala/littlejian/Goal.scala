@@ -46,7 +46,7 @@ final case class GoalPredNotType[T](tag: PredTypeTag, x: VarOr[T]) extends GoalB
 sealed trait GoalControl extends Goal
 
 final class GoalDelay(x: => Goal) extends GoalControl {
-  lazy val get: Goal = x
+  def get: Goal = x
 }
 
 final case class GoalDisj(xs: ParVector[Goal]) extends GoalControl

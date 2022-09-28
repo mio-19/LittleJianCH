@@ -22,16 +22,16 @@ def printSpace(root: Var[_], space: Seq[State]): String = space.map(s => printSt
 def displaySpace(root: Var[_], space: Stream[State]): Unit = space.foreach(s => println(printState(root, s)))
 
 def run[T](block: VarOr[T] => Goal)(implicit unifier: Unifier[T], searcher: Searcher): String = {
-  val root = hole
+  val root = hole[T]
   printSpace(root, run(block(root)))
 }
 
 def runDisplay[T](block: VarOr[T] => Goal)(implicit unifier: Unifier[T], searcher: Searcher): Unit = {
-  val root = hole
+  val root = hole[T]
   displaySpace(root, run(block(root)))
 }
 
 def run[T](n: Int, block: VarOr[T] => Goal)(implicit unifier: Unifier[T], searcher: Searcher): String = {
-  val root = hole
+  val root = hole[T]
   printSpace(root, run(block(root)).take(n))
 }

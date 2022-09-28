@@ -1,5 +1,6 @@
 package littlejian
 
+import scala.annotation.targetName
 import scala.collection.parallel.immutable.ParVector
 
 sealed trait Goal {
@@ -47,6 +48,8 @@ object GoalDisj {
   def apply(xs: ParVector[Goal]) = new GoalDisj(xs)
 
   def apply(xs: Seq[Goal]) = new GoalDisj(ParVector(xs *))
+
+  @targetName("applyMul") def apply(xs: Goal*) = new GoalDisj(ParVector(xs *))
 }
 
 final case class GoalConj(xs: ParVector[Goal]) extends GoalControl
@@ -54,6 +57,7 @@ final case class GoalConj(xs: ParVector[Goal]) extends GoalControl
 object GoalConj {
   def apply(xs: ParVector[Goal]) = new GoalConj(xs)
   def apply(xs: Seq[Goal]) = new GoalConj(ParVector(xs*))
+  @targetName("applyMul") def apply(xs: Goal*) = new GoalConj(ParVector(xs*))
 }
 
 object Goal {

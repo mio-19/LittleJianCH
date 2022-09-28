@@ -49,11 +49,16 @@ implicit def U$VarOr[T](implicit unifier: Unifier[T]): Unifier[VarOr[T]] = (x, y
 
 
 import scala.reflect.ClassTag
-def U$Or[T, U](t: Unifier[T], u: Unifier[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Unifier[T | U] = (x, y) => (x, y) match {
-  case (x: T, y: T) => t.unify(x, y)
-  case (x: U, y: U) => u.unify(x, y)
-  case (_: T, _: U) | (_: U, _: T) => Unifying.failure
-  case (_, _) => throw new IllegalStateException("Unexpected")
+
+def U$Union[T, U](t: Unifier[T], u: Unifier[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Unifier[T | U] = {
+  if (tev.runtimeClass == uev.runtimeClass) throw new IllegalArgumentException("T == U")
+  (x, y) =>
+    (x, y) match {
+      case (x: T, y: T) => t.unify(x, y)
+      case (x: U, y: U) => u.unify(x, y)
+      case (_: T, _: U) | (_: U, _: T) => Unifying.failure
+      case (_, _) => throw new IllegalStateException("Unexpected")
+    }
 }
 
 trait EqualUnifier[T] extends Unifier[T] {

@@ -37,4 +37,4 @@ private def convertList(xs: Seq[VarOr[SExp]]): SExp = if (xs.isEmpty) () else co
 def list(xs: VarOr[SExp]*) = convertList(xs)
 
 
-implicit val U$SExp: Unifier[SExp] = U$Or(U$Cons, U$Or(U$Unit, U$String))
+implicit val U$SExp: Unifier[SExp] = U$Union(U$Cons, U$Union(U$Unit, U$String))

@@ -3,7 +3,17 @@ package littlejian.data
 import littlejian._
 import scala.language.implicitConversions
 
-sealed trait LList[T]
+sealed trait LList[T] {
+  def ::(elem: VarOr[T]): LList[T] = LCons(elem, this)
+}
+
+object LList {
+  def empty[T]: LList[T] = LEmpty()
+
+  def apply[T](xs: VarOr[T]*): LList[T] = LList.from(xs)
+
+  def from[T](xs: Seq[VarOr[T]]): LList[T] = if (xs.isEmpty) LEmpty() else LCons(xs.head, LList.from(xs.tail))
+}
 
 final case class LEmpty[T]() extends LList[T]
 

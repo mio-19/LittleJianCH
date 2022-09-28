@@ -28,7 +28,7 @@ class MySuite extends munit.FunSuite {
       _ <- x === LList(head, tail)
       _ <- head === 42 && tail === 32
     } yield x), "LCons(42,LCons(32,LEmpty()))\n")
-    assertEquals(run { (x: VarOr[LList[Int]]) =>
+    assertEquals(run[LList[Int]] { (x) =>
       val head = hole[Int]
       val tail = hole[Int]
       for {
@@ -37,7 +37,7 @@ class MySuite extends munit.FunSuite {
         _ <- tail === 32
       } yield ()
     }, "LCons(42,LCons(32,LEmpty()))\n")
-    assertEquals(run { (x: VarOr[Option[VarOr[Int]]]) => {
+    assertEquals(run[Option[VarOr[Int]]] { x => {
       val i = hole[Int]
       i === 53 && x === Some(i)
     }}, "Some(53)\n")

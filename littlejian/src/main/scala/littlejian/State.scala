@@ -28,7 +28,11 @@ object NotEqState {
       tail <- traverse(xs.tail)
     } yield head +: tail
 
-  private def exec[T](eq: EqState, x: NotEqRequest[T]): Option[ParVector/*disj*/[NotEqElem[_]]] = ???
+  private def exec[T](eq: EqState, req: NotEqRequest[T]): Option[ParVector/*disj*/[NotEqElem[_]]] =
+    req.unifier.unify(eq.subst.walk(req.x), eq.subst.walk(req.y))(Subst.empty) match {
+      case Some(newSubst) => ???
+      case None => Some(ParVector())
+    }
 
   private def run(eq: EqState, x: ParVector/*disj*/[NotEqRequest[_]]): Option[ParVector[NotEqElem[_]]] = traverse(x.map(exec(eq, _))).map(_.flatten)
 

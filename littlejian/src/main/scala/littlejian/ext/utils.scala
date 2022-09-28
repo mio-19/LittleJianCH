@@ -10,7 +10,7 @@ implicit class GoalOps(x: =>Goal) {
   def ||(y: =>Goal): Goal = GoalDisj(GoalDelay(x), GoalDelay(y))
 }
 
-def hole[T] = new Var[T]()
+def hole[T]: VarOr[T] = new Var[T]()
 def fresh[T, U](block: VarOr[T] => U): U = block(hole)
 
 

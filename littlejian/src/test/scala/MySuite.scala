@@ -27,5 +27,14 @@ class MySuite extends munit.FunSuite {
       _ <- x === LList(head, tail)
       _ <- head === 42 && tail === 32
     } yield x), "LCons(42,LCons(32,LEmpty()))\n")
+    assertEquals(run { (x: VarOr[LList[Int]]) =>
+      val head = hole[Int]
+      val tail = hole[Int]
+      for {
+        _ <- x === LList(head, tail)
+        _ <- head === 42
+        _ <- tail === 32
+      } yield ()
+    }, "LCons(42,LCons(32,LEmpty()))\n")
   }
 }

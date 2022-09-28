@@ -1,6 +1,6 @@
 package littlejian
 
-import scala.collection.parallel.immutable.{ParHashMap, ParVector}
+import scala.collection.parallel.immutable.{ParHashMap, ParSeq, ParVector}
 
 final case class EqState(subst: Subst)
 
@@ -9,6 +9,9 @@ object EqState {
 }
 
 sealed class NotEqRequest[T](val x: VarOr[T], val y: VarOr[T], val unifier: Unifier[T])
+
+private def NotEqRequestUnchecked[T, U](x: T, y: U, unifier: Unifier[_]): NotEqRequest[_] =
+  new NotEqRequest[T | U](x, y, unifier.asInstanceOf[Unifier[T | U]])
 
 final case class NotEqElem[T](override val x: Var[T], override val y: VarOr[T], override val unifier: Unifier[T]) extends NotEqRequest[T](x, y, unifier)
 
@@ -28,13 +31,29 @@ object NotEqState {
       tail <- traverse(xs.tail)
     } yield head +: tail
 
-  private def exec[T](eq: EqState, req: NotEqRequest[T]): Option[ParVector/*disj*/[NotEqElem[_]]] =
-    req.unifier.unify(eq.subst.walk(req.x), eq.subst.walk(req.y))(Subst.empty) match {
-      case Some(newSubst) => ???
-      case None => Some(ParVector())
-    }
+  private def traverse[T](xs: ParSeq[Option[T]]): Option[ParSeq[T]] =
+    if (xs.isEmpty) Some(ParSeq())
+    else for {
+      head <- xs.head
+      tail <- traverse(xs.tail)
+    } yield head +: tail
 
-  private def run(eq: EqState, x: ParVector/*disj*/[NotEqRequest[_]]): Option[ParVector[NotEqElem[_]]] = traverse(x.map(exec(eq, _))).map(_.flatten)
+  private def exec[T](eq: EqState, req: NotEqRequest[T]): Option[ParVector /*disj, empty means success*/ [NotEqElem[_]]] = (eq.subst.walk(req.x), eq.subst.walk(req.y)) match {
+    case (x: Var[T], y: Var[T]) if (x == y) => None
+    case (x: Var[T], y) => Some(ParVector(NotEqElem(x, y, req.unifier)))
+    case (x, y: Var[T]) => Some(ParVector(NotEqElem(y, x, req.unifier)))
+    case (x, y) => req.unifier.unify(x, y)(Subst.empty) match {
+      case None => Some(ParVector())
+      case Some((newSubst, ())) => if(newSubst.isEmpty) None else run(eq, newSubst.toSeq.map({ case (v, (unifier, x)) => NotEqRequestUnchecked(v, x, unifier) }))
+    }
+  }
+
+  private def run(eq: EqState, x: ParSeq /*disj*/ [NotEqRequest[_]]): Option[ParVector /*disj, empty means success*/ [NotEqElem[_]]] =
+    if (x.isEmpty) throw new IllegalArgumentException("Empty vector")
+    else traverse(x.map(exec(eq, _))) match {
+      case Some(result) => if (result.exists(_.isEmpty)) Some(ParVector.empty) else Some(result.fold(ParVector.empty)(_ ++ _))
+      case None => None
+    }
 
   private def create(eq: EqState, xs: ParVector[ParVector[NotEqRequest[_]]]): Option[NotEqState] =
     traverse(xs.map(run(eq, _))).map(xs => NotEqState(xs.filter(_.nonEmpty)))

@@ -35,7 +35,15 @@ object PredTypeState {
 }
 
 final case class PredNotTypeState(xs: ParVector[(Var[_], PredTypeTag)]) {
-  def onEq(eq: EqState): Option[PredNotTypeState] = Some(this) // TODO
+  def onEq(eq: EqState): Option[PredNotTypeState] = {
+    val (bound0, rest) = xs.partition(x => eq.subst.contains(x._1))
+    val bound = bound0.map(x => (eq.subst.walk(x._1), x._2))
+    val (vars, concretes) = bound.partition(x => x._1 match {
+      case _: Var[_] => true
+      case _ => false
+    })
+    if (concretes.forall(x => !checkPredTypeTag(x._2, x._1))) Some(PredNotTypeState(vars.map(x => (x._1.asInstanceOf[Var[_]], x._2)) ++ rest)) else None
+  }
 }
 
 object PredNotTypeState {

@@ -27,11 +27,11 @@ import scala.reflect.ClassTag
 
 type PredTypeTag = ClassTag[_]
 
-final case class GoalPredType[T](tag: PredTypeTag, x: VarOr[T])(implicit unifier: Unifier[T]) extends GoalBasic {
+final case class GoalPredType[T](tag: PredTypeTag, x: VarOr[T]) extends GoalBasic {
   override def execute(state: State): Option[State] = ???
 }
 
-final case class GoalPredNotType[T](tag: PredTypeTag, x: VarOr[T])(implicit unifier: Unifier[T]) extends GoalBasic {
+final case class GoalPredNotType[T](tag: PredTypeTag, x: VarOr[T]) extends GoalBasic {
   override def execute(state: State): Option[State] = ???
 }
 

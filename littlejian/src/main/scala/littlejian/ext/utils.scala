@@ -1,6 +1,16 @@
 package littlejian.ext
 
 import littlejian._
+import scala.reflect.ClassTag
+
+def ===[T](x: VarOr[T], y: VarOr[T])(implicit unifier: Unifier[T]): Goal = GoalEq(x, y)
+def =/=[T](x: VarOr[T], y: VarOr[T])(implicit unifier: Unifier[T]): Goal = GoalNotEq(x, y)
+
+implicit class TypePredOps[T](x: VarOr[T]) {
+  def isType(t: ClassTag[_]): Goal = GoalPredType(t, x)
+
+  def isNotType(t: ClassTag[_]): Goal = GoalPredNotType(t, x)
+}
 
 def begin(xs: => Goal*): Goal = GoalDelay(GoalConj(xs))
 

@@ -1,20 +1,22 @@
 package littlejian
 
+import scala.annotation.tailrec
 import scala.collection.parallel.immutable.ParHashMap
 
 type Subst = ParHashMap[Var[_], _/*VarOr[_]*/]
 
-implicit class SubstOps(self: Subst) {
+implicit final class SubstOps(self: Subst) {
+  @tailrec
   def walk[T](x: VarOr[T]): VarOr[T] = x match {
     case v: Var[_] => self.get(v) match {
-      case Some(v) => this.walk(v).asInstanceOf[VarOr[T]]
+      case Some(v) => walk(v.asInstanceOf[VarOr[T]])
       case None => x
     }
     case _ => x
   }
 
   def getOption[T](x: Var[T]): Option[VarOr[T]] = self.get(x) match {
-    case Some(v) => Some(this.walk(v).asInstanceOf[VarOr[T]])
+    case Some(v) => Some(walk(v.asInstanceOf[VarOr[T]]))
     case None => None
   }
 

@@ -9,9 +9,6 @@ final class Var[T] {
       case None => "$" + context.getVar(this).toString
     }
   }
-
-  // public api
-  def get(state: State): VarOr[T] = state.eq.subst.walk(this)
 }
 
 type VarOr[T] = Var[T] | T

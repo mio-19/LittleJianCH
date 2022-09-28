@@ -4,6 +4,14 @@ import littlejian._
 import scala.collection.parallel.immutable.ParVector
 import scala.reflect.ClassTag
 
+implicit class StateResolve(self: State) {
+  def resolve[T](x: VarOr[T]): VarOr[T] = self.eq.subst.walk(x)
+}
+
+implicit class VarGet[T](self: Var[T]) {
+  def get(state: State): VarOr[T] = state.eq.subst.walk(self)
+}
+
 implicit class GoalOps(x: => Goal) {
   def &&(y: => Goal): Goal = GoalConj(GoalDelay(x), GoalDelay(y))
 

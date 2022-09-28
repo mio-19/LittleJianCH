@@ -34,7 +34,10 @@ final case class GoalPredType[T](tag: PredTypeTag, x: VarOr[T]) extends GoalBasi
 }
 
 final case class GoalPredNotType[T](tag: PredTypeTag, x: VarOr[T]) extends GoalBasic {
-  override def execute(state: State): Option[State] = ???
+  override def execute(state: State): Option[State] = state.eq.subst.walk(x) match {
+    case v: Var[_] => Some(state.predNotTypeMap(_.insert(v, tag)))
+    case x => if (!checkPredTypeTag(tag, x)) Some(state) else None
+  }
 }
 
 sealed trait GoalControl extends Goal

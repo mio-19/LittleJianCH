@@ -35,6 +35,8 @@ object PredTypeState {
 }
 
 final case class PredNotTypeState(xs: ParVector[(Var[_], PredTypeTag)]) {
+  def insert(v: Var[_], t: PredTypeTag): PredNotTypeState = PredNotTypeState((v, t) +: xs)
+
   def onEq(eq: EqState): Option[PredNotTypeState] = {
     val (bound0, rest) = xs.partition(x => eq.subst.contains(x._1))
     val bound = bound0.map(x => (eq.subst.walk(x._1), x._2))
@@ -60,6 +62,8 @@ final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, 
   def predTypeMap(f: PredTypeState => PredTypeState): State = State(eq = eq, notEq = notEq, predType = f(predType), predNotType = predNotType)
 
   def predNotTypeUpdated(predNotType: PredNotTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType)
+
+  def predNotTypeMap(f: PredNotTypeState => PredNotTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = f(predNotType))
 
   // Update Constraints
   def onEq: Option[State] = for {

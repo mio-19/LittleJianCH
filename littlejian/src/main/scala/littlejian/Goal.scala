@@ -43,11 +43,20 @@ final class GoalDelay(x: => Goal) extends GoalControl {
 
 final case class GoalDisj(xs: ParVector[Goal]) extends GoalControl
 
+object GoalDisj {
+  def apply(xs: ParVector[Goal]) = new GoalDisj(xs)
+
+  def apply(xs: Seq[Goal]) = new GoalDisj(ParVector(xs *))
+}
+
 final case class GoalConj(xs: ParVector[Goal]) extends GoalControl
 
-object Goal {
-  def conde(clauses: ParVector[ParVector[Goal]]): Goal = GoalDisj(clauses.map(GoalConj(_)))
+object GoalConj {
+  def apply(xs: ParVector[Goal]) = new GoalConj(xs)
+  def apply(xs: Seq[Goal]) = new GoalConj(ParVector(xs*))
+}
 
+object Goal {
   val success: Goal = GoalConj(ParVector())
   val failure: Goal = GoalDisj(ParVector())
 }

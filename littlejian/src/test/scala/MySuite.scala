@@ -73,5 +73,10 @@ class MySuite extends munit.FunSuite {
       val z = hole[SExp]
       x =/= cons(y,z) && y === "a" && z === "b" && x === cons("a", "d")
     }), Set("(a . d)"))
+    assertEquals(Set.from(run[SExp] { x =>
+      val y = hole[SExp]
+      val z = hole[SExp]
+      x =/= cons(y, z) && y === "a" && z === "b" && x === cons("a", "b")
+    }), Set())
   }
 }

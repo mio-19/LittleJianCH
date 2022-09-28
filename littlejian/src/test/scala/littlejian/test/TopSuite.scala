@@ -1,4 +1,4 @@
-package littlejian
+package littlejian.test
 
 import littlejian.*
 import littlejian.data.*

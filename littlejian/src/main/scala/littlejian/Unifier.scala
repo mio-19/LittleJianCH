@@ -32,6 +32,7 @@ trait Unifier[T] {
     self <- Subst.walk(self)
     other <- Subst.walk(other)
     _ <- (self, other) match {
+      case _ if self == other => Unifying.success(())
       case (self: Var[_], _) => Subst.addEntry(self.asInstanceOf[Var[T]], other)
       case (_, other: Var[_]) => Subst.addEntry(other.asInstanceOf[Var[T]], self)
       case _ => concreteUnify(self.asInstanceOf[T], other.asInstanceOf[T])

@@ -23,5 +23,12 @@ class EvalSuite extends munit.FunSuite {
     assertEquals(Set.from(run {
       evalo(list(cons("a", "b"), cons("a", "c")), "b")
     }), Set())
+    assertEquals(Set.from(run {
+      val x: VarOr[SExp] = list("quote", "a")
+      val result = hole[SExp]
+      for {
+        _ <- x === list("quote", result)
+      } yield result
+    }), Set("a"))
   }
 }

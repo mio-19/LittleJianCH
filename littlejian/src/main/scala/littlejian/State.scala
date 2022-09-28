@@ -21,9 +21,19 @@ final case class NotEqState(clauses: ParVector /*conj*/ [ParVector[NotEqElem[_]]
 object NotEqState {
   val empty: NotEqState = NotEqState(ParVector.empty)
 
-  private[littlejian] def create(eq: EqState, req: NotEqRequest[_], clauses: NotEqState): Option[NotEqState] = ???
+  private def traverse[T](xs: ParVector[Option[T]]): Option[ParVector[T]] =
+    if (xs.isEmpty) Some(ParVector())
+    else for {
+      head <- xs.head
+      tail <- traverse(xs.tail)
+    } yield head +: tail
 
-  private[littlejian] def create(eq: EqState, clauses: ParVector[ParVector[NotEqElem[_]]]): Option[NotEqState] = ???
+  private def run(eq: EqState, x: ParVector[NotEqRequest[_]]): Option[ParVector[NotEqElem[_]]] = ???
+
+  private def create(eq: EqState, xs: ParVector[ParVector[NotEqRequest[_]]]): Option[NotEqState] =
+    traverse(xs.map(run(eq, _))).map(xs => NotEqState(xs.filter(_.nonEmpty)))
+
+  private[littlejian] def create(eq: EqState, req: NotEqRequest[_], clauses: NotEqState): Option[NotEqState] = create(eq, ParVector(req) +: clauses.clauses)
 }
 
 final case class PredTypeState(xs: ParVector[(Var[_], PredTypeTag)]) {

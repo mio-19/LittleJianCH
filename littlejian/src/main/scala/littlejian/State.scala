@@ -1,6 +1,7 @@
 package littlejian
 
 import scala.collection.parallel.immutable.{ParHashMap, ParSeq, ParVector}
+import collection.parallel.CollectionConverters._
 
 final case class EqState(subst: Subst)
 
@@ -90,7 +91,10 @@ object PredNotTypeState {
 }
 
 final case class AbsentState(absents: ParVector/*conj*/[(Any, ParVector/*disj*/[WithInspector[_]])]) {
-
+  def insert(goal: GoalAbsent[_]): Option[AbsentState] = Inspector.scanUncertain(goal.x, goal.absent) match {
+    case None => None
+    case Some(xs) => if(xs.isEmpty) Some(this) else Some(AbsentState((goal.absent, Vector.from(xs).par) +: absents))
+  }
 }
 
 object AbsentState {
@@ -98,7 +102,7 @@ object AbsentState {
 
   import littlejian.utils._
 
-  def create(absents: ParVector/*conj*/[(Any, ParVector/*disj*/[WithInspector[_]])]): Option[AbsentState] =
+  def check(absents: ParVector/*conj*/[(Any, ParVector/*disj*/[WithInspector[_]])]): Option[AbsentState] =
     if(absents.isEmpty) Some(AbsentState.empty) // optimize
     else {
       traverse(absents.map({case (v, xs) => for {

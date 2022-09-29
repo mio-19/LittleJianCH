@@ -19,6 +19,16 @@ def lookupo(env: VarOr[SExp], id: VarOr[SExp], v: VarOr[SExp]): Goal = conde(
 
 def lookupo(env: VarOr[SExp], id: VarOr[SExp]): Rel[SExp] = lookupo(env, id, _)
 
+def notInEnvo(env: VarOr[SExp], id: VarOr[SExp]): Goal = conde(
+  env === (),
+  {
+    val aid = hole[SExp]
+    val av = hole[SExp]
+    val d = hole[SExp]
+    env === cons(cons(aid, av), d) && id =/= aid && notInEnvo(d, id)
+  }
+)
+
 def envExto(env: VarOr[SExp], params: VarOr[SExp], args: VarOr[SExp]): Rel[SExp] = conde(
   begin(params === (), args === (), env),
   {
@@ -80,12 +90,14 @@ def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
     val args = hole[SExp]
     val body = hole[SExp]
     for {
+      _ <- notInEnvo(env, "lambda")
       _ <- x === list("lambda", args, body)
     } yield closureo(env, args, body)
   },
   {
     val result = hole[SExp]
     for {
+      _ <- notInEnvo(env, "quote")
       _ <- result.isType[String] // a hack to prevent run[SExp] { x => evalo((), x, x) }.head => "(quote #1=(quote #1))"
       _ <- x === list("quote", result)
     } yield result
@@ -94,6 +106,7 @@ def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
     val a = hole[SExp]
     val b = hole[SExp]
     for {
+      _ <- notInEnvo(env, "cons")
       _ <- x === list("cons", a, b)
       a0 <- evalo(env, a)
       b0 <- evalo(env, b)
@@ -102,6 +115,7 @@ def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
   {
     val xs = hole[SExp]
     for {
+      _ <- notInEnvo(env, "list")
       _ <- x === cons("list", xs)
       xs0 <- mapo(evalo(env, _), xs)
     } yield xs0
@@ -111,6 +125,7 @@ def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
     val a = hole[SExp]
     val b = hole[SExp]
     for {
+      _ <- notInEnvo(env, "car")
       _ <- x === list("car", p)
       p0 <- evalo(env, p)
       _ <- p0 === cons(a, b)
@@ -121,6 +136,7 @@ def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
     val a = hole[SExp]
     val b = hole[SExp]
     for {
+      _ <- notInEnvo(env, "cdr")
       _ <- x === list("cdr", p)
       p0 <- evalo(env, p)
       _ <- p0 === cons(a, b)

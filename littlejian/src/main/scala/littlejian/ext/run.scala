@@ -8,7 +8,7 @@ implicit class StateOps(self: State)(implicit searcher: Searcher) {
   def execute(goal: Goal): Stream[State] = searcher.run(self, goal)
 }
 
-def printRoot(root: Var[_], state: State): String = PrettyPrintContext.callWith(new PrettyPrintContext(state.eq.subst)) {
+def printRoot(root: Var[_], state: State): String = prettyPrintContext.callWith(new PrettyPrintContext(state.eq.subst)) {
   root.toString
 }
 

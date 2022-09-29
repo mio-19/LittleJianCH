@@ -27,9 +27,12 @@ final class SDelay[T](x: => SStream[T]) extends SStream[T] {
 }
 
 object SStream {
-  def from[T](xs: Iterable[T]): SStream[T] = if (xs.isEmpty) SEmpty() else SCons(xs.head, SStream.from(xs.tail))
+  def from[T](xs: IterableOnce[T]): SStream[T] = from(xs.iterator)
+  def from[T](xs: Iterator[T]): SStream[T] = if(xs.hasNext) SCons(xs.next, from(xs)) else SEmpty()
 
   def apply[T](x: T*): SStream[T] = SStream.from(x)
+
+  def empty[T] = SEmpty()
 }
 
 def mplus[T](xs: SStream[T], ys: SStream[T]): SStream[T] = xs match {

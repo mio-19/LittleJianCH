@@ -4,8 +4,10 @@ import scala.annotation.targetName
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
 import scala.collection.parallel.immutable.ParVector
+import littlejian.utils.*
+import scala.collection.immutable.HashSet
 
-import littlejian.utils._
+private val scanRecHistory = new Parameter[HashSet[Any]]
 
 final case class WithInspector[T](x: VarOr[T])(implicit inspector: Inspector[T]) {
   // None: contains
@@ -14,10 +16,14 @@ final case class WithInspector[T](x: VarOr[T])(implicit inspector: Inspector[T])
   // todo: catch recursion scan
   final def scanUncertain(resolver: Any => Any, v: Any): Option[Seq[WithInspector[_]]] = {
     val todo = resolver(x).asInstanceOf[VarOr[T]]
+    val history = scanRecHistory.get.getOrElse(HashSet.empty)
+    if(history.contains(todo)) return Some(Seq())
     if (todo.isInstanceOf[Var[_]])
       Some(Seq(this))
-    else if(todo == v) None
-    else traverse(inspector.inspect(todo.asInstanceOf[T]).map(_.scanUncertain(resolver, v))).map(_.flatten)
+    else if (todo == v) None
+    else scanRecHistory.callWith(history.incl(todo)) {
+      traverse(inspector.inspect(todo.asInstanceOf[T]).map(_.scanUncertain(resolver, v))).map(_.flatten)
+    }
   }
 }
 
@@ -35,9 +41,9 @@ object Inspector {
   // None: contains
   // Some(Seq()): not contains
   // Some(Seq(...)): uncertain
-  def scanUncertain[T](x: WithInspector[T], resolver: Any => Any,v: Any): Option[Seq[WithInspector[_]]] = x.scanUncertain(resolver, v)
+  def scanUncertain[T](x: WithInspector[T], resolver: Any => Any, v: Any): Option[Seq[WithInspector[_]]] = x.scanUncertain(resolver, v)
 
-  def scanUncertain(xs: ParVector[WithInspector[_]], resolver: Any => Any,v: Any): Option[ParVector[WithInspector[_]]] = traverse(xs.map(_.scanUncertain(resolver, v))).map(_.flatten)
+  def scanUncertain(xs: ParVector[WithInspector[_]], resolver: Any => Any, v: Any): Option[ParVector[WithInspector[_]]] = traverse(xs.map(_.scanUncertain(resolver, v))).map(_.flatten)
 }
 
 trait AtomInspector[T] extends Inspector[T] {

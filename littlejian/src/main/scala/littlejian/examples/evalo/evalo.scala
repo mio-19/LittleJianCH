@@ -108,6 +108,7 @@ def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
     for {
       _ <- notInEnvo(env, "quote")
       //_ <- result.isType[String] // a hack to prevent run[SExp] { x => evalo((), x, x) }.head => "(quote #1=(quote #1))"
+      _ <- result.absent(ClosureTag)
       _ <- x === list("quote", result)
     } yield result
   },

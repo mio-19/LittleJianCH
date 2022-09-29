@@ -40,10 +40,10 @@ class EvalSuite extends munit.FunSuite {
       evalo(list(), list("quote", list("a")))
     }), Set("(a)"))
     assertEquals(Set.from(run {
-      evalo((), list("list", list("quote", list("a"))))
-    }), Set("((a))"))
+      evalo((), list("list", list("quote", "a")))
+    }), Set("(a)"))
     assertEquals(Set.from(run {
-      evalo((), list("car", list("car", list("list", list("quote", list("a"))))))
+      evalo((), list("car", list("list", list("quote", "a"))))
     }), Set("a"))
   }
   test("What eval to a") {

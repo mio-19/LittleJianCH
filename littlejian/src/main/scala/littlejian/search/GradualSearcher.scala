@@ -2,6 +2,7 @@ package littlejian.search
 
 import scala.collection.parallel.immutable.ParVector
 import littlejian._
+import scala.util.control.Breaks._
 
 implicit object GradualSearcher extends Searcher {
   // TODO: parallel execution
@@ -11,12 +12,14 @@ implicit object GradualSearcher extends Searcher {
 
   private def getGoals(originGoals: ParVector[Goal]): ParVector[Goal] = {
     var result = originGoals
-    for (_ <- 0 until reduceLevel) {
-      val (conjs, rest) = result.partition(x => x.isInstanceOf[GoalConj])
-      if (conjs.nonEmpty) result = (rest +: conjs.asInstanceOf[ParVector[GoalConj]].map(_.xs)).flatten
-      val (delays, rest1) = result.partition(x => x.isInstanceOf[GoalDelay])
-      if (delays.nonEmpty) result = delays.asInstanceOf[ParVector[GoalDelay]].map(_.get) ++ rest1
-      if (conjs.isEmpty && delays.isEmpty) return result
+    breakable {
+      for (_ <- 0 until reduceLevel) {
+        val (conjs, rest) = result.partition(x => x.isInstanceOf[GoalConj])
+        if (conjs.nonEmpty) result = (rest +: conjs.asInstanceOf[ParVector[GoalConj]].map(_.xs)).flatten
+        val (delays, rest1) = result.partition(x => x.isInstanceOf[GoalDelay])
+        if (delays.nonEmpty) result = delays.asInstanceOf[ParVector[GoalDelay]].map(_.get) ++ rest1
+        if (conjs.isEmpty && delays.isEmpty) break
+      }
     }
     result
   }

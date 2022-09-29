@@ -106,9 +106,13 @@ final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, 
 
   def notEqUpdated(notEq: NotEqState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType)
 
-  def predTypeMap(f: PredTypeState => PredTypeState): State = State(eq = eq, notEq = notEq, predType = f(predType), predNotType = predNotType)
+  def predTypeUpdated(predType: PredTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType)
 
-  def predNotTypeMap(f: PredNotTypeState => PredNotTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = f(predNotType))
+  def predNotTypeUpdated(predNotType: PredNotTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType)
+
+  def predTypeMap(f: PredTypeState => PredTypeState): State = predTypeUpdated(f(predType))
+
+  def predNotTypeMap(f: PredNotTypeState => PredNotTypeState): State = predNotTypeUpdated(f(predNotType))
 
   // Update Constraints
   def onEq: Option[State] = for {

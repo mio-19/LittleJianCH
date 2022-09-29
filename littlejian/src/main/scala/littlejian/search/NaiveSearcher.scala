@@ -3,13 +3,10 @@ package littlejian.search
 import scala.collection.parallel.immutable.ParVector
 import littlejian._
 import littlejian.search._
+import scala.annotation.tailrec
 
 sealed trait SStream[T] {
-  def toStream: Stream[T] = this match {
-    case SEmpty() => Stream.empty
-    case x: SDelay[T] => x.get.toStream
-    case SCons(head, tail) => head #:: tail.toStream
-  }
+  def toStream: Stream[T] = SStream.toStream(this)
 
   def map[U](f: T => U): SStream[U] = this match {
     case SEmpty() => SEmpty()
@@ -27,6 +24,16 @@ final class SDelay[T](x: => SStream[T]) extends SStream[T] {
 }
 
 object SStream {
+  def toStream[T](self: SStream[T]): Stream[T] = {
+    var result = self
+    while (result.isInstanceOf[SDelay[T]]) result = result.asInstanceOf[SDelay[T]].get
+    result match {
+      case SEmpty() => Stream.empty
+      case SCons(head, tail) => head #:: tail.toStream
+      case _: SDelay[T] => throw new IllegalStateException("Unreachable state")
+    }
+  }
+
   def from[T](xs: IterableOnce[T]): SStream[T] = from(xs.iterator)
   def from[T](xs: Iterator[T]): SStream[T] = if(xs.hasNext) SCons(xs.next, from(xs)) else SEmpty()
 

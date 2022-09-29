@@ -33,7 +33,13 @@ implicit object GradualSearcher extends Searcher {
       disj.xs.map(g => expandDisj(rest, World(world.state, g +: world.goals))).flatten
     }
 
+  val taskLimits = 16
+
   private def runTask(xs: ParVector[World]): SStream[State] = {
+    if(xs.length > taskLimits) {
+      val (a, b) = xs.splitAt(xs.length / 2)
+      mplus(runTask(a), SDelay { runTask(b) })
+    }
     val result = xs.map(_.run)
     val states = result.map(_._1).flatten
     val next = SDelay { flatten(result.map(_._2).map(runTask)) }

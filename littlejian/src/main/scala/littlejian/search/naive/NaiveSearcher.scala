@@ -39,27 +39,7 @@ def mplus[T](xs: SStream[T], ys: SStream[T]): SStream[T] = xs match {
   case SEmpty() => ys
 }
 
-def mplusLazy[T](xs: SStream[T], ys: => SStream[T]): SStream[T] = xs match {
-  case SCons(x, xs) => SCons(x, SDelay(mplus(ys, xs)))
-  case xs: SDelay[T] => SDelay(mplus(ys, xs.get))
-  case SEmpty() => ys
-}
-
-private def mplus[T](xs: Stream[T], ys: Stream[T]): Stream[T] = xs match {
-  case x #:: xs => x #:: mplus(ys, xs)
-  case _ => ys
-}
-
-private def mplusLazy[T](xs: Stream[T], ys: => Stream[T]): Stream[T] = xs match {
-  case x #:: xs => x #:: mplus(ys, xs)
-  case _ => ys
-}
-
-private def flatten[T](xs: ParVector[Stream[T]]): Stream[T] = xs.fold(Stream.empty)(mplus)
-
 def flatten[T](xs: ParVector[SStream[T]]): SStream[T] = xs.fold(SEmpty())(mplus)
-
-private def flatten[T](xs: Stream[Stream[T]]): Stream[T] = if (xs.isEmpty) Stream.empty else mplusLazy(xs.head, flatten(xs.tail))
 
 def flatten[T](xs: SStream[SStream[T]]): SStream[T] = xs match {
   case SCons(x, xs) => mplus(x, flatten(xs))

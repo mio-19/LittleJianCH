@@ -85,6 +85,7 @@ def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
   {
     val result = hole[SExp]
     for {
+      _ <- result.isType[String] // a hack to prevent run[SExp] { x => evalo((), x, x) }.head => "(quote #1=(quote #1))"
       _ <- x === list("quote", result)
     } yield result
   },

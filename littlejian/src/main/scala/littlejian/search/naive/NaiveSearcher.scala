@@ -36,13 +36,13 @@ object SStream {
 def mplus[T](xs: SStream[T], ys: SStream[T]): SStream[T] = xs match {
   case SCons(x, xs) => SCons(x, mplus(ys, xs))
   case xs: SDelay[T] => SDelay(mplus(ys, xs.get))
-  case SEmpty() => SEmpty()
+  case SEmpty() => ys
 }
 
 def mplusLazy[T](xs: SStream[T], ys: => SStream[T]): SStream[T] = xs match {
   case SCons(x, xs) => SCons(x, SDelay(mplus(ys, xs)))
   case xs: SDelay[T] => SDelay(mplus(ys, xs.get))
-  case SEmpty() => SEmpty()
+  case SEmpty() => ys
 }
 
 private def mplus[T](xs: Stream[T], ys: Stream[T]): Stream[T] = xs match {
@@ -72,11 +72,11 @@ implicit object NaiveSearcher extends Searcher {
   def runs(state: State, goal: Goal): SStream[State] =
     goal match {
       case goal: GoalBasic => SStream.from(goal.execute(state))
-      case GoalDisj(xs) => flatten(xs.map(runs(state, _)))
+      case GoalDisj(xs) => SDelay(flatten(xs.map(runs(state, _))))
       case GoalConj(xs) => if (xs.isEmpty) SStream(state) else {
         val tail = GoalConj(xs.tail)
-        flatten(runs(state, xs.head).map(runs(_, tail)))
+        SDelay(flatten(runs(state, xs.head).map(runs(_, tail))))
       }
-      case goal: GoalDelay => runs(state, goal.get)
+      case goal: GoalDelay => SDelay(runs(state, goal.get))
     }
 }

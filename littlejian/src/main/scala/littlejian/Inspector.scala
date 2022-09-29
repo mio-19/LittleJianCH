@@ -11,10 +11,12 @@ final case class WithInspector[T](x: VarOr[T])(implicit inspector: Inspector[T])
   // None: contains
   // Some(Seq()): not contains
   // Some(Seq(...)): uncertain
-  final def scanUncertain(v: Any): Option[Seq[WithInspector[_]]] =
-    if (x.isInstanceOf[Var[_]])
+  final def scanUncertain(resolver: Any => Any, v: Any): Option[Seq[WithInspector[_]]] = {
+    val todo = resolver(x).asInstanceOf[VarOr[T]]
+    if (todo.isInstanceOf[Var[_]])
       Some(Seq(this))
-    else traverse(inspector.inspect(x.asInstanceOf[T]).map(_.scanUncertain(v))).map(_.flatten)
+    else traverse(inspector.inspect(todo.asInstanceOf[T]).map(_.scanUncertain(resolver, v))).map(_.flatten)
+  }
 }
 
 // for GoalAbsent usages
@@ -24,16 +26,16 @@ trait Inspector[T] {
   // None: contains
   // Some(Seq()): not contains
   // Some(Seq(...)): uncertain
-  final def scanUncertain(x: T, v: Any): Option[Seq[WithInspector[_]]] = WithInspector(x)(this).scanUncertain(v)
+  final def scanUncertain(x: T, resolver: Any => Any, v: Any): Option[Seq[WithInspector[_]]] = WithInspector(x)(this).scanUncertain(resolver, v)
 }
 
 object Inspector {
   // None: contains
   // Some(Seq()): not contains
   // Some(Seq(...)): uncertain
-  def scanUncertain[T](x: WithInspector[T], v: Any): Option[Seq[WithInspector[_]]] = x.scanUncertain(v)
+  def scanUncertain[T](x: WithInspector[T], resolver: Any => Any,v: Any): Option[Seq[WithInspector[_]]] = x.scanUncertain(resolver, v)
 
-  def scanUncertain(xs: ParVector[WithInspector[_]], v: Any): Option[ParVector[WithInspector[_]]] = traverse(xs.map(_.scanUncertain(v))).map(_.flatten)
+  def scanUncertain(xs: ParVector[WithInspector[_]], resolver: Any => Any,v: Any): Option[ParVector[WithInspector[_]]] = traverse(xs.map(_.scanUncertain(resolver, v))).map(_.flatten)
 }
 
 trait AtomInspector[T] extends Inspector[T] {

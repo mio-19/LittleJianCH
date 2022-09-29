@@ -91,7 +91,7 @@ object PredNotTypeState {
 }
 
 final case class AbsentState(absents: ParVector/*conj*/[(Any, ParVector/*disj*/[WithInspector[_]])]) {
-  def insert(goal: GoalAbsent[_]): Option[AbsentState] = Inspector.scanUncertain(goal.x, goal.absent) match {
+  def insert(eq: EqState, goal: GoalAbsent[_]): Option[AbsentState] = Inspector.scanUncertain(goal.x, eq.subst.walk, goal.absent) match {
     case None => None
     case Some(xs) => if(xs.isEmpty) Some(this) else Some(AbsentState((goal.absent, Vector.from(xs).par) +: absents))
   }
@@ -102,11 +102,11 @@ object AbsentState {
 
   import littlejian.utils._
 
-  def check(absents: ParVector/*conj*/[(Any, ParVector/*disj*/[WithInspector[_]])]): Option[AbsentState] =
+  def check(eq: EqState, absents: ParVector/*conj*/[(Any, ParVector/*disj*/[WithInspector[_]])]): Option[AbsentState] =
     if(absents.isEmpty) Some(AbsentState.empty) // optimize
     else {
       traverse(absents.map({case (v, xs) => for {
-        ys <- Inspector.scanUncertain(xs, v)
+        ys <- Inspector.scanUncertain(xs, eq.subst.walk, v)
       } yield (v, ys)})).map(
         next => AbsentState(next.filter({case (_, xs) => xs.nonEmpty}))
       )

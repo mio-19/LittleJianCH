@@ -53,8 +53,16 @@ final case class GoalPredNotType[T](tag: PredTypeTag, x: VarOr[T]) extends GoalB
 
 sealed trait GoalControl extends Goal
 
+val goalDelayEvalLevel = new Parameter[Int]
+val defaultGoalDelayEvalLevel = 3
+
 final class GoalDelay(x: => Goal) extends GoalControl {
   def get: Goal = x
+
+  override def toString: String = {
+    val level = goalDelayEvalLevel.get.getOrElse(defaultGoalDelayEvalLevel)
+    if (level <= 0) super.toString else this.get.toString
+  }
 }
 
 final case class GoalDisj(xs: ParVector[Goal]) extends GoalControl {

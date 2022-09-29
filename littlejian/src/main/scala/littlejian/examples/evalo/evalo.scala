@@ -19,6 +19,9 @@ def lookupo(env: VarOr[SExp], id: VarOr[SExp], v: VarOr[SExp]): Goal = conde(
 
 def lookupo(env: VarOr[SExp], id: VarOr[SExp]): Rel[SExp] = lookupo(env, id, _)
 
+
+def checkido(x: VarOr[SExp]): Goal = x.isType[String] && x =/= "lambda" && x =/= "quote" && x =/= "cons" && x =/= "list" && x =/= "car" && x =/= "cdr" && x =/= ClosureTag
+
 def envExto(env: VarOr[SExp], params: VarOr[SExp], args: VarOr[SExp]): Rel[SExp] = conde(
   begin(params === (), args === (), env),
   {
@@ -29,6 +32,7 @@ def envExto(env: VarOr[SExp], params: VarOr[SExp], args: VarOr[SExp]): Rel[SExp]
     for {
       _ <- args === cons(arg, args0)
       _ <- params === cons(param, params0)
+      _ <- checkido(param)
       newEnv <- envExto(cons(cons(param, arg), env), params0, args0)
     } yield newEnv
   }
@@ -67,10 +71,7 @@ def mapo(f: VarOr[SExp] => Rel[SExp], xs: VarOr[SExp]): Rel[SExp] = conde(
 def evalo(env: VarOr[SExp], x: VarOr[SExp], result: VarOr[SExp]): Goal = evalo(env, x)(result)
 
 def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
-  begin(
-    x =/= "lambda" && x =/= "quote" && x =/= "cons" && x =/= "list" && x =/= "car" && x =/= "cdr" && x =/= ClosureTag,
-    lookupo(env, x)
-  ),
+  lookupo(env, x),
   {
     val f = hole[SExp]
     val args = hole[SExp]

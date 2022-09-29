@@ -26,10 +26,11 @@ def envExto(env: VarOr[SExp], params: VarOr[SExp], args: VarOr[SExp]): Rel[SExp]
     val args0 = hole[SExp]
     val param = hole[SExp]
     val params0 = hole[SExp]
-    begin(
-      args === cons(arg, args0),
-      params === cons(param, params0),
-      cons(cons(param, arg), env))
+    for {
+      _ <- args === cons(arg, args0)
+      _ <- params === cons(param, params0)
+      newEnv <- envExto(cons(cons(param, arg), env), params0, args0)
+    } yield newEnv
   }
 )
 

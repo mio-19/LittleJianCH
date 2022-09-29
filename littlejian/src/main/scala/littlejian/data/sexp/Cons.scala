@@ -35,6 +35,10 @@ implicit val U$Cons: Unifier[Cons] = (x, y) => for {
   _ <- x.d.unify(y.d)
 } yield ()
 
+implicit val I$Cons: Inspector[Cons] = {
+  case Cons(a, d) => Seq(WithInspector(a), WithInspector(d))
+}
+
 def cons(a: VarOr[SExp], d: VarOr[SExp]): SExp = Cons(a, d)
 
 private def convertList(xs: Seq[VarOr[SExp]]): SExp = if (xs.isEmpty) () else cons(xs.head, convertList(xs.tail))
@@ -42,3 +46,5 @@ def list(xs: VarOr[SExp]*) = convertList(xs)
 
 
 implicit val U$SExp: Unifier[SExp] = U$Union(U$Cons, U$Union(U$Unit, U$String))
+
+implicit val I$SExp: Inspector[SExp] = I$Union(I$Cons, I$Union(I$Unit, I$String))

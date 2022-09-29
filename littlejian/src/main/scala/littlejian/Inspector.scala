@@ -16,6 +16,7 @@ final case class WithInspector[T](x: VarOr[T])(implicit inspector: Inspector[T])
     val todo = resolver(x).asInstanceOf[VarOr[T]]
     if (todo.isInstanceOf[Var[_]])
       Some(Seq(this))
+    else if(todo == v) None
     else traverse(inspector.inspect(todo.asInstanceOf[T]).map(_.scanUncertain(resolver, v))).map(_.flatten)
   }
 }
@@ -54,6 +55,8 @@ implicit object I$Int extends AtomInspector[Int]
 implicit object I$Long extends AtomInspector[Long]
 
 implicit object I$Integer extends AtomInspector[Integer]
+
+implicit object I$Unit extends AtomInspector[Unit]
 
 @targetName("I$Union2") implicit def I$Union[T, U](t: Inspector[T], u: Inspector[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Inspector[T | U] = I$Union(t, u, tev, uev)
 

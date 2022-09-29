@@ -12,7 +12,7 @@ class TopSuite extends munit.FunSuite {
   runTest("GradualSearcher ")(littlejian.search.GradualSearcher)
 
   def runTest(name: String = "")(implicit searcher: Searcher): Unit = {
-    test(name+"basics") {
+    test(name + "basics") {
       assertEquals(Set.from(run { (x: VarOr[Int]) => x === 42 }), Set("42"))
       assertEquals(Set.from(run { (x: VarOr[Int]) => x === 42 && x === 32 }), Set())
       assertEquals(Set.from(run { (x: VarOr[Int]) => x === 42 || x === 32 }), Set("42", "32"))
@@ -79,6 +79,27 @@ class TopSuite extends munit.FunSuite {
         val z = hole[SExp]
         x =/= cons(y, z) && y === "a" && z === "b" && x === cons("a", "b")
       }), Set())
+    }
+    test(name + "absent") {
+      assertEquals(Set.from(run[SExp] { x =>
+        x === cons("a", "a") && x.absent("a")
+      }), Set())
+      assertEquals(Set.from(run[SExp] { x =>
+        x.absent("a") && x === cons("a", "a")
+      }), Set())
+      assertEquals(Set.from(run[SExp] { x =>
+        x.absent("c") && x === cons("a", "a")
+      }), Set("(a . a)"))
+      assertEquals(Set.from(run[SExp] { x => {
+        val a = hole[SExp]
+        x.absent("b") && x === cons(a, "a") && a === "b"
+      }
+      }), Set())
+      assertEquals(Set.from(run[SExp] { x => {
+        val a = hole[SExp]
+        x.absent("c") && x === cons(a, "a") && a === "b"
+      }
+      }), Set("(b . a)"))
     }
   }
 }

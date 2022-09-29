@@ -28,10 +28,12 @@ implicit class EqOps[T](x: VarOr[T]) {
   def =/=(y: VarOr[T])(implicit unifier: Unifier[T]): Goal = GoalNotEq(x, y)
 }
 
-implicit class TypePredOps[T](x: VarOr[T]) {
+implicit class VarOrPredOps[T](x: VarOr[T]) {
   def isType[T](implicit t: ClassTag[T]): Goal = GoalPredType(t, x)
 
   def isNotType[T](implicit t: ClassTag[T]): Goal = GoalPredNotType(t, x)
+
+  def absent(absent: Any)(implicit inspector: Inspector[T]): Goal = GoalAbsent(WithInspector(x)(inspector), absent)
 }
 
 def begin(xs: => Goal*): Goal = GoalDelay(GoalConj(xs))

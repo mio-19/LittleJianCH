@@ -1,13 +1,32 @@
 package littlejian
 
 import scala.annotation.targetName
+import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
-final case class WithInspector[T](x: T)(implicit inspector: Inspector[T])
+final case class WithInspector[T](x: VarOr[T])(implicit inspector: Inspector[T]) {
+  // None: contains
+  // Some(Seq()): not contains
+  // Some(Seq(...)): uncertain
+  final def scanUncertain(v: Any): Option[Seq[WithInspector[_]]] =
+    if (x.isInstanceOf[Var[_]])
+      Some(Seq(this))
+    else traverse(inspector.inspect(x.asInstanceOf[T]).map(_.scanUncertain(v))).map(_.flatten)
+}
+
+private def traverse[T](xs: Seq[Option[T]]): Option[Seq[T]] = if (xs.isEmpty) Some(Seq.empty) else for {
+  head <- xs.head
+  tail <- traverse(xs.tail)
+} yield head +: tail
 
 // for GoalAbsent usages
 trait Inspector[T] {
   def inspect(x: T): Seq[WithInspector[_]]
+
+  // None: contains
+  // Some(Seq()): not contains
+  // Some(Seq(...)): uncertain
+  final def scanUncertain(x: T, v: Any): Option[Seq[WithInspector[_]]] = WithInspector(x)(this).scanUncertain(v)
 }
 
 trait AtomInspector[T] extends Inspector[T] {
@@ -15,10 +34,15 @@ trait AtomInspector[T] extends Inspector[T] {
 }
 
 implicit object I$Var extends AtomInspector[Var[_]]
+
 implicit object I$String extends AtomInspector[String]
+
 implicit object I$Boolean extends AtomInspector[Boolean]
+
 implicit object I$Int extends AtomInspector[Int]
+
 implicit object I$Long extends AtomInspector[Long]
+
 implicit object I$Integer extends AtomInspector[Integer]
 
 @targetName("I$Union2") implicit def I$Union[T, U](t: Inspector[T], u: Inspector[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Inspector[T | U] = I$Union(t, u, tev, uev)
@@ -28,7 +52,7 @@ implicit def I$Union[T, U](implicit t: Inspector[T], u: Inspector[U], tev: Class
   val uc = uev.runtimeClass
   if (tc == uc) throw new IllegalArgumentException("T == U")
   (x) => {
-    if(tc.isInstance(x)) t.inspect(x.asInstanceOf[T])
+    if (tc.isInstance(x)) t.inspect(x.asInstanceOf[T])
     else u.inspect(x.asInstanceOf[U])
   }
 }

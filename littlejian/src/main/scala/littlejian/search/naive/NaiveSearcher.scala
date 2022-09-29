@@ -4,7 +4,6 @@ import scala.collection.parallel.immutable.ParVector
 import littlejian._
 import littlejian.search._
 
-// TODO: use SStream
 sealed trait SStream[T] {
   def toStream: Stream[T] = this match {
     case SEmpty() => Stream.empty

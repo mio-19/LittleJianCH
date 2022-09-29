@@ -11,6 +11,7 @@ final case class WithInspector[T](x: VarOr[T])(implicit inspector: Inspector[T])
   // None: contains
   // Some(Seq()): not contains
   // Some(Seq(...)): uncertain
+  // todo: catch recursion scan
   final def scanUncertain(resolver: Any => Any, v: Any): Option[Seq[WithInspector[_]]] = {
     val todo = resolver(x).asInstanceOf[VarOr[T]]
     if (todo.isInstanceOf[Var[_]])

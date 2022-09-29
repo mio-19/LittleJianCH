@@ -52,7 +52,7 @@ final case class GoalPredNotType[T](tag: PredTypeTag, x: VarOr[T]) extends GoalB
 }
 
 final case class GoalAbsent[T](x: WithInspector[T], absent: Any) extends GoalBasic {
-  override def execute(state: State): Option[State] = ???
+  override def execute(state: State): Option[State] = state.absent.insert(state.eq, this).map(state.absentUpdated)
 
   override def toString: String = s"${x.x}.absent(${absent})"
 }

@@ -95,6 +95,8 @@ final case class AbsentState(absents: ParVector/*conj*/[(Any, ParVector/*disj*/[
     case None => None
     case Some(xs) => if(xs.isEmpty) Some(this) else Some(AbsentState((goal.absent, Vector.from(xs).par) +: absents))
   }
+
+  def onEq(eq: EqState): Option[AbsentState] = AbsentState.check(eq, absents)
 }
 
 object AbsentState {
@@ -113,14 +115,16 @@ object AbsentState {
     }
 }
 
-final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, predNotType: PredNotTypeState) {
-  def eqUpdated(eq: EqState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType)
+final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, predNotType: PredNotTypeState, absent: AbsentState) {
+  def eqUpdated(eq: EqState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
 
-  def notEqUpdated(notEq: NotEqState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType)
+  def notEqUpdated(notEq: NotEqState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
 
-  def predTypeUpdated(predType: PredTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType)
+  def predTypeUpdated(predType: PredTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
 
-  def predNotTypeUpdated(predNotType: PredNotTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType)
+  def predNotTypeUpdated(predNotType: PredNotTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
+
+  def absentUpdated(absent: AbsentState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
 
   def predTypeMap(f: PredTypeState => PredTypeState): State = predTypeUpdated(f(predType))
 
@@ -131,11 +135,12 @@ final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, 
     notEq <- notEq.onEq(eq)
     predType <- predType.onEq(eq)
     predNotType <- predNotType.onEq(eq)
-  } yield State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType)
+    absent <- absent.onEq(eq)
+  } yield State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
 
   def setEq(eq: EqState) = this.eqUpdated(eq).onEq
 }
 
 object State {
-  val empty: State = State(eq = EqState.empty, notEq = NotEqState.empty, predType = PredTypeState.empty, predNotType = PredNotTypeState.empty)
+  val empty: State = State(eq = EqState.empty, notEq = NotEqState.empty, predType = PredTypeState.empty, predNotType = PredNotTypeState.empty, absent = AbsentState.empty)
 }

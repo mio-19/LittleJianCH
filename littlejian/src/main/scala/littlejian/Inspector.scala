@@ -3,6 +3,9 @@ package littlejian
 import scala.annotation.targetName
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
+import scala.collection.parallel.immutable.ParVector
+
+import littlejian.utils._
 
 final case class WithInspector[T](x: VarOr[T])(implicit inspector: Inspector[T]) {
   // None: contains
@@ -14,11 +17,6 @@ final case class WithInspector[T](x: VarOr[T])(implicit inspector: Inspector[T])
     else traverse(inspector.inspect(x.asInstanceOf[T]).map(_.scanUncertain(v))).map(_.flatten)
 }
 
-private def traverse[T](xs: Seq[Option[T]]): Option[Seq[T]] = if (xs.isEmpty) Some(Seq.empty) else for {
-  head <- xs.head
-  tail <- traverse(xs.tail)
-} yield head +: tail
-
 // for GoalAbsent usages
 trait Inspector[T] {
   def inspect(x: T): Seq[WithInspector[_]]
@@ -27,6 +25,16 @@ trait Inspector[T] {
   // Some(Seq()): not contains
   // Some(Seq(...)): uncertain
   final def scanUncertain(x: T, v: Any): Option[Seq[WithInspector[_]]] = WithInspector(x)(this).scanUncertain(v)
+}
+
+object Inspector {
+  // None: contains
+  // Some(Seq()): not contains
+  // Some(Seq(...)): uncertain
+  def scanUncertain[T](x: WithInspector[T], v: Any): Option[Seq[WithInspector[_]]] = x.scanUncertain(v)
+
+  // disjs
+  def scanUncertain[T](xs: ParVector[(WithInspector[T], _)]): Option[ParVector[WithInspector[_]]] = traverse(xs.map({case (x, v) => x.scanUncertain(v)})).map(_.flatten)
 }
 
 trait AtomInspector[T] extends Inspector[T] {

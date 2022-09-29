@@ -24,19 +24,7 @@ final case class NotEqState(clauses: ParVector /*conj*/ [ParVector[NotEqElem[_]]
 object NotEqState {
   val empty: NotEqState = NotEqState(ParVector.empty)
 
-  private def traverse[T](xs: ParVector[Option[T]]): Option[ParVector[T]] =
-    if (xs.isEmpty) Some(ParVector())
-    else for {
-      head <- xs.head
-      tail <- traverse(xs.tail)
-    } yield head +: tail
-
-  private def traverse[T](xs: ParSeq[Option[T]]): Option[ParSeq[T]] =
-    if (xs.isEmpty) Some(ParSeq())
-    else for {
-      head <- xs.head
-      tail <- traverse(xs.tail)
-    } yield head +: tail
+  import littlejian.utils._
 
   private def exec[T](eq: EqState, req: NotEqRequest[T]): Option[ParVector /*disj, empty means success*/ [NotEqElem[_]]] = (eq.subst.walk(req.x), eq.subst.walk(req.y)) match {
     case (x: Var[T], y: Var[T]) if x == y => None
@@ -99,6 +87,22 @@ final case class PredNotTypeState(xs: ParVector[(Var[_], PredTypeTag)]) {
 
 object PredNotTypeState {
   val empty: PredNotTypeState = PredNotTypeState(ParVector.empty)
+}
+
+final case class AbsentState(absents: ParVector/*conj*/[ParVector/*disj*/[(WithInspector[_], Any)]]) {
+  
+}
+
+object AbsentState {
+  val empty: AbsentState = AbsentState(ParVector.empty)
+
+  def create(absents: ParVector/*conj*/[ParVector/*disj*/[(WithInspector[_], Any)]]) =
+    if(absents.isEmpty) AbsentState.empty // optimize
+    else {
+      absents.map({clauses =>
+        ???
+      })
+    }
 }
 
 final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, predNotType: PredNotTypeState) {

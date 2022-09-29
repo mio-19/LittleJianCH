@@ -1,14 +1,15 @@
 package littlejian.search
 
 import scala.collection.parallel.immutable.ParVector
-import littlejian._
-import scala.util.control.Breaks._
+import littlejian.*
+
+import scala.util.control.Breaks.*
 
 implicit object GradualSearcher extends Searcher {
   // TODO: parallel execution
   private def runBasic(state: State, xs: ParVector[GoalBasic]): Option[State] = if (xs.isEmpty) Some(state) else xs.head.execute(state).flatMap(runBasic(_, xs.tail))
 
-  private val reduceLevel = 9
+  private val reduceLevel = 3
 
   private def getGoals(originGoals: ParVector[Goal]): ParVector[Goal] = {
     var result = originGoals
@@ -32,6 +33,13 @@ implicit object GradualSearcher extends Searcher {
       disj.xs.map(g => expandDisj(rest, World(world.state, g +: world.goals))).flatten
     }
 
+  private def runTask(xs: ParVector[World]): SStream[State] = {
+    val result = xs.map(_.run)
+    val states = result.map(_._1).flatten
+    val next = SDelay { flatten(result.map(_._2).map(runTask)) }
+    SStream.append(states, next)
+  }
+
   final case class World(state: State, goals: ParVector[Goal]) {
     def run: (Option[State], ParVector[World]) =
       if (goals.isEmpty) (Some(state), ParVector.empty)
@@ -46,13 +54,7 @@ implicit object GradualSearcher extends Searcher {
         }
       })
 
-    def exec: SStream[State] = {
-      val (ok, rest) = this.run
-      ok match {
-        case Some(ok) => SCons(ok, flatten(rest.map(_.exec)))
-        case None => flatten(rest.map(_.exec))
-      }
-    }
+    def exec: SStream[State] = runTask(ParVector(this))
   }
 
   override def run(state: State, goal: Goal): Stream[State] = World(state, ParVector(goal)).exec.toStream

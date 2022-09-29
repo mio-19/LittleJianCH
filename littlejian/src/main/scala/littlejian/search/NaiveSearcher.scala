@@ -30,6 +30,10 @@ object SStream {
   def from[T](xs: IterableOnce[T]): SStream[T] = from(xs.iterator)
   def from[T](xs: Iterator[T]): SStream[T] = if(xs.hasNext) SCons(xs.next, from(xs)) else SEmpty()
 
+  def append[T](xs: IterableOnce[T], tail: SStream[T]): SStream[T] = append(xs.iterator, tail)
+
+  def append[T](xs: Iterator[T], tail: SStream[T]): SStream[T] = if (xs.hasNext) SCons(xs.next, append(xs, tail)) else tail
+
   def apply[T](x: T*): SStream[T] = SStream.from(x)
 
   def empty[T] = SEmpty()

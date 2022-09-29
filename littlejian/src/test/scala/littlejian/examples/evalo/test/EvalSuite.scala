@@ -4,8 +4,8 @@ import littlejian.*
 import littlejian.data.*
 import littlejian.data.sexp.*
 import littlejian.ext.*
-import littlejian.search.naive.*
 import littlejian.unifier.*
+import littlejian.search.NaiveSearcher
 import littlejian.examples.evalo._
 
 class EvalSuite extends munit.FunSuite {

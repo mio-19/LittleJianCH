@@ -4,6 +4,20 @@ import scala.collection.parallel.immutable.ParVector
 import littlejian._
 import littlejian.search._
 
+// TODO: use SStream
+sealed trait SStream[T] {
+  def toStream: Stream[T] = this match {
+    case SEmpty() => Stream.empty
+    case x: SDelay[T] => x.get.toStream
+    case SCons(head, tail) => head #:: tail.toStream
+  }
+}
+final case class SEmpty[T]() extends SStream[T]
+final case class SCons[T](head: T, tail: SStream[T]) extends SStream[T]
+final class SDelay[T](x: =>SStream[T]) extends SStream[T] {
+  def get: SStream[T] = x
+}
+
 private def mplus[T](xs: Stream[T], ys: Stream[T]): Stream[T] = xs match {
   case x #:: xs => x #:: mplus(ys, xs)
   case _ => ys

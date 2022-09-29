@@ -55,6 +55,6 @@ class EvalSuite extends munit.FunSuite {
     }), Set("a"))
   }
   test("What eval to itself") {
-    //assertEquals(run[SExp] { x => evalo((), x, x) }.head, "(quote #1=(quote #1))")
+    assertEquals(run[SExp] { x => evalo((), x, x) }.head, "(quote #1=(quote #1))")
   }
 }

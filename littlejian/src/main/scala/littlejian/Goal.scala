@@ -66,12 +66,15 @@ final class GoalDelay(x: => Goal) extends GoalControl {
 }
 
 final case class GoalDisj(xs: ParVector[Goal]) extends GoalControl {
+  /*
   private def flatten: ParVector[Goal] = xs.map({
     case x: GoalDisj => x.flatten
     case v => ParVector(v)
   }).flatten
 
   override def toString: String = s"conde(${this.flatten.mkString(", ")})"
+  */
+  override def toString: String = s"conde(${xs.mkString(", ")})"
 }
 
 object GoalDisj {
@@ -83,12 +86,15 @@ object GoalDisj {
 }
 
 final case class GoalConj(xs: ParVector[Goal]) extends GoalControl {
+  /*
   private def flatten: ParVector[Goal] = xs.map({
     case x: GoalConj => x.flatten
     case v => ParVector(v)
   }).flatten
 
   override def toString: String = s"begin(${this.flatten.mkString(", ")})"
+  */
+  override def toString: String = s"begin(${xs.mkString(", ")})"
 }
 
 object GoalConj {

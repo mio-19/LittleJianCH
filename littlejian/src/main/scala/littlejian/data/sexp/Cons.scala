@@ -6,7 +6,11 @@ import scala.annotation.tailrec
 
 type SExp = Cons | Unit | String
 
-private def consDot(xs: Vector[VarOr[SExp]], next: Var[SExp] | String): String = if (xs.isEmpty) next.toString else s"(${xs.map(_.toString).mkString(" ")} . ${next.toString})"
+private def consDot(xs: Vector[VarOr[SExp]], next: Var[SExp] | String): String =
+  if (xs.isEmpty)
+    next.toString
+  else
+    s"(${xs.map(_.toString).mkString(" ")} . ${next.toString})"
 
 @tailrec
 private def consToString(xs: Vector[VarOr[SExp]], next: VarOr[SExp]): String = next match {

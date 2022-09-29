@@ -19,13 +19,14 @@ private def flatten[T](xs: ParVector[Stream[T]]): Stream[T] = xs.fold(Stream.emp
 private def flatten[T](xs: Stream[Stream[T]]): Stream[T] = if (xs.isEmpty) Stream.empty else mplusLazy(xs.head, flatten(xs.tail))
 
 implicit object NaiveSearcher extends Searcher {
-  override def run(state: State, goal: Goal): Stream[State] = goal match {
-    case goal: GoalBasic => Stream.from(goal.execute(state))
-    case GoalDisj(xs) => flatten(xs.map(run(state, _)))
-    case GoalConj(xs) => if (xs.isEmpty) Stream(state) else {
-      val tail = GoalConj(xs.tail)
-      flatten(run(state, xs.head).map(run(_, tail)))
+  override def run(state: State, goal: Goal): Stream[State] =
+    goal match {
+      case goal: GoalBasic => Stream.from(goal.execute(state))
+      case GoalDisj(xs) => flatten(xs.map(run(state, _)))
+      case GoalConj(xs) => if (xs.isEmpty) Stream(state) else {
+        val tail = GoalConj(xs.tail)
+        flatten(run(state, xs.head).map(run(_, tail)))
+      }
+      case goal: GoalDelay => run(state, goal.get)
     }
-    case goal: GoalDelay => run(state, goal.get)
-  }
 }

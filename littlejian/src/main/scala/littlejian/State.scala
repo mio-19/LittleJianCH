@@ -89,19 +89,23 @@ object PredNotTypeState {
   val empty: PredNotTypeState = PredNotTypeState(ParVector.empty)
 }
 
-final case class AbsentState(absents: ParVector/*conj*/[ParVector/*disj*/[(WithInspector[_], Any)]]) {
-  
+final case class AbsentState(absents: ParVector/*conj*/[(Any, ParVector/*disj*/[WithInspector[_]])]) {
+
 }
 
 object AbsentState {
   val empty: AbsentState = AbsentState(ParVector.empty)
 
-  def create(absents: ParVector/*conj*/[ParVector/*disj*/[(WithInspector[_], Any)]]) =
-    if(absents.isEmpty) AbsentState.empty // optimize
+  import littlejian.utils._
+
+  def create(absents: ParVector/*conj*/[(Any, ParVector/*disj*/[WithInspector[_]])]): Option[AbsentState] =
+    if(absents.isEmpty) Some(AbsentState.empty) // optimize
     else {
-      absents.map({clauses =>
-        ???
-      })
+      traverse(absents.map({case (v, xs) => for {
+        ys <- Inspector.scanUncertain(xs, v)
+      } yield (v, ys)})).map(
+        next => AbsentState(next.filter({case (_, xs) => xs.nonEmpty}))
+      )
     }
 }
 

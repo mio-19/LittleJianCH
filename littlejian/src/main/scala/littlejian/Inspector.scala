@@ -33,8 +33,7 @@ object Inspector {
   // Some(Seq(...)): uncertain
   def scanUncertain[T](x: WithInspector[T], v: Any): Option[Seq[WithInspector[_]]] = x.scanUncertain(v)
 
-  // disjs
-  def scanUncertain[T](xs: ParVector[(WithInspector[T], _)]): Option[ParVector[WithInspector[_]]] = traverse(xs.map({case (x, v) => x.scanUncertain(v)})).map(_.flatten)
+  def scanUncertain(xs: ParVector[WithInspector[_]], v: Any): Option[ParVector[WithInspector[_]]] = traverse(xs.map(_.scanUncertain(v))).map(_.flatten)
 }
 
 trait AtomInspector[T] extends Inspector[T] {

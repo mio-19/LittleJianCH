@@ -51,6 +51,9 @@ final case class GoalPredNotType[T](tag: PredTypeTag, x: VarOr[T]) extends GoalB
   override def toString: String = s"${x}.isNotType[${tag}]"
 }
 
+// TODO
+//final case class GoalAbsent[T]
+
 sealed trait GoalControl extends Goal
 
 val goalDelayEvalLevel = new Parameter[Int]

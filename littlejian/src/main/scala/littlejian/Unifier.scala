@@ -52,9 +52,9 @@ implicit def U$VarOr[T](implicit unifier: Unifier[T]): Unifier[VarOr[T]] = (x, y
 import scala.reflect.ClassTag
 
 def U$Union[T, U](t: Unifier[T], u: Unifier[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Unifier[T | U] = {
-  if (tev.runtimeClass == uev.runtimeClass) throw new IllegalArgumentException("T == U")
   val tc = tev.runtimeClass
   val uc = uev.runtimeClass
+  if (tc == uc) throw new IllegalArgumentException("T == U")
   (x, y) => {
     if (tc.isInstance(x) && tc.isInstance(y)) t.unify(x.asInstanceOf[T], y.asInstanceOf[T])
     else if (uc.isInstance(x) && uc.isInstance(y)) u.unify(x.asInstanceOf[U], y.asInstanceOf[U])

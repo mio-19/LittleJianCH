@@ -44,7 +44,9 @@ def envExto(env: VarOr[SExp], params: VarOr[SExp], args: VarOr[SExp]): Rel[SExp]
   }
 )
 
-def closureo(env: VarOr[SExp], params: VarOr[SExp], body: VarOr[SExp]): VarOr[SExp] = cons("closure", cons(env, cons(params, body)))
+val ClosureTag = "$$Closure$$"
+
+def closureo(env: VarOr[SExp], params: VarOr[SExp], body: VarOr[SExp]): VarOr[SExp] = cons(ClosureTag, cons(env, cons(params, body)))
 
 def applyo(f: VarOr[SExp], args: VarOr[SExp]): Rel[SExp] = {
   val env = hole[SExp]
@@ -129,6 +131,7 @@ def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
       _ <- x === list("car", p)
       p0 <- evalo(env, p)
       _ <- p0 === cons(a, b)
+      _ <- a =/= ClosureTag
     } yield a
   },
   {
@@ -140,6 +143,7 @@ def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
       _ <- x === list("cdr", p)
       p0 <- evalo(env, p)
       _ <- p0 === cons(a, b)
+      _ <- a =/= ClosureTag
     } yield b
   }
 )

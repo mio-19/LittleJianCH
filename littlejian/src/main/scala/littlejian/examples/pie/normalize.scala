@@ -881,5 +881,136 @@ def readBacko(Γ: VarOr[SExp], τ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp
   ("Π", readBackλ(Γ, τ, v, norm))
 )
 def readBacko(Γ: VarOr[SExp], τ: VarOr[SExp], v: VarOr[SExp]): Rel[SExp] = readBacko(Γ, τ, v, _)
-def readBackTypo(Γ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp]): Goal = ???
+/*
+(defrel (read-back-dep-binder tag₁ tag₂ Γ v norm)
+  (fresh (x A c vars x^ A^ Dv D^ Γ^)
+    (== v `(,tag₁ ,x ,A ,c))
+    (== norm `(,tag₂ ([,x^ ,A^]) ,D^))
+    (just-names Γ vars)
+    (freshen x vars x^)
+    (read-back-typo Γ A A^)
+    (extend-Γ Γ x^ A Γ^)
+    (valof-closuro c `(NEU ,A (VAR ,x^)) Dv)
+    (read-back-typo Γ^ Dv D^)))
+*/
+def readBackDepBinder(tag1: String, tag2: String, Γ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp]): Goal = for {
+  x <- fresh[SExp]
+  A <- fresh[SExp]
+  c <- fresh[SExp]
+  vars <- fresh[SExp]
+  x_ <- fresh[SExp]
+  A_ <- fresh[SExp]
+  Dv <- fresh[SExp]
+  D_ <- fresh[SExp]
+  Γ_ <- fresh[SExp]
+  _ <- v === list(tag1, x, A, c)
+  _ <- norm === list(tag2, list(list(x_, A_)), D_)
+  _ <- justNames(Γ, vars)
+  _ <- freshen(x, vars, x_)
+  _ <- readBackTypo(Γ, A, A_)
+  _ <- extendΓ(Γ, x_, A, Γ_)
+  _ <- valofClosuro(c, list("NEU", A, list("VAR", x_)), Dv)
+  _ <- readBackTypo(Γ_, Dv, D_)
+} yield ()
+/*
+(defrel (read-back-= Γ v norm)
+  (fresh (X to from Xo too fromo)
+    (== v `(EQUAL ,X ,from ,to))
+    (== norm `(= ,Xo ,fromo ,too))
+    (read-back-typo Γ X Xo)
+    (read-backo Γ X from fromo)
+    (read-backo Γ X to too)))
+*/
+def readBackEqual(Γ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp]): Goal = for {
+  X <- fresh[SExp]
+  to <- fresh[SExp]
+  from <- fresh[SExp]
+  Xo <- fresh[SExp]
+  too <- fresh[SExp]
+  fromo <- fresh[SExp]
+  _ <- v === list("EQUAL", X, from, to)
+  _ <- norm === list("=", Xo, fromo, too)
+  _ <- readBackTypo(Γ, X, Xo)
+  _ <- readBacko(Γ, X, from, fromo)
+  _ <- readBacko(Γ, X, to, too)
+} yield ()
+/*
+(defrel (read-back-type-neutral Γ v norm)
+  (fresh (ne)
+    (== v `(NEU UNIVERSE ,ne))
+    (read-back-neutral 'UNIVERSE Γ ne norm)))
+*/
+def readBackTypeNeutral(Γ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp]): Goal = for {
+  ne <- fresh[SExp]
+  _ <- v === list("NEU", "UNIVERSE", ne)
+  _ <- readBackNeutral("UNIVERSE", Γ, ne, norm)
+} yield ()
+/*
+(define (RBT-v v)
+  (match v
+    [(? symbol?) `(,v)]
+    [`(PI . ,info) '(Π)]
+    [`(EQUAL . ,info) '(=)]
+    [`(SIGMA . ,info) '(Σ)]
+    [`(NEU . ,info) '(neutral)]
+    [(? var?) '(use-maybe)]
+    [else '()]))
+*/
+def RBTv(v: VarOr[SExp])(walker: Walker): Seq[String] = walkStar(walker, v) match {
+  case v: String => Seq(v)
+  case Cons("PI", info) => Seq("Π")
+  case Cons("EQUAL", info) => Seq("=")
+  case Cons("SIGMA", info) => Seq("Σ")
+  case Cons("NEU", info) => Seq("neutral")
+  case v: Var[_] => Seq(UseMaybe)
+  case _ => Seq()
+}
+/*
+(define (RBT-n e)
+  (match e
+    ['Atom '(ATOM)]
+    ['Trivial '(TRIVIAL)]
+    ['Nat '(NAT)]
+    ['U '(UNIVERSE)]
+    [`(Π . ,info) '(Π)]
+    [`(= . ,info) '(=)]
+    [`(Σ . ,info) '(Σ)]
+    [(? var?) '(ATOM NAT UNIVERSE TRIVIAL Σ Π = neutral)]
+    [else '(neutral)]))
+*/
+def RBTn(e: VarOr[SExp])(walker: Walker): Seq[String] = walkStar(walker, e) match {
+  case "Atom" => Seq("ATOM")
+  case "Trivial" => Seq("TRIVIAL")
+  case "Nat" => Seq("NAT")
+  case "U" => Seq("UNIVERSE")
+  case Cons("Π", info) => Seq("Π")
+  case Cons("=", info) => Seq("=")
+  case Cons("Σ", info) => Seq("Σ")
+  case e: Var[_] => Seq("ATOM", "NAT", "UNIVERSE", "TRIVIAL", "Σ", "Π", "=", "neutral")
+  case _ => Seq("neutral")
+}
+/*
+(defrel (read-back-typo Γ v norm)
+  (condp
+    (((RBT-v v))
+     ((RBT-n norm)))
+    [ATOM (assign-simple 'ATOM 'Atom v norm)]
+    [NAT (assign-simple 'NAT 'Nat v norm)]
+    [UNIVERSE (assign-simple 'UNIVERSE 'U v norm)]
+    [TRIVIAL (assign-simple 'TRIVIAL 'Trivial v norm)]
+    [Σ (read-back-dep-binder 'SIGMA 'Σ Γ v norm)]
+    [= (read-back-= Γ v norm)]
+    [Π (read-back-dep-binder 'PI 'Π Γ v norm)]
+    [neutral (read-back-type-neutral Γ v norm)]))
+*/
+def readBackTypo(Γ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp]): Goal = condp(Seq(RBTv(v)),Seq(RBTn(norm)))(
+  ("ATOM", assignSimple("ATOM", "Atom", v, norm)),
+  ("NAT", assignSimple("NAT", "Nat", v, norm)),
+  ("UNIVERSE", assignSimple("UNIVERSE", "U", v, norm)),
+  ("TRIVIAL", assignSimple("TRIVIAL", "Trivial", v, norm)),
+  ("Σ", readBackDepBinder("SIGMA", "Σ", Γ, v, norm)),
+  ("=", readBackEqual(Γ, v, norm)),
+  ("Π", readBackDepBinder("PI", "Π", Γ, v, norm)),
+  ("neutral", readBackTypeNeutral(Γ, v, norm)))
+
 def readBackNeutral(τ: VarOr[SExp], Γ: VarOr[SExp], ne: VarOr[SExp], norm: VarOr[SExp]): Goal = ???

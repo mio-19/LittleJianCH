@@ -117,9 +117,18 @@ sealed trait GoalControlImpure extends GoalControl
 final case class GoalDisjA(xs: ParVector[(Goal, Goal)]) extends GoalControlImpure {
   override def toString: String = s"conda(${xs.map({case (test, goal) => s"(${test}, ${goal})"})mkString(", ")})"
 }
+
+object GoalDisjA {
+  def apply(xs: Seq[(Goal, Goal)]) = new GoalDisjA(ParVector(xs *))
+}
+
 // condu
 final case class GoalDisjU(xs: ParVector[(Goal, Goal)]) extends GoalControlImpure {
   override def toString: String = s"condu(${xs.map({case (test, goal) => s"(${test}, ${goal})"})mkString(", ")})"
+}
+
+object GoalDisjU {
+  def apply(xs: Seq[(Goal, Goal)]) = new GoalDisjU(ParVector(xs *))
 }
 
 object Goal {

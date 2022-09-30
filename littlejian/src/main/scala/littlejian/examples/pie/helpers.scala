@@ -293,9 +293,7 @@ def addStar(x: String): String = x + "*"
    [(membero x used) (fresh/aux (add-* x) used name)]
    [(== x name)]))
 */
-/*
 def freshAux(x: String, used: VarOr[SExp], name: VarOr[SExp]): Goal = condu(
-  membero(x, used) && freshAux(addStar(x), used, name),
-  x === name
+  (membero(x, used), freshAux(addStar(x), used, name)),
+  (x === name, Goal.success)
 )
-*/

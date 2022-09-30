@@ -40,6 +40,9 @@ def begin(xs: => Goal*): Goal = GoalDelay(GoalConj(xs))
 
 def conde(xs: => Goal*): Goal = GoalDelay(GoalDisj(xs))
 
+def conda(xs: => (Goal, Goal)*): Goal = GoalDelay(GoalDisjA(xs))
+def condu(xs: => (Goal, Goal)*): Goal = GoalDelay(GoalDisjU(xs))
+
 implicit class EqRelOps[T](x: Rel[T]) {
   def ===(y: Rel[T])(implicit unifier: Unifier[T]): Goal = begin(x.goal, y.goal, x.x === y.x)
 

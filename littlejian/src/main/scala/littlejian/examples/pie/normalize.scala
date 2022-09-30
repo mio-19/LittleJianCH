@@ -1177,4 +1177,22 @@ def RBNne(v0: VarOr[SExp])(walker: Walker): Seq[String] = {
   else if(v.isInstanceOf[Var[_]]) allRBN
   else Seq()
 }
-def readBackNeutral(τ: VarOr[SExp], Γ: VarOr[SExp], ne: VarOr[SExp], norm: VarOr[SExp]): Goal = ???
+/*
+(defrel (read-back-neutral τ Γ ne norm)
+  (condp
+    (((RBN-ne ne)))
+    [VAR (RBN-var ne norm)]
+    [CAR (RBN-car τ Γ ne norm)]
+    [CDR (RBN-cdr τ Γ ne norm)]
+    [N-APP (RBN-app τ Γ ne norm)]
+    [IND-NAT (RBN-ind-Nat τ Γ ne norm)]
+    [IND-= (RBN-ind-= τ Γ ne norm)]))
+*/
+def readBackNeutral(τ: VarOr[SExp], Γ: VarOr[SExp], ne: VarOr[SExp], norm: VarOr[SExp]): Goal = condp(Seq(RBNne(ne)))(
+  ("VAR", RBNvar(ne, norm)),
+  ("CAR", RBNcar(τ, Γ, ne, norm)),
+  ("CDR", RBNcdr(τ, Γ, ne, norm)),
+  ("N-APP", RBNapp(τ, Γ, ne, norm)),
+  ("IND-NAT", RBNindNat(τ, Γ, ne, norm)),
+  ("IND-=", RBNindEq(τ, Γ, ne, norm))
+)

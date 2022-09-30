@@ -549,7 +549,30 @@ def valofoOut(v: VarOr[SExp])(walker: Walker): Seq[String] = walkStar(walker, v)
     [λ (valof-λ ρ exp v)]
     [app (valof-app ρ exp v)]))
 */
-def valofo(ρ: VarOr[SExp], exp: VarOr[SExp], v: VarOr[SExp]): Goal = ???
+def valofo(ρ: VarOr[SExp], exp: VarOr[SExp], v: VarOr[SExp]): Goal = condp(Seq(valofoIn(exp)), Seq(valofoOut(v)))(
+  ("the", valofThe(ρ, exp, v)),
+  ("zero", assignSimple("zero", "ZERO", exp, v)),
+  ("Atom", assignSimple("Atom", "ATOM", exp, v)),
+  ("Nat", assignSimple("Nat", "NAT", exp, v)),
+  ("U", assignSimple("U", "UNIVERSE", exp, v)),
+  ("Trivial", assignSimple("Trivial", "TRIVIAL", exp, v)),
+  ("sole", assignSimple("sole", "SOLE", exp, v)),
+  ("var", applyρ(ρ, exp, v)),
+  ("var", valofNeutralVar(ρ, exp, v)),
+  ("quote", valofQuote(ρ, exp, v)),
+  ("add1", valofAdd1(ρ, exp, v)),
+  ("ind-Nat", valofIndNat(ρ, exp, v)),
+  ("Σ", valofSigma(ρ, exp, v)),
+  ("cons", valofCons(ρ, exp, v)),
+  ("car", valofCar(ρ, exp, v)),
+  ("cdr", valofCdr(ρ, exp, v)),
+  ("=", valofEqual(ρ, exp, v)),
+  ("same", valofSame(ρ, exp, v)),
+  ("ind-=", valofIndEqual(ρ, exp, v)),
+  ("Π", valofPi(ρ, exp, v)),
+  ("λ", valofLam(ρ, exp, v)),
+  ("app", valofApp(ρ, exp, v))
+)
 def valofo(ρ: VarOr[SExp], exp: VarOr[SExp]): Rel[SExp] = valofo(ρ, exp, _)
 /*
 (defrel (not-LAM e)

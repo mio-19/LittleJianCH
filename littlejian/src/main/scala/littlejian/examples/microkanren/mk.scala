@@ -3,9 +3,9 @@ package littlejian.examples.microkanren
 import littlejian._
 import littlejian.data._
 
-type MKData = (Unit | String | MKPair) | (MKVar | MKGoal | MKThunk)
+type MKData = (Unit | String | MKPair) | (MKVar | MKGoal | MKThunk | MKMap)
 
-implicit val U$MKData: Unifier[MKData] = U$Union(U$Union[Unit, String, MKPair], U$Union[MKVar, MKGoal, MKThunk])
+implicit val U$MKData: Unifier[MKData] = U$Union(U$Union[Unit, String, MKPair], U$Union[MKVar, MKGoal, MKThunk, MKMap])
 
 final case class MKVar(id: VarOr[Nat]) extends Product1[VarOr[Nat]]
 
@@ -14,6 +14,14 @@ implicit val U$MKVar: Unifier[MKVar] = U$Product
 final case class MKPair(a: VarOr[MKData], b: VarOr[MKData]) extends Product2[VarOr[MKData], VarOr[MKData]]
 
 implicit val U$MKPair: Unifier[MKPair] = U$Product
+
+type MKMap = MKMapEmpty.type | MKMapCons
+implicit val U$MKMap: Unifier[MKMap] = U$Union[MKMapEmpty.type, MKMapCons]
+case object MKMapEmpty
+implicit val U$MKMapEmpty: Unifier[MKMapEmpty.type] = equalUnifier
+
+final case class MKMapCons(key: VarOr[MKData], value: VarOr[MKData], tail: VarOr[MKMap]) extends Product3[VarOr[MKData], VarOr[MKData], VarOr[MKMap]]
+implicit val U$MKMapCons: Unifier[MKMapCons] = U$Product(U$VarOr(U$MKData), U$VarOr(U$MKData), U$VarOr(U$MKMap))
 
 sealed trait MKThunkKind
 

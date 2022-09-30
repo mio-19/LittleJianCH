@@ -99,6 +99,10 @@ final case class GoalConj(xs: ParVector[Goal]) extends GoalControl {
   override def toString: String = s"begin(${this.flatten.mkString(", ")})"
 }
 
+final case class GoalReadSubst(f: Subst => Goal) extends GoalControl {
+  def apply(subst: Subst): Goal = f(subst)
+}
+
 object GoalConj {
   def apply(xs: ParVector[Goal]) = new GoalConj(xs)
 

@@ -55,7 +55,9 @@ implicit object GradualSearcher extends Searcher {
         runBasic(state, basics.asInstanceOf[ParVector[GoalBasic]]) match {
           case None => ParVector.empty
           case Some(state) => {
-            val (disjs, rest1) = rest.partition(x => x.isInstanceOf[GoalDisj])
+            val (reads, rest0) = rest.partition(x => x.isInstanceOf[GoalReadSubst])
+            val goals = reads.asInstanceOf[ParVector[GoalReadSubst]].map(_(state.eq.subst)) ++ rest0
+            val (disjs, rest1) = goals.partition(x => x.isInstanceOf[GoalDisj])
             expandDisj(disjs.asInstanceOf[ParVector[GoalDisj]], World(state, rest1))
           }
         }

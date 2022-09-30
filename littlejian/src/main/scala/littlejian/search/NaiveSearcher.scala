@@ -71,6 +71,7 @@ implicit object NaiveSearcher extends Searcher {
         val tail = GoalConj(xs.tail)
         SDelay(flatten(runs(state, xs.head).map(runs(_, tail))))
       }
+      case GoalReadSubst(f) => SDelay(runs(state, f(state.eq.subst)))
       case goal: GoalDelay => SDelay(runs(state, goal.get))
     }
 }

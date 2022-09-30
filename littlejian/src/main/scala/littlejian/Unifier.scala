@@ -83,6 +83,25 @@ def U$Union[T, U, V](tr: => Unifier[T], ur: => Unifier[U], vr: => Unifier[V])(im
     else Unifying.failure
   }
 }
+@targetName("U$Union_") def U$Union[T, U, V, W](implicit tr: => Unifier[T], ur: => Unifier[U], vr: => Unifier[V], wr: => Unifier[W], tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W]): Unifier[T | U | V | W] = U$Union(tr, ur, vr, wr)(tev, uev, vev, wev)
+def U$Union[T, U, V, W](tr: => Unifier[T], ur: => Unifier[U], vr: => Unifier[V], wr: => Unifier[W])(implicit tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W]): Unifier[T | U | V | W] = {
+  lazy val t = tr
+  lazy val u = ur
+  lazy val v = vr
+  lazy val w = wr
+  val tc = tev.runtimeClass
+  val uc = uev.runtimeClass
+  val vc = vev.runtimeClass
+  val wc = wev.runtimeClass
+  if (tc == uc || tc == vc || tc == wc || uc == vc || uc == wc || vc == wc) throw new IllegalArgumentException("T == U || T == V || T == W || U == V || U == W || V == W")
+  (x, y) => {
+    if (tc.isInstance(x) && tc.isInstance(y)) t.unify(x.asInstanceOf[T], y.asInstanceOf[T])
+    else if (uc.isInstance(x) && uc.isInstance(y)) u.unify(x.asInstanceOf[U], y.asInstanceOf[U])
+    else if (vc.isInstance(x) && vc.isInstance(y)) v.unify(x.asInstanceOf[V], y.asInstanceOf[V])
+    else if (wc.isInstance(x) && wc.isInstance(y)) w.unify(x.asInstanceOf[W], y.asInstanceOf[W])
+    else Unifying.failure
+  }
+}
 
 trait EqualUnifier[T] extends Unifier[T] {
   override def concreteUnify(self: T, other: T): Unifying[Unit] = Unifying.guard(self == other)

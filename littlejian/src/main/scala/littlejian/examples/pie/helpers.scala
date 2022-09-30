@@ -1,7 +1,22 @@
 package littlejian.examples.pie
-import littlejian._
-import littlejian.ext._
-import littlejian.data.sexp._
+import littlejian.*
+import littlejian.ext.*
+import littlejian.data.sexp.*
+
+import scala.language.implicitConversions
+
+
+implicit def SeqToSExp(ls: Seq[String]): SExp = list(ls*)
+def car(x: VarOr[SExp]): VarOr[SExp] = x match {
+  case Cons(v, _) => v
+  case _ => throw new IllegalArgumentException("car: not a cons cell")
+}
+def walkStar(walker: Walker, x: VarOr[SExp]): VarOr[SExp] = walker(x) match {
+  case () => ()
+  case Cons(a, d) => Cons(walkStar(walker, a), walkStar(walker, d))
+  case x: String => x
+  case x: Var[_] => x
+}
 
 // https://github.com/bboskin/SFPW2018/blob/master/condp/helpers.rkt
 
@@ -181,6 +196,7 @@ def extendΓ(Γ: VarOr[SExp], y: VarOr[SExp], τ: VarOr[SExp]): VarOr[SExp] = co
   (== new-ρ `((val ,y ,v) . ,ρ)))
 */
 def extendρ(ρ: VarOr[SExp], y: VarOr[SExp], v: VarOr[SExp]): VarOr[SExp] = cons(list("val", y, v), ρ)
+def extendρ(ρ: VarOr[SExp], y: VarOr[SExp], v: VarOr[SExp], o: VarOr[SExp]): Goal = o === extendρ(ρ, y, v)
 
 /*
 (defrel (extend-env ρ y v τ new-ρ)
@@ -255,6 +271,7 @@ def freeInρ(x: VarOr[SExp], ρ: VarOr[SExp]): Goal = conde(
              (just-names Γ^ o)
              (== names `(,x . ,o))]))]))
 */
+def justNames(Γ: VarOr[SExp], names: VarOr[SExp]): Goal = justNames(Γ)(names) 
 def justNames(Γ: VarOr[SExp]): Rel[SExp] = conde(
   begin(Γ === (), ()),
   {
@@ -337,7 +354,7 @@ def expMemvQ(ls: VarOr[SExp])(e: VarOr[SExp]): Boolean = e match {
   case _ => false
 }
 // (define simple? (λ (x) (memv x symbol-exprs)))
-def simpleQ(x: VarOr[SExp]): Boolean = symbolExprs.contains(x)
+def simpleQ(x: String): Boolean = symbolExprs.contains(x)
 
 /*
 (define (get-constructors τ)

@@ -99,16 +99,23 @@ implicit def I$Union[T, U, V](tr: => Inspector[T], ur: => Inspector[U], vr: => I
 
 implicit def I$Product[T, R <: Product1[T]](implicit tr: => Inspector[T]): Inspector[R] = {
   lazy val t = tr
-  (x) => Seq(WithInspector(x._1))
+  (x) => Seq(WithInspector(x._1)(t))
 }
 implicit def I$Product[T, U, R <: Product2[T, U]](implicit tr: => Inspector[T], ur: => Inspector[U]): Inspector[R] = {
   lazy val t = tr
   lazy val u = ur
-  (x) => Seq(WithInspector(x._1), WithInspector(x._2))
+  (x) => Seq(WithInspector(x._1)(t), WithInspector(x._2)(u))
 }
 implicit def I$Product[T, U, V, R <: Product3[T, U, V]](implicit tr: => Inspector[T], ur: => Inspector[U], vr: => Inspector[V]): Inspector[R] = {
   lazy val t = tr
   lazy val u = ur
   lazy val v = vr
-  (x) => Seq(WithInspector(x._1), WithInspector(x._2), WithInspector(x._3))
+  (x) => Seq(WithInspector(x._1)(t), WithInspector(x._2)(u), WithInspector(x._3)(v))
+}
+implicit def I$Produce[A, B, C, D, R <: Product4[A, B, C, D]](implicit ar: => Inspector[A], br: => Inspector[B], cr: => Inspector[C], dr: => Inspector[D]): Inspector[R] = {
+  lazy val a = ar
+  lazy val b = br
+  lazy val c = cr
+  lazy val d = dr
+  (x) => Seq(WithInspector(x._1)(a), WithInspector(x._2)(b), WithInspector(x._3)(c), WithInspector(x._4)(d))
 }

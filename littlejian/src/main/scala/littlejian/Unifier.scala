@@ -133,3 +133,16 @@ implicit def U$Product[A, B, C, R <: Product3[A, B, C]](implicit ar: Unifier[A],
       _ <- c.unify(x._3, y._3)
     } yield ()
 }
+implicit def U$Produce[A, B, C, D, R <: Product4[A, B, C, D]](implicit ar: Unifier[A], br: Unifier[B], cr: Unifier[C], dr: Unifier[D]): Unifier[R] = {
+  lazy val a = ar
+  lazy val b = br
+  lazy val c = cr
+  lazy val d = dr
+  (x, y) =>
+    if (x.getClass != y.getClass) Unifying.failure else for {
+      _ <- a.unify(x._1, y._1)
+      _ <- b.unify(x._2, y._2)
+      _ <- c.unify(x._3, y._3)
+      _ <- d.unify(x._4, y._4)
+    } yield ()
+}

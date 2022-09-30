@@ -33,7 +33,7 @@ private def consToString(xs: Vector[VarOr[SExp]], next: VarOr[SExp]): String = n
 final case class Cons(a: VarOr[SExp], d: VarOr[SExp]) extends Product2[VarOr[SExp], VarOr[SExp]] {
   override def toString: String = consToString(Vector(a), d)
 }
-implicit val U$Cons: Unifier[Cons] = U$Product2(U$VarOr(U$SExp), U$VarOr(U$SExp))
+implicit val U$Cons: Unifier[Cons] = U$Product2
 
 implicit val I$Cons: Inspector[Cons] = {
   case Cons(a, d) => Seq(WithInspector(a), WithInspector(d))

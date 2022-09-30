@@ -851,7 +851,35 @@ def readBackNorm(e0: VarOr[SExp])(walker: Walker): Seq[String] = {
 
   loop()
 }
+/*
+(defrel (read-backo Γ τ v norm)
+  (condp
+    (((read-back-v v)
+      (read-back-τ τ))
+     ((read-back-norm norm)))
+    ;; Types
+    [U (go-to-type Γ τ v norm)]
+    ;; The
+    [the (read-back-the Γ τ v norm)]
+    [neutral (go-to-neutral Γ τ v norm)]
+    [Trivial (== τ 'TRIVIAL) (== v 'SOLE) (== norm 'sole)]
+    [Atom (read-back-quote Γ τ v norm)]
+    [Nat (read-back-Nat Γ τ v norm)]
+    [Σ (read-back-cons Γ τ v norm)]
+    [= (read-back-same Γ τ v norm)]
+    [Π (read-back-λ Γ τ v norm)]))
+*/
+def readBacko(Γ: VarOr[SExp], τ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp]): Goal = condp(Seq(readBackV(v), readBackT(τ)), Seq(readBackNorm(norm)))(
+  ("U", goToType(Γ, τ, v, norm)),
+  ("the", readBackThe(Γ, τ, v, norm)),
+  ("neutral", goToNeutral(Γ, τ, v, norm)),
+  ("Trivial", begin(τ === "TRIVIAL", v === "SOLE", norm === "sole")),
+  ("Atom", readBackQuote(Γ, τ, v, norm)),
+  ("Nat", readBackNat(Γ, τ, v, norm)),
+  ("Σ", readBackCons(Γ, τ, v, norm)),
+  ("=", readBackSame(Γ, τ, v, norm)),
+  ("Π", readBackλ(Γ, τ, v, norm))
+)
 def readBacko(Γ: VarOr[SExp], τ: VarOr[SExp], v: VarOr[SExp]): Rel[SExp] = readBacko(Γ, τ, v, _)
-def readBacko(Γ: VarOr[SExp], τ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp]): Goal = ???
 def readBackTypo(Γ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp]): Goal = ???
 def readBackNeutral(τ: VarOr[SExp], Γ: VarOr[SExp], ne: VarOr[SExp], norm: VarOr[SExp]): Goal = ???

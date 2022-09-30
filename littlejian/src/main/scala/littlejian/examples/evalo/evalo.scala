@@ -103,25 +103,19 @@ def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
       _ <- x === list("lambda", args, body)
     } yield closureo(env, args, body)
   },
-  {
-    val result = hole[SExp]
-    for {
-      _ <- notInEnvo(env, "quote")
-      //_ <- result.isType[String] // a hack to prevent run[SExp] { x => evalo((), x, x) }.head => "(quote #1=(quote #1))"
-      _ <- result.absent(ClosureTag)
-      _ <- x === list("quote", result)
-    } yield result
-  },
-  {
-    val a = hole[SExp]
-    val b = hole[SExp]
-    for {
-      _ <- notInEnvo(env, "cons")
-      _ <- x === list("cons", a, b)
-      a0 <- evalo(env, a)
-      b0 <- evalo(env, b)
-    } yield cons(a0, b0)
-  },
+  for {
+    ignored <- notInEnvo(env, "quote")
+    result <- x.is[SExp](list("quote", _))
+    //ignored <- result.isType[String] // a hack to prevent run[SExp] { x => evalo((), x, x) }.head => "(quote #1=(quote #1))"
+    ignored <- result.absent(ClosureTag)
+  } yield result,
+  for {
+    ignored <- notInEnvo(env, "cons")
+    ab <- x.is[SExp, SExp](list("cons", _, _))
+    (a, b) = ab
+    a0 <- evalo(env, a)
+    b0 <- evalo(env, b)
+  } yield cons(a0, b0),
   {
     val xs = hole[SExp]
     for {

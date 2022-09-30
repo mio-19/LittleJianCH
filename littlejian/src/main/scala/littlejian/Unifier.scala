@@ -51,7 +51,9 @@ implicit def U$VarOr[T](implicit unifier: Unifier[T]): Unifier[VarOr[T]] = (x, y
 
 import scala.reflect.ClassTag
 
-def U$Union[T, U](t: Unifier[T], u: Unifier[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Unifier[T | U] = {
+def U$Union[T, U](tr: => Unifier[T], ur: => Unifier[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Unifier[T | U] = {
+  lazy val t = tr
+  lazy val u = ur
   val tc = tev.runtimeClass
   val uc = uev.runtimeClass
   if (tc == uc) throw new IllegalArgumentException("T == U")
@@ -84,18 +86,30 @@ implicit object U$Integer extends EqualUnifier[Integer]
 
 implicit object U$Boolean extends EqualUnifier[Boolean]
 
-implicit def U$Product1[T](implicit t: Unifier[T]): Unifier[Product1[T]] = (x, y) =>
-  if(x.getClass != y.getClass) Unifying.failure else t.unify(x._1, y._1)
+implicit def U$Product1[T, R <: Product1[T]](implicit tr: => Unifier[T]): Unifier[R] = {
+  lazy val t = tr
+  (x, y) =>
+    if (x.getClass != y.getClass) Unifying.failure else t.unify(x._1, y._1)
+}
 
-implicit def U$Product2[A, B](implicit a: Unifier[A], b: Unifier[B]): Unifier[Product2[A, B]] = (x, y) =>
-  if(x.getClass != y.getClass) Unifying.failure else for {
-    _ <- a.unify(x._1, y._1)
-    _ <- b.unify(x._2, y._2)
-  } yield ()
+implicit def U$Product2[A, B, R <: Product2[A, B]](implicit ar: => Unifier[A], br: => Unifier[B]): Unifier[R] = {
+  lazy val a = ar
+  lazy val b = br
+  (x, y) =>
+    if (x.getClass != y.getClass) Unifying.failure else for {
+      _ <- a.unify(x._1, y._1)
+      _ <- b.unify(x._2, y._2)
+    } yield ()
+}
 
-implicit def U$Product3[A, B, C](implicit a: Unifier[A], b: Unifier[B], c: Unifier[C]): Unifier[Product3[A, B, C]] = (x, y) =>
-  if (x.getClass != y.getClass) Unifying.failure else for {
-    _ <- a.unify(x._1, y._1)
-    _ <- b.unify(x._2, y._2)
-    _ <- c.unify(x._3, y._3)
-  } yield ()
+implicit def U$Product3[A, B, C, R <: Product3[A, B, C]](implicit ar: Unifier[A], br: Unifier[B], cr: Unifier[C]): Unifier[R] = {
+  lazy val a = ar
+  lazy val b = br
+  lazy val c = cr
+  (x, y) =>
+    if (x.getClass != y.getClass) Unifying.failure else for {
+      _ <- a.unify(x._1, y._1)
+      _ <- b.unify(x._2, y._2)
+      _ <- c.unify(x._3, y._3)
+    } yield ()
+}

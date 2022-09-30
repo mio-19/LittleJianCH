@@ -16,7 +16,7 @@ final case class WithInspector[T](x: VarOr[T])(implicit inspector: Inspector[T])
   final def scanUncertain(resolver: Any => Any, v: Any): Option[Seq[WithInspector[_]]] = {
     val todo = resolver(x).asInstanceOf[VarOr[T]]
     val history = scanRecHistory.get.getOrElse(HashSet.empty)
-    if(history.contains(todo)) return Some(Seq())
+    if (history.contains(todo)) return Some(Seq())
     if (todo.isInstanceOf[Var[_]])
       Some(Seq(this))
     else if (todo == v) None
@@ -63,9 +63,11 @@ implicit object I$Integer extends AtomInspector[Integer]
 
 implicit object I$Unit extends AtomInspector[Unit]
 
-@targetName("I$Union2") implicit def I$Union[T, U](t: Inspector[T], u: Inspector[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Inspector[T | U] = I$Union(t, u, tev, uev)
+@targetName("I$Union2") implicit def I$Union[T, U](t: => Inspector[T], u: => Inspector[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Inspector[T | U] = I$Union(t, u, tev, uev)
 
-implicit def I$Union[T, U](implicit t: Inspector[T], u: Inspector[U], tev: ClassTag[T], uev: ClassTag[U]): Inspector[T | U] = {
+implicit def I$Union[T, U](implicit tr: => Inspector[T], ur: => Inspector[U], tev: ClassTag[T], uev: ClassTag[U]): Inspector[T | U] = {
+  lazy val t = tr
+  lazy val u = ur
   val tc = tev.runtimeClass
   val uc = uev.runtimeClass
   if (tc == uc) throw new IllegalArgumentException("T == U")

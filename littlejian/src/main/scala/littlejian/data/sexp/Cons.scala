@@ -1,10 +1,14 @@
 package littlejian.data.sexp
 
-import littlejian.*
+import littlejian._
 
 import scala.annotation.tailrec
 
 type SExp = Cons | Unit | String
+
+implicit val U$SExp: Unifier[SExp] = U$Union(U$Cons, U$Union(U$Unit, U$String))
+
+implicit val I$SExp: Inspector[SExp] = I$Union(I$Cons, I$Union(I$Unit, I$String))
 
 private def consDot(xs: Vector[VarOr[SExp]], next: Var[SExp] | String): String =
   if (xs.isEmpty)
@@ -26,14 +30,10 @@ private def consToString(xs: Vector[VarOr[SExp]], next: VarOr[SExp]): String = n
   case s: String => consDot(xs, s)
 }
 
-final case class Cons(a: VarOr[SExp], d: VarOr[SExp]) {
+final case class Cons(a: VarOr[SExp], d: VarOr[SExp]) extends Product2[VarOr[SExp], VarOr[SExp]] {
   override def toString: String = consToString(Vector(a), d)
 }
-
-implicit val U$Cons: Unifier[Cons] = (x, y) => for {
-  _ <- x.a.unify(y.a)
-  _ <- x.d.unify(y.d)
-} yield ()
+implicit val U$Cons: Unifier[Cons] = U$Product2(U$VarOr(U$SExp), U$VarOr(U$SExp))
 
 implicit val I$Cons: Inspector[Cons] = {
   case Cons(a, d) => Seq(WithInspector(a), WithInspector(d))
@@ -57,7 +57,3 @@ object list {
 }
 def listDot(xs: VarOr[SExp]*) = convertListDot(xs)
 
-
-implicit val U$SExp: Unifier[SExp] = U$Union(U$Cons, U$Union(U$Unit, U$String))
-
-implicit val I$SExp: Inspector[SExp] = I$Union(I$Cons, I$Union(I$Unit, I$String))

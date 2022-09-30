@@ -111,6 +111,17 @@ object GoalConj {
   @targetName("applyMul") def apply(xs: Goal*) = new GoalConj(ParVector(xs *))
 }
 
+sealed trait GoalControlImpure extends GoalControl
+
+// conda
+final case class GoalDisjA(xs: ParVector[(Goal, Goal)]) extends GoalControlImpure {
+  override def toString: String = s"conda(${xs.map({case (test, goal) => s"(${test}, ${goal})"})mkString(", ")})"
+}
+// condu
+final case class GoalDisjU(xs: ParVector[(Goal, Goal)]) extends GoalControlImpure {
+  override def toString: String = s"condu(${xs.map({case (test, goal) => s"(${test}, ${goal})"})mkString(", ")})"
+}
+
 object Goal {
   val success: Goal = GoalConj(ParVector())
   val failure: Goal = GoalDisj(ParVector())

@@ -278,3 +278,24 @@ def justNames(Γ: VarOr[SExp]): Rel[SExp] = conde(
     ) : Rel[SExp]
   }
 )
+
+/*
+(define (add-* x)
+  (string->symbol
+   (string-append (symbol->string x)
+                  "*")))
+*/
+def addStar(x: String): String = x + "*"
+
+/*
+(defrel (fresh/aux x used name)
+  (condu
+   [(membero x used) (fresh/aux (add-* x) used name)]
+   [(== x name)]))
+*/
+/*
+def freshAux(x: String, used: VarOr[SExp], name: VarOr[SExp]): Goal = condu(
+  membero(x, used) && freshAux(addStar(x), used, name),
+  x === name
+)
+*/

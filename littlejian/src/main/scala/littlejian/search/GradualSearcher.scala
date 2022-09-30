@@ -5,7 +5,7 @@ import littlejian.*
 
 import scala.util.control.Breaks.*
 
-// Broken
+// Broken, GoalControlImpure not supported
 implicit object GradualSearcher extends Searcher {
   // TODO: parallel execution
   private def runBasic(state: State, xs: ParVector[GoalBasic]): Option[State] = if (xs.isEmpty) Some(state) else xs.head.execute(state).flatMap(runBasic(_, xs.tail))
@@ -37,13 +37,17 @@ implicit object GradualSearcher extends Searcher {
   val taskLimits = 16
 
   private def runTask(xs: ParVector[World]): SStream[State] = {
-    if(xs.length > taskLimits) {
+    if (xs.length > taskLimits) {
       val (a, b) = xs.splitAt(xs.length / 2)
-      mplus(runTask(a), SDelay { runTask(b) })
+      mplus(runTask(a), SDelay {
+        runTask(b)
+      })
     }
     val result = xs.map(_.run)
     val states = result.map(_._1).flatten
-    val next = SDelay { flatten(result.map(_._2).map(runTask)) }
+    val next = SDelay {
+      flatten(result.map(_._2).map(runTask))
+    }
     SStream.append(states, next)
   }
 
@@ -51,12 +55,13 @@ implicit object GradualSearcher extends Searcher {
     def run: (Option[State], ParVector[World]) =
       if (goals.isEmpty) (Some(state), ParVector.empty)
       else (None, {
+        if (goals.exists(_.isInstanceOf[GoalControlImpure])) throw new UnsupportedOperationException("GoalControlImpure not supported")
         val (basics, rest) = getGoals(goals).partition(_.isInstanceOf[GoalBasic])
         runBasic(state, basics.asInstanceOf[ParVector[GoalBasic]]) match {
           case None => ParVector.empty
           case Some(state) => {
             val (reads, rest0) = rest.partition(x => x.isInstanceOf[GoalReadSubst])
-            val goals = reads.asInstanceOf[ParVector[GoalReadSubst]].map(_(state.eq.subst)) ++ rest0
+            val goals = reads.asInstanceOf[ParVector[GoalReadSubst]].map(_ (state.eq.subst)) ++ rest0
             val (disjs, rest1) = goals.partition(x => x.isInstanceOf[GoalDisj])
             expandDisj(disjs.asInstanceOf[ParVector[GoalDisj]], World(state, rest1))
           }

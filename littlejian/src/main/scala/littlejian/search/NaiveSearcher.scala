@@ -10,8 +10,20 @@ sealed trait SStream[T] {
 
   def map[U](f: T => U): SStream[U] = this match {
     case SEmpty() => SEmpty()
-    case x: SDelay[T] => SDelay(x.get.map(f))
+    case x: SDelay[_] => SDelay(x.get.map(f))
     case SCons(head, tail) => SCons(f(head), tail.map(f))
+  }
+
+  def take1FlatMap[U](default: => SStream[U], f: T => SStream[U]): SStream[U] = this match {
+    case SEmpty() => SEmpty()
+    case x: SDelay[_] => SDelay(x.get.take1FlatMap(default, f))
+    case SCons(head, _) => f(head)
+  }
+
+  def caseOnEmpty[U](default: => SStream[U], f: SStream[T] => SStream[U]): SStream[U] = this match {
+    case SEmpty() => default
+    case x: SDelay[_] => SDelay(x.get.caseOnEmpty(default, f))
+    case SCons(_, _) => f(this)
   }
 }
 
@@ -35,7 +47,8 @@ object SStream {
   }
 
   def from[T](xs: IterableOnce[T]): SStream[T] = from(xs.iterator)
-  def from[T](xs: Iterator[T]): SStream[T] = if(xs.hasNext) SCons(xs.next, from(xs)) else SEmpty()
+
+  def from[T](xs: Iterator[T]): SStream[T] = if (xs.hasNext) SCons(xs.next, from(xs)) else SEmpty()
 
   def append[T](xs: IterableOnce[T], tail: SStream[T]): SStream[T] = append(xs.iterator, tail)
 
@@ -43,7 +56,7 @@ object SStream {
 
   def apply[T](x: T*): SStream[T] = SStream.from(x)
 
-  def empty[T] = SEmpty()
+  def empty[T]: SStream[T] = SEmpty()
 }
 
 def mplus[T](xs: SStream[T], ys: SStream[T]): SStream[T] = xs match {
@@ -63,6 +76,7 @@ def flatten[T](xs: SStream[SStream[T]]): SStream[T] = xs match {
 // TRS2 search strategy, interleaving DFS (DFSi) in "Towards a miniKanren with fair search strategies"
 implicit object NaiveSearcher extends Searcher {
   override def run(state: State, goal: Goal): Stream[State] = runs(state, goal).toStream
+
   def runs(state: State, goal: Goal): SStream[State] =
     goal match {
       case goal: GoalBasic => SStream.from(goal.execute(state))
@@ -73,5 +87,25 @@ implicit object NaiveSearcher extends Searcher {
       }
       case GoalReadSubst(f) => SDelay(runs(state, f(state.eq.subst)))
       case goal: GoalDelay => SDelay(runs(state, goal.get))
+      case GoalDisjU(xs) =>
+        if (xs.isEmpty)
+          SStream.empty
+        else SDelay {
+          val (test, goal) = xs.head
+          val rest = xs.tail
+          runs(state, test).take1FlatMap({
+            runs(state, GoalDisjU(rest))
+          }, { state => runs(state, goal) })
+        }
+      case GoalDisjA(xs) =>
+        if (xs.isEmpty)
+          SStream.empty
+        else SDelay {
+          val (test, goal) = xs.head
+          val rest = xs.tail
+          runs(state, test).caseOnEmpty({
+            runs(state, GoalDisjA(rest))
+          }, { states => flatten(states.map(runs(_, goal))) })
+        }
     }
 }

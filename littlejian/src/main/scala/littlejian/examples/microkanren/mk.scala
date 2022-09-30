@@ -5,6 +5,7 @@ package littlejian.examples.microkanren
 import littlejian._
 import littlejian.data._
 import littlejian.ext._
+import littlejian.unifier._
 
 type MKData = (Unit | String | MKPair) | (MKVar | MKGoal | MKThunk | MKMap) | (MKRec | MKReg)
 
@@ -42,9 +43,9 @@ object MKThunkKind {
 
 implicit val U$MKThunkKind: Unifier[MKThunkKind] = equalUnifier
 
-final case class MKThunk(kind: VarOr[MKThunkKind], env: VarOr[MKMap], rand: VarOr[MKData], s: VarOr[MKData], c: VarOr[MKData]) extends Product5[VarOr[MKThunkKind], VarOr[MKMap], VarOr[MKData], VarOr[MKData], VarOr[MKData]]
+final case class MKThunk(kind: VarOr[MKThunkKind], xs: VarOr[List[VarOr[MKData]]]) extends Product2[VarOr[MKThunkKind], VarOr[List[VarOr[MKData]]]]
 
-implicit val U$MKThunk: Unifier[MKThunk] = U$Product
+implicit val U$MKThunk: Unifier[MKThunk] = U$Product(U$VarOr(U$MKThunkKind), U$VarOr(U$List(U$VarOr(U$MKData))))
 
 type MKGoal = (MKGoalEq | MKGoalCallFresh) | (MKGoalConj | MKGoalDisj) | MKGoalTop
 implicit val U$MKGoal: Unifier[MKGoal] = U$Union(U$Union[MKGoalEq, MKGoalCallFresh], U$Union[MKGoalConj, MKGoalDisj], U$MKGoalTop)
@@ -98,3 +99,21 @@ def applyEnvo(env: VarOr[MKMap], y: VarOr[MKData]): Rel[MKData] = for {
     applyEnvo(tail, y)
   }
 } yield result
+
+def bindo(xs: VarOr[MKData], g: VarOr[MKData]): Rel[MKData] = conde(
+  begin(xs === (), ()),
+  for {
+    _ <- xs.is(MKThunk(_, _))
+  } yield MKThunk(MKThunkKind.Bind, List(xs, g)),
+  for {
+    (a, d) <- xs.is(MKPair(_, _))
+    (aa, da) <- a.is(MKPair(_, _))
+    xs1 <- runGoalo(g, aa, da)
+    xs2 <- bindo(d, g)
+    result <- mpluso(xs1, xs2)
+  } yield result
+)
+
+def mpluso(xs: VarOr[MKData], ys: VarOr[MKData]): Rel[MKData] = ???
+
+def runGoalo(g: VarOr[MKData], s: VarOr[MKData], c: VarOr[MKData]): Rel[MKData] = ???

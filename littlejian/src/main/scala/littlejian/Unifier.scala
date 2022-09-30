@@ -86,13 +86,13 @@ implicit object U$Integer extends EqualUnifier[Integer]
 
 implicit object U$Boolean extends EqualUnifier[Boolean]
 
-implicit def U$Product1[T, R <: Product1[T]](implicit tr: => Unifier[T]): Unifier[R] = {
+implicit def U$Product[T, R <: Product1[T]](implicit tr: => Unifier[T]): Unifier[R] = {
   lazy val t = tr
   (x, y) =>
     if (x.getClass != y.getClass) Unifying.failure else t.unify(x._1, y._1)
 }
 
-implicit def U$Product2[A, B, R <: Product2[A, B]](implicit ar: => Unifier[A], br: => Unifier[B]): Unifier[R] = {
+implicit def U$Product[A, B, R <: Product2[A, B]](implicit ar: => Unifier[A], br: => Unifier[B]): Unifier[R] = {
   lazy val a = ar
   lazy val b = br
   (x, y) =>
@@ -102,7 +102,7 @@ implicit def U$Product2[A, B, R <: Product2[A, B]](implicit ar: => Unifier[A], b
     } yield ()
 }
 
-implicit def U$Product3[A, B, C, R <: Product3[A, B, C]](implicit ar: Unifier[A], br: Unifier[B], cr: Unifier[C]): Unifier[R] = {
+implicit def U$Product[A, B, C, R <: Product3[A, B, C]](implicit ar: Unifier[A], br: Unifier[B], cr: Unifier[C]): Unifier[R] = {
   lazy val a = ar
   lazy val b = br
   lazy val c = cr

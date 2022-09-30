@@ -15,7 +15,7 @@ final case class GoalWith[T](goal: Goal, x: T) {
 
   def flatMap[U](f: T => GoalWith[U]): GoalWith[U] = {
     val result = f(x)
-    GoalWith(GoalConj(goal, result.goal), result.x)
+    GoalWith(if(goal eq Goal.success) result.goal else GoalConj(goal, result.goal), result.x)
   }
 }
 

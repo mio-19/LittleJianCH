@@ -63,9 +63,7 @@ implicit object I$Integer extends AtomInspector[Integer]
 
 implicit object I$Unit extends AtomInspector[Unit]
 
-@targetName("I$Union2") implicit def I$Union[T, U](t: => Inspector[T], u: => Inspector[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Inspector[T | U] = I$Union(t, u, tev, uev)
-
-implicit def I$Union[T, U](implicit tr: => Inspector[T], ur: => Inspector[U], tev: ClassTag[T], uev: ClassTag[U]): Inspector[T | U] = {
+implicit def I$Union[T, U](tr: => Inspector[T], ur: => Inspector[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Inspector[T | U] = {
   lazy val t = tr
   lazy val u = ur
   val tc = tev.runtimeClass
@@ -74,5 +72,20 @@ implicit def I$Union[T, U](implicit tr: => Inspector[T], ur: => Inspector[U], te
   (x) => {
     if (tc.isInstance(x)) t.inspect(x.asInstanceOf[T])
     else u.inspect(x.asInstanceOf[U])
+  }
+}
+
+implicit def I$Union[T, U, V](tr: => Inspector[T], ur: => Inspector[U], vr: => Inspector[V])(implicit tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V]): Inspector[T | U | V] = {
+  lazy val t = tr
+  lazy val u = ur
+  lazy val v = vr
+  val tc = tev.runtimeClass
+  val uc = uev.runtimeClass
+  val vc = vev.runtimeClass
+  if (tc == uc || tc == vc || uc == vc) throw new IllegalArgumentException("T == U or T == V or U == V")
+  (x) => {
+    if (tc.isInstance(x)) t.inspect(x.asInstanceOf[T])
+    else if (uc.isInstance(x)) u.inspect(x.asInstanceOf[U])
+    else v.inspect(x.asInstanceOf[V])
   }
 }

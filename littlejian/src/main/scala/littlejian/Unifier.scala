@@ -64,6 +64,22 @@ def U$Union[T, U](tr: => Unifier[T], ur: => Unifier[U])(implicit tev: ClassTag[T
   }
 }
 
+def U$Union[T, U, V](tr: => Unifier[T], ur: => Unifier[U], vr: => Unifier[V])(implicit tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V]): Unifier[T | U | V] = {
+  lazy val t = tr
+  lazy val u = ur
+  lazy val v = vr
+  val tc = tev.runtimeClass
+  val uc = uev.runtimeClass
+  val vc = vev.runtimeClass
+  if (tc == uc || tc == vc || uc == vc) throw new IllegalArgumentException("T == U || T == V || U == V")
+  (x, y) => {
+    if (tc.isInstance(x) && tc.isInstance(y)) t.unify(x.asInstanceOf[T], y.asInstanceOf[T])
+    else if (uc.isInstance(x) && uc.isInstance(y)) u.unify(x.asInstanceOf[U], y.asInstanceOf[U])
+    else if (vc.isInstance(x) && vc.isInstance(y)) v.unify(x.asInstanceOf[V], y.asInstanceOf[V])
+    else Unifying.failure
+  }
+}
+
 trait EqualUnifier[T] extends Unifier[T] {
   override def concreteUnify(self: T, other: T): Unifying[Unit] = Unifying.guard(self == other)
 }

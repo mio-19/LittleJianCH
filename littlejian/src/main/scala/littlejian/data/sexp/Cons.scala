@@ -6,9 +6,9 @@ import scala.annotation.tailrec
 
 type SExp = Cons | Unit | String
 
-implicit val U$SExp: Unifier[SExp] = U$Union(U$Cons, U$Union(U$Unit, U$String))
+implicit val U$SExp: Unifier[SExp] = U$Union(U$Cons, U$Unit, U$String)
 
-implicit val I$SExp: Inspector[SExp] = I$Union(I$Cons, I$Union(I$Unit, I$String))
+implicit val I$SExp: Inspector[SExp] = I$Union(I$Cons, I$Unit, I$String)
 
 private def consDot(xs: Vector[VarOr[SExp]], next: Var[SExp] | String): String =
   if (xs.isEmpty)

@@ -87,6 +87,7 @@ def U$Union[T, U, V](tr: => Unifier[T], ur: => Unifier[U], vr: => Unifier[V])(im
 trait EqualUnifier[T] extends Unifier[T] {
   override def concreteUnify(self: T, other: T): Unifying[Unit] = Unifying.guard(self == other)
 }
+def equalUnifier[T]: Unifier[T] =  new EqualUnifier[T] {}
 
 implicit object U$Symbol extends EqualUnifier[Symbol]
 
@@ -133,7 +134,7 @@ implicit def U$Product[A, B, C, R <: Product3[A, B, C]](implicit ar: Unifier[A],
       _ <- c.unify(x._3, y._3)
     } yield ()
 }
-implicit def U$Produce[A, B, C, D, R <: Product4[A, B, C, D]](implicit ar: Unifier[A], br: Unifier[B], cr: Unifier[C], dr: Unifier[D]): Unifier[R] = {
+implicit def U$Product[A, B, C, D, R <: Product4[A, B, C, D]](implicit ar: Unifier[A], br: Unifier[B], cr: Unifier[C], dr: Unifier[D]): Unifier[R] = {
   lazy val a = ar
   lazy val b = br
   lazy val c = cr

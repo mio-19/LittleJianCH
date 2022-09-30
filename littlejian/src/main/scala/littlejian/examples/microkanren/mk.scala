@@ -89,7 +89,10 @@ def applyEnvo(env: VarOr[MKMap], y: VarOr[MKData]): Rel[MKData] = for {
       for {
         (x, exp2) <- value.is(MKRec(_, _))
         result <- microo(list("lambda", list(x), exp2), env)
-      } yield result
+      } yield result,
+      for {
+        b <- value.is(MKReg(_))
+      } yield b
     )
   } {
     applyEnvo(tail, y)

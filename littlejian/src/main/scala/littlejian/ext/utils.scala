@@ -27,6 +27,14 @@ implicit class EqOps[T](x: VarOr[T]) {
   def =/=(y: VarOr[T])(implicit unifier: Unifier[T]): Goal = GoalNotEq(x, y)
 }
 
+def compare[T](x: VarOr[T], y: VarOr[T])(equals: => Goal)(notEquals: => Goal)(implicit unifier: Unifier[T]): Goal = conde(
+  begin(x === y, equals), begin(x =/= y, notEquals)
+)
+
+def compare[T, U](x: VarOr[T], y: VarOr[T])(equals: => Rel[U])(notEquals: => Rel[U])(implicit t: Unifier[T], u: Unifier[U]): Rel[U] = conde(
+  begin(x === y, equals), begin(x =/= y, notEquals)
+)
+
 implicit class VarOrPredOps[T](x: VarOr[T]) {
   def isType[T](implicit t: ClassTag[T]): Goal = GoalPredType(t, x)
 

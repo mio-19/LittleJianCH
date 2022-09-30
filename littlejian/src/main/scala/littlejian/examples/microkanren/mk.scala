@@ -1,11 +1,14 @@
 package littlejian.examples.microkanren
 
+// https://github.com/jasonhemann/micro-in-mini/blob/master/micro-in-mini.rkt
+
 import littlejian._
 import littlejian.data._
+import littlejian.ext._
 
-type MKData = (Unit | String | MKPair) | (MKVar | MKGoal | MKThunk | MKMap)
+type MKData = (Unit | String | MKPair) | (MKVar | MKGoal | MKThunk | MKMap) | (MKRec | MKReg)
 
-implicit val U$MKData: Unifier[MKData] = U$Union(U$Union[Unit, String, MKPair], U$Union[MKVar, MKGoal, MKThunk, MKMap])
+implicit val U$MKData: Unifier[MKData] = U$Union(U$Union[Unit, String, MKPair], U$Union[MKVar, MKGoal, MKThunk, MKMap], U$Union[MKRec, MKReg])
 
 final case class MKVar(id: VarOr[Nat]) extends Product1[VarOr[Nat]]
 
@@ -65,3 +68,30 @@ implicit val U$MKGoalDisj: Unifier[MKGoalDisj] = U$Product
 final case class MKGoalTop(rand: VarOr[MKData], env: VarOr[MKMap]) extends Product2[VarOr[MKData], VarOr[MKMap]]
 
 implicit val U$MKGoalTop: Unifier[MKGoalTop] = U$Product
+
+
+final case class MKRec(x: VarOr[MKData], exp: VarOr[MKData]) extends Product2[VarOr[MKData], VarOr[MKData]]
+
+implicit val U$MKRec: Unifier[MKRec] = U$Product
+
+final case class MKReg(x: VarOr[MKData]) extends Product1[VarOr[MKData]]
+
+implicit val U$MKReg: Unifier[MKReg] = U$Product
+
+def list(xs: VarOr[MKData]*): VarOr[MKData] = xs.foldRight[VarOr[MKData]](())(MKPair)
+
+def microo(x: VarOr[MKData], env: VarOr[MKMap]): Rel[MKData] = ???
+
+def applyEnvo(env: VarOr[MKMap], y: VarOr[MKData]): Rel[MKData] = for {
+  (key, value, tail) <- env.is(MKMapCons(_, _, _))
+  result <- compare(key, y) {
+    conde(
+      for {
+        (x, exp2) <- value.is(MKRec(_, _))
+        result <- microo(list("lambda", list(x), exp2), env)
+      } yield result
+    )
+  } {
+    applyEnvo(tail, y)
+  }
+} yield result

@@ -5,6 +5,7 @@ import littlejian.*
 
 import scala.util.control.Breaks.*
 
+// Broken
 implicit object GradualSearcher extends Searcher {
   // TODO: parallel execution
   private def runBasic(state: State, xs: ParVector[GoalBasic]): Option[State] = if (xs.isEmpty) Some(state) else xs.head.execute(state).flatMap(runBasic(_, xs.tail))

@@ -60,6 +60,7 @@ def flatten[T](xs: SStream[SStream[T]]): SStream[T] = xs match {
   case xs: SDelay[SStream[T]] => SDelay(flatten(xs.get))
 }
 
+// TRS2 search strategy, interleaving DFS (DFSi) in "Towards a miniKanren with fair search strategies"
 implicit object NaiveSearcher extends Searcher {
   override def run(state: State, goal: Goal): Stream[State] = runs(state, goal).toStream
   def runs(state: State, goal: Goal): SStream[State] =

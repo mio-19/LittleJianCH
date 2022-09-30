@@ -83,9 +83,7 @@ def list(xs: VarOr[MKData]*): VarOr[MKData] = xs.foldRight[VarOr[MKData]](())(MK
 
 def microo(x: VarOr[MKData], env: VarOr[MKMap]): Rel[MKData] = ???
 
-def MKMapo(x: VarOr[MKData]): Rel[MKMap] = for {
-  _ <- x.isType[MKMap]
-} yield x.asInstanceOf[VarOr[MKMap]]
+def MKMapo(x: VarOr[MKData]): Rel[MKMap] = x.cast[MKMap]
 
 def applyEnvo(env: VarOr[MKMap], y: VarOr[MKData]): Rel[MKData] = for {
   (key, value, tail) <- env.is(MKMapCons(_, _, _))

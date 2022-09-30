@@ -43,6 +43,17 @@ implicit class VarOrPredOps[T](x: VarOr[T]) {
   def absent(absent: Any)(implicit inspector: Inspector[T]): Goal = GoalAbsent(WithInspector(x)(inspector), absent)
 }
 
+implicit class VarOrCast[T](x: VarOr[T]) {
+  def cast[U](implicit u: ClassTag[U], unifier: Unifier[U]): Rel[U] = {
+    val result = hole[U]
+    begin(
+      x.isType[U],
+      result === x.asInstanceOf[VarOr[U]],
+      result
+    )
+  }
+}
+
 def begin(xs: => Goal*): Goal = GoalDelay(GoalConj(xs))
 
 def conde(xs: => Goal*): Goal = GoalDelay(GoalDisj(xs))

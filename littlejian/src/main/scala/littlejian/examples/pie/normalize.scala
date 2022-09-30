@@ -1,4 +1,5 @@
 package littlejian.examples.pie
+
 import littlejian._
 import littlejian.ext._
 import littlejian.data.sexp._
@@ -507,9 +508,327 @@ def valofoIn(exp: VarOr[SExp])(walker: Walker): Seq[String] = walkStar(walker, e
   case Cons(rat, ran) => Seq("app")
   case _: Var[_] => Seq(UseMaybe)
 }
+/*
+(define (valofo-out v)
+  (match v
+    [`(NEU ,t ,e) '(var ind-Nat ind-= car cdr app)]
+    [else all-exprs]))
+*/
+def valofoOut(v: VarOr[SExp])(walker: Walker): Seq[String] = walkStar(walker, v) match {
+  case list("NEU", t, e) => Seq("var", "ind-Nat", "ind-=", "car", "cdr", "app")
+  case _ => allExprs
+}
 
-def valofo(ρ: VarOr[SExp], exp: VarOr[SExp]): Rel[SExp] = valofo(ρ, exp, _)
+/*
+
+(defrel (valofo ρ exp v)
+  (condp
+    (((valofo-in exp))
+     ((valofo-out v)))
+    ; The expressions
+    [the (valof-the ρ exp v)]
+    [zero (assign-simple 'zero 'ZERO exp v)]
+    [Atom (assign-simple 'Atom 'ATOM exp v)]
+    [Nat (assign-simple 'Nat 'NAT exp v)]
+    [U (assign-simple 'U 'UNIVERSE exp v)]
+    [Trivial (assign-simple 'Trivial 'TRIVIAL exp v)]
+    [sole (assign-simple 'sole 'SOLE exp v)]
+    [var (apply-ρ ρ exp v)]
+    [var (valof-neutral-var ρ exp v)]
+    [quote (valof-quote ρ exp v)]
+    [add1 (valof-add1 ρ exp v)]
+    [ind-Nat (valof-ind-Nat ρ exp v)]
+    [Σ (valof-Σ ρ exp v)]
+    [cons (valof-cons ρ exp v)]
+    [car (valof-car ρ exp v)]
+    [cdr (valof-cdr ρ exp v)]
+    [= (valof-= ρ exp v)]
+    [same (valof-same ρ exp v)]
+    [ind-= (valof-ind-= ρ exp v)]
+    [Π (valof-Π ρ exp v)]
+    [λ (valof-λ ρ exp v)]
+    [app (valof-app ρ exp v)]))
+*/
 def valofo(ρ: VarOr[SExp], exp: VarOr[SExp], v: VarOr[SExp]): Goal = ???
+def valofo(ρ: VarOr[SExp], exp: VarOr[SExp]): Rel[SExp] = valofo(ρ, exp, _)
+/*
+(defrel (not-LAM e)
+  (conde
+    [(symbolo e)]
+    [(fresh (a d)
+       (== e `(,a . ,d))
+       (=/= a 'LAM))]))
+*/
+def notLAM(e: VarOr[SExp]): Goal = conde(
+  for {
+    _ <- e.is[String]
+  } yield (),
+  for {
+    a <- fresh[SExp]
+    d <- fresh[SExp]
+    _ <- e === list(a, d)
+    _ <- a =/= "LAM"
+  } yield ()
+)
+/*
+;; helpers for read-backo
+(defrel (read-back-λ Γ τ v norm)
+  (fresh (x A c z x^ vars Γ^ B b inner Av)
+    (== τ `(PI ,x ,A ,c))
+    (== norm `(λ (,x^) ,inner))
+    (conde
+      [(fresh (y λc) (== v `(LAM ,y ,λc))
+              (== z y))]
+      [(not-LAM v) (== z x)])
+    (symbolo z)
+    (just-names Γ vars)
+    (freshen z vars x^)
+    (extend-Γ Γ x^ A Γ^)
+    (valof-closuro c `(NEU ,A (VAR ,x^)) B)
+    (do-appo v `(NEU ,A (VAR ,x^)) b)
+    (read-backo Γ^ B b inner)))
+*/
+def readBackλ(Γ: VarOr[SExp], τ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp]): Goal =
+  for {
+    x <- fresh[SExp]
+    A <- fresh[SExp]
+    c <- fresh[SExp]
+    z <- fresh[SExp]
+    x_ <- fresh[SExp]
+    vars <- fresh[SExp]
+    Γ_ <- fresh[SExp]
+    B <- fresh[SExp]
+    b <- fresh[SExp]
+    inner <- fresh[SExp]
+    Av <- fresh[SExp]
+    _ <- τ === list("PI", x, A, c)
+    _ <- norm === list("λ", list(x_), inner)
+    _ <- conde(
+      for {
+        y <- fresh[SExp]
+        λc <- fresh[SExp]
+        _ <- v === list("LAM", y, λc)
+        _ <- z === y
+      } yield (),
+      for {
+        _ <- notLAM(v)
+        _ <- z === x
+      } yield ()
+    )
+    _ <- z.is[String]
+    _ <- justNames(Γ, vars)
+    _ <- freshen(z, vars, x_)
+    _ <- extendΓ(Γ, x_, A, Γ_)
+    _ <- valofClosuro(c, list("NEU", A, list("VAR", x_)), B)
+    _ <- doAppo(v, list("NEU", A, list("VAR", x_)), b)
+    _ <- readBacko(Γ_, B, b, inner)
+  } yield ()
+/*
+(defrel (read-back-same Γ τ v norm)
+  (fresh (X from to val vo)
+    (== τ `(EQUAL ,X ,from ,to))
+    (== v `(SAME ,val))
+    (== norm `(same ,vo))
+    (read-backo Γ X val vo)))
+*/
+def readBackSame(Γ: VarOr[SExp], τ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp]): Goal =
+  for {
+    X <- fresh[SExp]
+    from <- fresh[SExp]
+    to <- fresh[SExp]
+    value <- fresh[SExp]
+    vo <- fresh[SExp]
+    _ <- τ === list("EQUAL", X, from, to)
+    _ <- v === list("SAME", value)
+    _ <- norm === list("same", vo)
+    _ <- readBacko(Γ, X, value, vo)
+  } yield ()
+/*
+(defrel (read-back-cons Γ τ v norm)
+  (fresh (x A c a a^ d d^ D)
+    (== τ `(SIGMA ,x ,A ,c))
+    (== norm `(cons ,a^ ,d^))
+    (do-caro v a)
+    (read-backo Γ A a a^)
+    (valof-closuro c a D)
+    (do-cdro v d)
+    (read-backo Γ D d d^)))
+*/
+def readBackCons(Γ: VarOr[SExp], τ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp]): Goal =
+  for {
+    x <- fresh[SExp]
+    A <- fresh[SExp]
+    c <- fresh[SExp]
+    a <- fresh[SExp]
+    a_ <- fresh[SExp]
+    d <- fresh[SExp]
+    d_ <- fresh[SExp]
+    D <- fresh[SExp]
+    _ <- τ === list("SIGMA", x, A, c)
+    _ <- norm === list("cons", a_, d_)
+    _ <- doCaro(v, a)
+    _ <- readBacko(Γ, A, a, a_)
+    _ <- valofClosuro(c, a, D)
+    _ <- doCdro(v, d)
+    _ <- readBacko(Γ, D, d, d_)
+  } yield ()
+/*
+(defrel (read-back-Nat Γ τ v norm)
+  (== τ 'NAT)
+  (conde
+    [(== v 'ZERO) (== norm 'zero)]
+    [(fresh (n nF)
+       (== v `(ADD1 ,n))
+       (== norm `(add1 ,nF))
+       (read-backo Γ 'NAT n nF))]))
+*/
+def readBackNat(Γ: VarOr[SExp], τ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp]): Goal =
+  for {
+    n <- fresh[SExp]
+    nF <- fresh[SExp]
+    _ <- τ === "NAT"
+    _ <- conde(
+      for {
+        _ <- v === "ZERO"
+        _ <- norm === "zero"
+      } yield (),
+      for {
+        _ <- v === list("ADD1", n)
+        _ <- norm === list("add1", nF)
+        _ <- readBacko(Γ, "NAT", n, nF)
+      } yield ()
+    )
+  } yield ()
+/*
+(defrel (read-back-quote Γ τ v norm)
+  (fresh (at)
+    (== τ 'ATOM)
+    (== v `(ATOM ,at))
+    (symbolo at)
+    (== norm `(quote ,at))))
+*/
+def readBackQuote(Γ: VarOr[SExp], τ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp]): Goal =
+  for {
+    at <- fresh[SExp]
+    _ <- τ === "ATOM"
+    _ <- v === list("ATOM", at)
+    _ <- at.is[String]
+    _ <- norm === list("quote", at)
+  } yield ()
+/*
+(defrel (read-back-the Γ τ v norm)
+  (fresh (t e tₒ eₒ)
+    (== v `(THE ,t ,e))
+    (== norm `(the ,tₒ ,eₒ))
+    (read-back-typo Γ t tₒ)
+    (read-backo Γ τ e eₒ)))
+*/
+def readBackThe(Γ: VarOr[SExp], τ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp]): Goal =
+  for {
+    t <- fresh[SExp]
+    e <- fresh[SExp]
+    t_ <- fresh[SExp]
+    e_ <- fresh[SExp]
+    _ <- v === list("THE", t, e)
+    _ <- norm === list("the", t_, e_)
+    _ <- readBackTypo(Γ, t, t_)
+    _ <- readBacko(Γ, τ, e, e_)
+  } yield ()
+/*
+(defrel (go-to-neutral Γ τ v norm)
+  (fresh (τ ne)
+    (== v `(NEU ,τ ,ne))
+    (read-back-neutral τ Γ ne norm)))
+*/
+def goToNeutral(Γ: VarOr[SExp], τ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp]): Goal =
+  for {
+    τ_ <- fresh[SExp]
+    ne <- fresh[SExp]
+    _ <- v === list("NEU", τ_, ne)
+    _ <- readBackNeutral(τ, Γ, ne, norm)
+  } yield ()
+/*
+(defrel (go-to-type Γ τ v norm)
+  (== τ 'UNIVERSE)
+  (read-back-typo Γ v norm))
+*/
+def goToType(Γ: VarOr[SExp], τ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp]): Goal =
+  for {
+    _ <- τ === "UNIVERSE"
+    _ <- readBackTypo(Γ, v, norm)
+  } yield ()
+/*
+
+;; relevance function for read-backo
+
+(define (in-type? e τ)
+  (let ([cs (get-constructors τ)])
+    (or (memv e cs)
+        (and (pair? e)
+             (member (car e) cs)))))
+*/
+def inType(e: VarOr[SExp], τ: VarOr[SExp]): Boolean =
+  getConstructors(τ).contains(e) || (e match {
+    case Cons(car, _) => getConstructors(τ).contains(car)
+    case _ => false
+  })
+/*
+(define (read-back-v v)
+  (match v
+    [`(THE ,t ,e) '(the)]
+    [`(NEU ,t ,e) '(neutral)]
+    [(? var?) '(use-maybe)]
+    [else '()]))
+*/
+def readBackV(v: VarOr[SExp])(walker: Walker): Seq[String] = walkStar(walker, v) match {
+  case list("THE", t, e) => Seq("the")
+  case list("NEU", t, e) => Seq("neutral")
+  case v: Var[_] => Seq(UseMaybe)
+  case _ => Seq()
+}
+/*
+(define (read-back-τ t)
+  (match t
+    ['UNIVERSE '(U)]
+    ['TRIVIAL '(Trivial)]
+    ['NAT '(Nat)]
+    ['ATOM '(Atom)]
+    [`(SIGMA . ,info) '(Σ)]
+    [`(EQUAL . ,info) '(=)]
+    [`(PI . ,info) '(Π)]
+    [(? var?) '(use-maybe)]
+    [else '(the neutral)]))
+*/
+def readBackT(t: VarOr[SExp])(walker: Walker): Seq[String] = walkStar(walker, t) match {
+  case "UNIVERSE" => Seq("U")
+  case "TRIVIAL" => Seq("Trivial")
+  case "NAT" => Seq("Nat")
+  case "ATOM" => Seq("Atom")
+  case list("SIGMA", info@_*) => Seq("Σ")
+  case list("EQUAL", info@_*) => Seq("=")
+  case list("PI", info@_*) => Seq("Π")
+  case v: Var[_] => Seq(UseMaybe)
+  case _ => Seq("the", "neutral")
+}
+/*
+(define (read-back-norm e)
+  (let loop ([t '(Nat Trivial Atom Σ Π = U)])
+    (cond
+      [(null? t) '()]
+      [(in-type? e (car t)) `(,(car t) neutral the)]
+      [else (loop (cdr t))])))
+*/
+def readBackNorm(e0: VarOr[SExp])(walker: Walker): Seq[String] = {
+  val e = walkStar(walker, e0)
+
+  def loop(t: Seq[String] = Seq("Nat", "Trivial", "Atom", "Σ", "Π", "=", "U")): Seq[String] =
+    if (t.isEmpty) Seq.empty
+    else if inType(e, t.head) then Seq(t.head, "neutral", "the")
+    else loop(t.tail)
+
+  loop()
+}
 def readBacko(Γ: VarOr[SExp], τ: VarOr[SExp], v: VarOr[SExp]): Rel[SExp] = readBacko(Γ, τ, v, _)
 def readBacko(Γ: VarOr[SExp], τ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp]): Goal = ???
 def readBackTypo(Γ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp]): Goal = ???
+def readBackNeutral(τ: VarOr[SExp], Γ: VarOr[SExp], ne: VarOr[SExp], norm: VarOr[SExp]): Goal = ???

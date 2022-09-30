@@ -190,6 +190,7 @@ def applyρ(ρ: VarOr[SExp], y: VarOr[SExp], v: VarOr[SExp]): Goal = conde(
   (== new-Γ `((free ,y ,τ) . ,Γ)))
 */
 def extendΓ(Γ: VarOr[SExp], y: VarOr[SExp], τ: VarOr[SExp]): VarOr[SExp] = cons(list("free", y, τ), Γ)
+def extendΓ(Γ: VarOr[SExp], y: VarOr[SExp], τ: VarOr[SExp], newΓ: VarOr[SExp]): Goal = newΓ === extendΓ(Γ, y, τ)
 
 /*
 (defrel (extend-ρ ρ y v new-ρ)
@@ -320,7 +321,7 @@ def freshAux(x: String, used: VarOr[SExp], name: VarOr[SExp]): Goal = condu(
    [(membero x used) (fresh/aux 'var used name)]
    [(== x name)]))
 */
-def freshen(x: String, used: VarOr[SExp], name: VarOr[SExp]): Goal = condu(
+def freshen(x: VarOr[SExp], used: VarOr[SExp], name: VarOr[SExp]): Goal = condu(
   (membero(x, used), freshAux("var", used, name)),
   (x === name, Goal.success))
 

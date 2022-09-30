@@ -115,36 +115,23 @@ def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
     a0 <- evalo(env, a)
     b0 <- evalo(env, b)
   } yield cons(a0, b0),
-  {
-    val xs = hole[SExp]
-    for {
-      _ <- notInEnvo(env, "list")
-      _ <- x === cons("list", xs)
-      xs0 <- mapo(evalo(env, _), xs)
-    } yield xs0
-  },
-  {
-    val p = hole[SExp]
-    val a = hole[SExp]
-    val b = hole[SExp]
-    for {
-      _ <- notInEnvo(env, "car")
-      _ <- x === list("car", p)
-      p0 <- evalo(env, p)
-      _ <- p0 === cons(a, b)
-      _ <- a =/= ClosureTag
-    } yield a
-  },
-  {
-    val p = hole[SExp]
-    val a = hole[SExp]
-    val b = hole[SExp]
-    for {
-      _ <- notInEnvo(env, "cdr")
-      _ <- x === list("cdr", p)
-      p0 <- evalo(env, p)
-      _ <- p0 === cons(a, b)
-      _ <- a =/= ClosureTag
-    } yield b
-  }
+  for {
+    _ <- notInEnvo(env, "list")
+    xs <- x.is[SExp](cons("list", _))
+    xs0 <- mapo(evalo(env, _), xs)
+  } yield xs0,
+  for {
+    _ <- notInEnvo(env, "car")
+    p <- x.is[SExp](list("car", _))
+    p0 <- evalo(env, p)
+    (a, b) <- p0.is[SExp, SExp](cons)
+    _ <- a =/= ClosureTag
+  } yield a,
+  for {
+    _ <- notInEnvo(env, "cdr")
+    p <- x.is[SExp](list("cdr", _))
+    p0 <- evalo(env, p)
+    (a, b) <- p0.is[SExp, SExp](cons)
+    _ <- a =/= ClosureTag
+  } yield b,
 )

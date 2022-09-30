@@ -74,6 +74,28 @@ implicit object U$Unit extends EqualUnifier[Unit]
 
 implicit object U$Int extends EqualUnifier[Int]
 
+implicit object U$Long extends EqualUnifier[Long]
+
+implicit object U$Float extends EqualUnifier[Float]
+
+implicit object U$Double extends EqualUnifier[Double]
+
 implicit object U$Integer extends EqualUnifier[Integer]
 
 implicit object U$Boolean extends EqualUnifier[Boolean]
+
+implicit def U$Product1[T](implicit t: Unifier[T]): Unifier[Product1[T]] = (x, y) =>
+  if(x.getClass != y.getClass) Unifying.failure else t.unify(x._1, y._1)
+
+implicit def U$Product2[A, B](implicit a: Unifier[A], b: Unifier[B]): Unifier[Product2[A, B]] = (x, y) =>
+  if(x.getClass != y.getClass) Unifying.failure else for {
+    _ <- a.unify(x._1, y._1)
+    _ <- b.unify(x._2, y._2)
+  } yield ()
+
+implicit def U$Product3[A, B, C](implicit a: Unifier[A], b: Unifier[B], c: Unifier[C]): Unifier[Product3[A, B, C]] = (x, y) =>
+  if (x.getClass != y.getClass) Unifying.failure else for {
+    _ <- a.unify(x._1, y._1)
+    _ <- b.unify(x._2, y._2)
+    _ <- c.unify(x._3, y._3)
+  } yield ()

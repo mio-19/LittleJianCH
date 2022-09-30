@@ -19,15 +19,15 @@ final case class MKPair(a: VarOr[MKData], b: VarOr[MKData]) extends Product2[Var
 
 implicit val U$MKPair: Unifier[MKPair] = U$Product
 
-type MKMap = MKMapEmpty.type | MKMapCons
-implicit val U$MKMap: Unifier[MKMap] = U$Union[MKMapEmpty.type, MKMapCons]
+sealed trait MKMap
+implicit val U$MKMap: Unifier[MKMap] = U$Union[MKMapEmpty.type, MKMapCons].asInstanceOf[Unifier[MKMap]]
 implicit val U$VarOr$MKMap: Unifier[VarOr[MKMap]] = U$VarOr(U$MKMap)
 
-case object MKMapEmpty
+case object MKMapEmpty extends MKMap
 
 implicit val U$MKMapEmpty: Unifier[MKMapEmpty.type] = equalUnifier
 
-final case class MKMapCons(key: VarOr[MKData], value: VarOr[MKData], tail: VarOr[MKMap]) extends Product3[VarOr[MKData], VarOr[MKData], VarOr[MKMap]]
+final case class MKMapCons(key: VarOr[MKData], value: VarOr[MKData], tail: VarOr[MKMap]) extends MKMap with Product3[VarOr[MKData], VarOr[MKData], VarOr[MKMap]]
 
 implicit val U$MKMapCons: Unifier[MKMapCons] = U$Product
 
@@ -82,6 +82,10 @@ implicit val U$MKReg: Unifier[MKReg] = U$Product
 def list(xs: VarOr[MKData]*): VarOr[MKData] = xs.foldRight[VarOr[MKData]](())(MKPair)
 
 def microo(x: VarOr[MKData], env: VarOr[MKMap]): Rel[MKData] = ???
+
+def MKMapo(x: VarOr[MKData]): Rel[MKMap] = for {
+  _ <- x.isType[MKMap]
+} yield x.asInstanceOf[VarOr[MKMap]]
 
 def applyEnvo(env: VarOr[MKMap], y: VarOr[MKData]): Rel[MKData] = for {
   (key, value, tail) <- env.is(MKMapCons(_, _, _))

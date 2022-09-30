@@ -42,7 +42,13 @@ implicit val I$Cons: Inspector[Cons] = {
 def cons(a: VarOr[SExp], d: VarOr[SExp]): SExp = Cons(a, d)
 
 private def convertList(xs: Seq[VarOr[SExp]]): SExp = if (xs.isEmpty) () else cons(xs.head, convertList(xs.tail))
+private def convertListDot(xs: Seq[VarOr[SExp]]): VarOr[SExp] = {
+  val head = xs.head
+  val tail = xs.tail
+  if(tail.isEmpty) head else cons(head, convertListDot(tail))
+}
 def list(xs: VarOr[SExp]*) = convertList(xs)
+def listDot(xs: VarOr[SExp]*) = convertListDot(xs)
 
 
 implicit val U$SExp: Unifier[SExp] = U$Union(U$Cons, U$Union(U$Unit, U$String))

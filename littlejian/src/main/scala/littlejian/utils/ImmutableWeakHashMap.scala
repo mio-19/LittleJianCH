@@ -1,35 +1,26 @@
 package littlejian.utils
 
-private val UsageLimit = 5
+private val PrefixLimit = 16
 
 // TODO: Use this for subst for gc
-final class ImmutableWeakHashMap[K, V](var prefix: scala.collection.immutable.HashMap[K, V],
-                                       var core: scala.collection.mutable.WeakHashMap[K, V]) extends scala.collection.immutable.AbstractMap[K, V] {
-  var usageCount = 0
+final class ImmutableWeakHashMap[K, V](private[utils] val prefix: scala.collection.immutable.HashMap[K, _ <: V],
+                                       private[utils] val core: scala.collection.mutable.WeakHashMap[K, _ <: V]) extends scala.collection.immutable.AbstractMap[K, V] {
 
-  private def checkUsage: Unit = {
-    if (prefix == null) return
-      usageCount += 1
-      if (usageCount >= UsageLimit) {
-        this.synchronized {
-          if (prefix != null) {
-            // TODO
-          }
-        }
-      }
-  }
+  def iterator: Iterator[(K, V)] = prefix.iterator ++ core.iterator.filter({ case (k, _) => !prefix.contains(k) })
 
-  def iterator: Iterator[(K, V)] = ???
-
-  def get(key: K): Option[V] = {
-    this.checkUsage
-    this.synchronized {
-      if (prefix == null) return core.get(key)
-      prefix.get(key).orElse(core.get(key))
-    }
-  }
+  def get(key: K): Option[V] = prefix.get(key).orElse(core.get(key))
 
   def removed(key: K): Map[K, V] = ???
 
-  def updated[V1 >: V](key: K, value: V1): Map[K, V1] = ???
+  def updated[V1 >: V](key: K, value: V1): Map[K, V1] = ImmutableWeakHashMap.create(prefix.updated(key, value), core)
+}
+
+object ImmutableWeakHashMap {
+  def empty[K, V]: ImmutableWeakHashMap[K, V] = new ImmutableWeakHashMap[K, V](scala.collection.immutable.HashMap.empty, new scala.collection.mutable.WeakHashMap[K, V])
+
+  private[utils] def create[K, V](prefix: scala.collection.immutable.HashMap[K, _ <: V], core: scala.collection.mutable.WeakHashMap[K, _ <: V]): ImmutableWeakHashMap[K, V] =
+    if (prefix.size > PrefixLimit)
+      ???
+    else
+      new ImmutableWeakHashMap[K, V](prefix, core)
 }

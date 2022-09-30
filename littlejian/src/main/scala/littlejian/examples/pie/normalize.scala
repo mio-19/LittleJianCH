@@ -1012,5 +1012,169 @@ def readBackTypo(Γ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp]): Goal = con
   ("=", readBackEqual(Γ, v, norm)),
   ("Π", readBackDepBinder("PI", "Π", Γ, v, norm)),
   ("neutral", readBackTypeNeutral(Γ, v, norm)))
+/*
+(defrel (RBN-var ne norm)
+  (fresh (s)
+    (== ne `(VAR ,s))
+    (== norm s)))
+*/
+def RBNvar(ne: VarOr[SExp], norm: VarOr[SExp]): Goal = for {
+  s <- fresh[SExp]
+  _ <- ne === list("VAR", s)
+  _ <- norm === s
+} yield ()
+/*
+(defrel (RBN-car τ Γ ne norm)
+  (fresh (pr τ-pr pr^)
+    (== ne `(CAR (NEU ,τ-pr ,pr)))
+    (== norm `(car ,pr^))
+    (read-back-neutral τ-pr Γ pr pr^)))
+*/
+def RBNcar(τ: VarOr[SExp], Γ: VarOr[SExp], ne: VarOr[SExp], norm: VarOr[SExp]): Goal = for {
+  pr <- fresh[SExp]
+  τpr <- fresh[SExp]
+  pr_ <- fresh[SExp]
+  _ <- ne === list("CAR", list("NEU", τpr, pr))
+  _ <- norm === list("car", pr_)
+  _ <- readBackNeutral(τpr, Γ, pr, pr_)
+} yield ()
+/*
+(defrel (RBN-cdr τ Γ ne norm)
+  (fresh (τ-pr pr pr^)
+    (== ne `(CDR (NEU ,τ-pr ,pr)))
+    (== norm `(cdr ,pr^))
+    (read-back-neutral τ-pr Γ pr pr^)))
+*/
+def RBNcdr(τ: VarOr[SExp], Γ: VarOr[SExp], ne: VarOr[SExp], norm: VarOr[SExp]): Goal = for {
+  τpr <- fresh[SExp]
+  pr <- fresh[SExp]
+  pr_ <- fresh[SExp]
+  _ <- ne === list("CDR", list("NEU", τpr, pr))
+  _ <- norm === list("cdr", pr_)
+  _ <- readBackNeutral(τpr, Γ, pr, pr_)
+} yield ()
+/*
+(defrel (RBN-app τ Γ ne norm)
+  (fresh (rat ran rato rano x A c T)
+    (== ne `(N-APP (NEU (PI ,x ,A ,c) ,rat) ,ran))
+    (== norm `(the ,T (,rato ,rano)))
+    (read-back-neutral `(PI ,x ,A ,c) Γ rat rato)
+    (read-backo Γ A ran rano)
+    (read-back-typo Γ τ T)))
+*/
+def RBNapp(τ: VarOr[SExp], Γ: VarOr[SExp], ne: VarOr[SExp], norm: VarOr[SExp]): Goal = for {
+  rat <- fresh[SExp]
+  ran <- fresh[SExp]
+  rato <- fresh[SExp]
+  rano <- fresh[SExp]
+  x <- fresh[SExp]
+  A <- fresh[SExp]
+  c <- fresh[SExp]
+  T <- fresh[SExp]
+  _ <- ne === list("N-APP", list("NEU", list("PI", x, A, c), rat), ran)
+  _ <- norm === list("the", T, list(rato, rano))
+  _ <- readBackNeutral(list("PI", x, A, c), Γ, rat, rato)
+  _ <- readBacko(Γ, A, ran, rano)
+  _ <- readBackTypo(Γ, τ, T)
+} yield ()
+/*
+(defrel (RBN-ind-Nat τ Γ ne norm)
+  (fresh (t m b s to mo bo so T τB TB T1 T2 vars n-1 res Γ^ k-1)
+    (== ne `(IND-NAT (NEU NAT ,t) ,m (THE ,τB ,b) ,s))
+    (== norm `(ind-Nat ,to ,mo (the ,TB ,bo) ,so))
+    (read-back-neutral 'NAT Γ t to)
+    (just-names Γ vars)
+    (freshen 'k-1 vars k-1)
+    (read-backo Γ `(PI ,k-1 NAT (CLOS ,Γ ,k-1 U)) m mo)
+    (read-backo Γ τB b bo)
+    (read-back-typo Γ τ T)
+    (read-back-typo Γ τB TB)
+    (freshen 'n-1 vars n-1)
+    (freshen 'res vars res)
+    (extend-Γ Γ n-1 'NAT Γ^)
+    (read-backo Γ `(PI ,n-1 NAT (CLOS ,Γ ,n-1 (Π ([,res (,mo ,n-1)])
+                                                (,mo (add1 ,n-1))))) s so)))
+*/
+def RBNindNat(τ: VarOr[SExp], Γ: VarOr[SExp], ne: VarOr[SExp], norm: VarOr[SExp]): Goal = for {
+  t <- fresh[SExp]
+  m <- fresh[SExp]
+  b <- fresh[SExp]
+  s <- fresh[SExp]
+  to <- fresh[SExp]
+  mo <- fresh[SExp]
+  bo <- fresh[SExp]
+  so <- fresh[SExp]
+  T <- fresh[SExp]
+  τB <- fresh[SExp]
+  TB <- fresh[SExp]
+  T1 <- fresh[SExp]
+  T2 <- fresh[SExp]
+  vars <- fresh[SExp]
+  n_1 <- fresh[SExp]
+  res <- fresh[SExp]
+  Γ_ <- fresh[SExp]
+  k_1 <- fresh[SExp]
+  _ <- ne === list("IND-NAT", list("NEU", "NAT", t), m, list("THE", τB, b), s)
+  _ <- norm === list("ind-Nat", to, mo, list("the", TB, bo), so)
+  _ <- readBackNeutral("NAT", Γ, t, to)
+  _ <- justNames(Γ, vars)
+  _ <- freshen("k-1", vars, k_1)
+  _ <- readBacko(Γ, list("PI", k_1, "NAT", list("CLOS", Γ, k_1, "U")), m, mo)
+  _ <- readBacko(Γ, τB, b, bo)
+  _ <- readBackTypo(Γ, τ, T)
+  _ <- readBackTypo(Γ, τB, TB)
+  _ <- freshen("n-1", vars, n_1)
+  _ <- freshen("res", vars, res)
+  _ <- extendΓ(Γ, n_1, "NAT", Γ_)
+  _ <- readBacko(Γ, list("PI", n_1, "NAT", list("CLOS", Γ, n_1, list("Π", list(list(res, list(mo, n_1))), list(mo, list("add1", n_1))))), s, so)
+} yield ()
+/*
+(defrel (RBN-ind-= τ Γ ne norm)
+  (fresh (A from to ne1 τm m τb b neo mo bo)
+    (== ne `(IND-= (NEU (EQUAL ,A ,from ,to) ,ne1)
+                   (THE ,τm ,m)
+                   (THE ,τb ,b)))
+    (== norm `(ind-= ,neo ,mo ,bo))
+    (read-back-neutral `(EQUAL ,A ,from ,to) Γ ne1 neo)
+    (read-backo Γ τm m mo)
+    (read-backo Γ τb b bo)))
+*/
+def RBNindEq(τ: VarOr[SExp], Γ: VarOr[SExp], ne: VarOr[SExp], norm: VarOr[SExp]): Goal = for {
+  A <- fresh[SExp]
+  from <- fresh[SExp]
+  to <- fresh[SExp]
+  ne1 <- fresh[SExp]
+  τm <- fresh[SExp]
+  m <- fresh[SExp]
+  τb <- fresh[SExp]
+  b <- fresh[SExp]
+  neo <- fresh[SExp]
+  mo <- fresh[SExp]
+  bo <- fresh[SExp]
+  _ <- ne === list("IND-=", list("NEU", list("EQUAL", A, from, to), ne1), list("THE", τm, m), list("THE", τb, b))
+  _ <- norm === list("ind-=", neo, mo, bo)
+  _ <- readBackNeutral(list("EQUAL", A, from, to), Γ, ne1, neo)
+  _ <- readBacko(Γ, τm, m, mo)
+  _ <- readBacko(Γ, τb, b, bo)
+} yield ()
+/*
+;; relevance function for read-back-neutral
 
+(define all-RBN
+  '(VAR CAR CDR N-APP IND-NAT IND-=))
+*/
+val allRBN: Seq[String] = Seq("VAR", "CAR", "CDR", "N-APP", "IND-NAT", "IND-=")
+/*
+(define (RBN-ne v)
+  (match v
+    [(? (exp-memv? all-RBN)) `(,(car v))]
+    [(? var?) all-RBN]
+    [else '()]))
+*/
+def RBNne(v0: VarOr[SExp])(walker: Walker): Seq[String] = {
+  val v = walkStar(walker, v0)
+  if(expMemvQ(allRBN)(v)) Seq(v.asInstanceOf[Cons].a.asInstanceOf[String])
+  else if(v.isInstanceOf[Var[_]]) allRBN
+  else Seq()
+}
 def readBackNeutral(τ: VarOr[SExp], Γ: VarOr[SExp], ne: VarOr[SExp], norm: VarOr[SExp]): Goal = ???

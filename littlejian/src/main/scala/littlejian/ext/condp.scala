@@ -1,6 +1,7 @@
 package littlejian.ext
 
-import littlejian._
+import littlejian.*
+import scala.collection.immutable.HashSet
 
 final case class Walker(f: Any => Any) {
   def apply[T](x: VarOr[T]): VarOr[T] = f(x).asInstanceOf[VarOr[T]]
@@ -16,7 +17,10 @@ private def collect(subst: Subst, keys: Seq[Walker => Seq[String]]*): Seq[String
     if (ulos.contains(UseMaybe)) ulos ++ collect(subst, keys.tail *) else ulos
   }
 
-def condp(keys: Seq[Walker => Seq[String]]*)(clauses: => (String, Goal)*): Goal = GoalDelay(???)
+def condp(keys: Seq[Walker => Seq[String]]*)(clauses: => (String, Goal)*): Goal = GoalReadSubst({ subst =>
+  val ids = HashSet.from(collect(subst, keys *))
+  GoalDisj(clauses.filter({ case (id, _) => ids.contains(id) }).map(_._2))
+})
 
 def condp[T](keys: Seq[Walker => Seq[String]]*)(clauses: => (String, Rel[T])*)(implicit unifier: Unifier[T]): Rel[T] = {
   val v = new Var[T]

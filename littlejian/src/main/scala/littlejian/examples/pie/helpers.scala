@@ -295,5 +295,69 @@ def addStar(x: String): String = x + "*"
 */
 def freshAux(x: String, used: VarOr[SExp], name: VarOr[SExp]): Goal = condu(
   (membero(x, used), freshAux(addStar(x), used, name)),
-  (x === name, Goal.success)
-)
+  (x === name, Goal.success))
+
+/*
+(defrel (freshen x used name)
+  (condu
+   [(membero x used) (fresh/aux 'var used name)]
+   [(== x name)]))
+*/
+def freshen(x: String, used: VarOr[SExp], name: VarOr[SExp]): Goal = condu(
+  (membero(x, used), freshAux("var", used, name)),
+  (x === name, Goal.success))
+
+/*
+(defrel (fresh-name o)
+  (== o (gensym 'tmp)))
+*/
+def freshName(o: VarOr[SExp]): Goal = o === gensym("tmp")
+
+// For relevance functions
+/*
+(define all-exprs
+  '(var the zero sole Nat Trivial Atom U quote add1 app
+        same λ cons car cdr ind-Nat ind-= Π Σ =))
+(define symbol-exprs
+  '(zero sole Atom Nat Trivial U))
+(define non-symbol-exprs
+  '(the quote add1 same λ cons car cdr ind-Nat ind-= Π Σ =))
+(define ((exp-memv? ls) e)
+  (and (pair? e) (memv (car e) ls)))
+*/
+val allExprs: Seq[String] = Seq("var", "the", "zero", "sole", "Nat", "Trivial", "Atom", "U", "quote", "add1", "app", "same", "λ", "cons", "car", "cdr", "ind-Nat", "ind-=", "Π", "Σ", "=")
+val symbolExprs: Seq[String] = Seq("zero", "sole", "Atom", "Nat", "Trivial", "U")
+val nonSymbolExprs: Seq[String] = Seq("the", "quote", "add1", "same", "λ", "cons", "car", "cdr", "ind-Nat", "ind-=", "Π", "Σ", "=")
+def memv(v: VarOr[SExp], ls: VarOr[SExp]): Boolean = ls match {
+  case Cons(car, cdr) => car == v || memv(v, cdr)
+  case _ => false
+}
+def expMemvQ(ls: VarOr[SExp])(e: VarOr[SExp]): Boolean = e match {
+  case Cons(car, cdr) => memv(car, ls)
+  case _ => false
+}
+// (define simple? (λ (x) (memv x symbol-exprs)))
+def simpleQ(x: VarOr[SExp]): Boolean = symbolExprs.contains(x)
+
+/*
+(define (get-constructors τ)
+  (match τ
+    ['Atom '(quote)]
+    ['Trivial '(sole)]
+    ['Nat '(zero add1)]
+    ['U '(Trivial Atom Nat Π Σ =)]
+    [`(Π ([,x ,A]) ,R) '(λ)]
+    [`(Σ ([,x ,A]) ,D) '(cons)]
+    [`(= ,X ,from ,to) '(same)]
+    [else '()]))
+*/
+def getConstructors(τ: VarOr[SExp]): Seq[String] = τ match {
+  case "Atom" => Seq("quote")
+  case "Trivial" => Seq("sole")
+  case "Nat" => Seq("zero", "add1")
+  case "U" => Seq("Trivial", "Atom", "Nat", "Π", "Σ", "=")
+  case list("Π", list(list(x, _)), _) => Seq("λ")
+  case list("Σ", list(list(x, _)), _) => Seq("cons")
+  case list("=", _, from, to) => Seq("same")
+  case _ => Seq.empty
+}

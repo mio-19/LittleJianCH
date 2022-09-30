@@ -47,7 +47,14 @@ private def convertListDot(xs: Seq[VarOr[SExp]]): VarOr[SExp] = {
   val tail = xs.tail
   if(tail.isEmpty) head else cons(head, convertListDot(tail))
 }
-def list(xs: VarOr[SExp]*) = convertList(xs)
+object list {
+  def apply(xs: VarOr[SExp]*) = convertList(xs)
+  def unapplySeq(x: VarOr[SExp]): Option[Seq[VarOr[SExp]]] = x match {
+    case Cons(a, d) => unapplySeq(d).map(a +: _)
+    case () => Some(Seq())
+    case _ => None
+  }
+}
 def listDot(xs: VarOr[SExp]*) = convertListDot(xs)
 
 

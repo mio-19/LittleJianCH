@@ -68,3 +68,5 @@ def applyΓ(Γ: VarOr[SExp], y: VarOr[SExp], τ: VarOr[SExp]): Goal = {
     }
   )
 }
+
+def applyρ(ρ: VarOr[SExp], y: VarOr[SExp], v: VarOr[SExp]): Goal = ???

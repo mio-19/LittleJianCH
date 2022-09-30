@@ -35,9 +35,7 @@ final case class Cons(a: VarOr[SExp], d: VarOr[SExp]) extends Product2[VarOr[SEx
 }
 implicit val U$Cons: Unifier[Cons] = U$Product
 
-implicit val I$Cons: Inspector[Cons] = {
-  case Cons(a, d) => Seq(WithInspector(a), WithInspector(d))
-}
+implicit val I$Cons: Inspector[Cons] = I$Product
 
 def cons(a: VarOr[SExp], d: VarOr[SExp]): SExp = Cons(a, d)
 

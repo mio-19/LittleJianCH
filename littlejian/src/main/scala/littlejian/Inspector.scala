@@ -63,6 +63,11 @@ implicit object I$Integer extends AtomInspector[Integer]
 
 implicit object I$Unit extends AtomInspector[Unit]
 
+implicit def I$VarOr[T](implicit inspector: Inspector[T]): Inspector[VarOr[T]] = {
+  case v: Var[_] => I$Var.inspect(v)
+  case t: T => inspector.inspect(t)
+}
+
 @targetName("I$Union_") implicit def I$Union[T, U](implicit tr: => Inspector[T], ur: => Inspector[U], tev: ClassTag[T], uev: ClassTag[U]): Inspector[T | U] = I$Union(tr, ur, tev, uev)
 implicit def I$Union[T, U](tr: => Inspector[T], ur: => Inspector[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Inspector[T | U] = {
   lazy val t = tr
@@ -90,4 +95,20 @@ implicit def I$Union[T, U, V](tr: => Inspector[T], ur: => Inspector[U], vr: => I
     else if (uc.isInstance(x)) u.inspect(x.asInstanceOf[U])
     else v.inspect(x.asInstanceOf[V])
   }
+}
+
+implicit def I$Product[T, R <: Product1[T]](implicit tr: => Inspector[T]): Inspector[R] = {
+  lazy val t = tr
+  (x) => Seq(WithInspector(x._1))
+}
+implicit def I$Product[T, U, R <: Product2[T, U]](implicit tr: => Inspector[T], ur: => Inspector[U]): Inspector[R] = {
+  lazy val t = tr
+  lazy val u = ur
+  (x) => Seq(WithInspector(x._1), WithInspector(x._2))
+}
+implicit def I$Product[T, U, V, R <: Product3[T, U, V]](implicit tr: => Inspector[T], ur: => Inspector[U], vr: => Inspector[V]): Inspector[R] = {
+  lazy val t = tr
+  lazy val u = ur
+  lazy val v = vr
+  (x) => Seq(WithInspector(x._1), WithInspector(x._2), WithInspector(x._3))
 }

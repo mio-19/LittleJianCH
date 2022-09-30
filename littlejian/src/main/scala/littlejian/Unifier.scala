@@ -1,5 +1,6 @@
 package littlejian
 
+import scala.annotation.targetName
 import scala.language.implicitConversions
 
 // Monad
@@ -51,6 +52,8 @@ implicit def U$VarOr[T](implicit unifier: Unifier[T]): Unifier[VarOr[T]] = (x, y
 
 import scala.reflect.ClassTag
 
+@targetName("U$Union_") def U$Union[T, U](implicit tr: => Unifier[T], ur: => Unifier[U], tev: ClassTag[T], uev: ClassTag[U]): Unifier[T | U] = U$Union(tr, ur)(tev, uev)
+
 def U$Union[T, U](tr: => Unifier[T], ur: => Unifier[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Unifier[T | U] = {
   lazy val t = tr
   lazy val u = ur
@@ -64,6 +67,7 @@ def U$Union[T, U](tr: => Unifier[T], ur: => Unifier[U])(implicit tev: ClassTag[T
   }
 }
 
+@targetName("U$Union_") def U$Union[T, U, V](implicit tr: => Unifier[T], ur: => Unifier[U], vr: => Unifier[V], tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V]): Unifier[T | U | V] = U$Union(tr, ur, vr)(tev, uev, vev)
 def U$Union[T, U, V](tr: => Unifier[T], ur: => Unifier[U], vr: => Unifier[V])(implicit tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V]): Unifier[T | U | V] = {
   lazy val t = tr
   lazy val u = ur

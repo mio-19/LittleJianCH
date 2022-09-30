@@ -6,7 +6,7 @@ import scala.annotation.tailrec
 
 type SExp = Cons | Unit | String
 
-implicit val U$SExp: Unifier[SExp] = U$Union(U$Cons, U$Unit, U$String)
+implicit val U$SExp: Unifier[SExp] = U$Union[Cons, Unit, String]
 
 implicit val I$SExp: Inspector[SExp] = I$Union(I$Cons, I$Unit, I$String)
 

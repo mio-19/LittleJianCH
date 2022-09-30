@@ -17,6 +17,12 @@ final case class GoalWith[T](goal: Goal, x: T) {
     val result = f(x)
     GoalWith(if(goal eq Goal.success) result.goal else GoalConj(goal, result.goal), result.x)
   }
+
+  // hack for `(a, b) <- val`
+  def withFilter(p: T => Boolean): GoalWith[T] = {
+    if(!p(x)) throw new UnsupportedOperationException("filter not supported")
+    this
+  }
 }
 
 implicit def packGoalWith[T](x: T): GoalWith[T] = GoalWith(Goal.success, x)

@@ -111,8 +111,7 @@ def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
   } yield result,
   for {
     ignored <- notInEnvo(env, "cons")
-    ab <- x.is[SExp, SExp](list("cons", _, _))
-    (a, b) = ab
+    (a, b) <- x.is[SExp, SExp](list("cons", _, _))
     a0 <- evalo(env, a)
     b0 <- evalo(env, b)
   } yield cons(a0, b0),

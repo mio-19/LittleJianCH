@@ -19,7 +19,7 @@ final case class NotEqElem[T](override val x: Var[T], override val y: VarOr[T], 
 final case class NotEqState(clauses: ParVector /*conj*/ [ParVector[NotEqElem[_]] /*disj not eq*/ ]) {
   def onEq(eq: EqState): Option[NotEqState] =
     if (clauses.isEmpty) Some(this) else // optimize
-      NotEqState.create(eq, clauses)
+      NotEqState.check(eq, clauses)
 }
 
 object NotEqState {
@@ -33,11 +33,11 @@ object NotEqState {
     case (x, y: Var[T]) => Some(ParVector(NotEqElem(y, x, req.unifier)))
     case (x, y) => req.unifier.unify(x, y)(Subst.empty) match {
       case None => Some(ParVector.empty)
-      case Some((newSubst, ())) => if (newSubst.isEmpty) None else run(eq, newSubst.toSeq.par.map({ case (v, (unifier, x)) => NotEqRequestUnchecked(v, x, unifier) }))
+      case Some((newSubst, ())) => if (newSubst.isEmpty) None else runCheck(eq, newSubst.toSeq.par.map({ case (v, (unifier, x)) => NotEqRequestUnchecked(v, x, unifier) }))
     }
   }
 
-  private def run(eq: EqState, x: ParSeq /*disj*/ [NotEqRequest[_]]): Option[ParVector /*disj, empty means success*/ [NotEqElem[_]]] =
+  private def runCheck(eq: EqState, x: ParSeq /*disj*/ [NotEqRequest[_]]): Option[ParVector /*disj, empty means success*/ [NotEqElem[_]]] =
     if (x.isEmpty) throw new IllegalArgumentException("Empty vector")
     else {
       val result = x.map(exec(eq, _)).filter(_.isDefined).map(_.get)
@@ -46,10 +46,10 @@ object NotEqState {
       else Some(result.fold(ParVector.empty)(_ ++ _))
     }
 
-  private def create(eq: EqState, xs: ParVector[ParVector[NotEqRequest[_]]]): Option[NotEqState] =
-    traverse(xs.map(run(eq, _))).map(xs => NotEqState(xs.filter(_.nonEmpty)))
+  private def check(eq: EqState, xs: ParVector[ParVector[NotEqRequest[_]]]): Option[NotEqState] =
+    traverse(xs.map(runCheck(eq, _))).map(xs => NotEqState(xs.filter(_.nonEmpty)))
 
-  private[littlejian] def create(eq: EqState, req: NotEqRequest[_], clauses: NotEqState): Option[NotEqState] = create(eq, ParVector(req) +: clauses.clauses)
+  private[littlejian] def create(eq: EqState, req: NotEqRequest[_], clauses: NotEqState): Option[NotEqState] = check(eq, ParVector(req) +: clauses.clauses)
 }
 
 final case class PredTypeState(xs: ParVector[(Var[_], PredTypeTag)]) {

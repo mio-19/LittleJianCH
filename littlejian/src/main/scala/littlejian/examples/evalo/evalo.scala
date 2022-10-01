@@ -27,12 +27,10 @@ def lookupo(env: VarOr[SExp], id: VarOr[SExp]): Rel[SExp] = lookupo(env, id, _)
 
 def notInEnvo(env: VarOr[SExp], id: VarOr[SExp]): Goal = conde(
   env === (),
-  {
-    val aid = hole[SExp]
-    val av = hole[SExp]
-    val d = hole[SExp]
-    env === cons(cons(aid, av), d) && id =/= aid && notInEnvo(d, id)
-  }
+  for {
+    (aid, av, d) <- fresh[SExp, SExp, SExp]
+    _ <- env === cons(cons(aid, av), d) && id =/= aid && notInEnvo(d, id)
+  } yield ()
 )
 
 def envExto(env: VarOr[SExp], params: VarOr[SExp], args: VarOr[SExp]): Rel[SExp] = conde(

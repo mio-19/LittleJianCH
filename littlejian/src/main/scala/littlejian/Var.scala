@@ -16,6 +16,6 @@ final class Var[T] private[littlejian] {
 
 type VarOr[T] = Var[T] | T
 
-
+@deprecated("this will be removed, please use fresh")
 def hole[T]: VarOr[T] = new Var[T]
 def callWithFresh[T](f: VarOr[T] => Goal): Goal = f(new Var[T])

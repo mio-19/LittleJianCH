@@ -27,14 +27,16 @@ implicit final class SubstOps(self: Subst) {
 }
 
 object Subst {
-  var empty: Subst = ImmutableWeakHashMap.empty
+  private var emptyImpl: Subst = ImmutableWeakHashMap.empty
+
+  def empty: Subst = emptyImpl
 
   def choseHashMapImpl(): Unit = {
-    empty = HashMap.empty
+    emptyImpl = HashMap.empty
   }
 
   def choseImmutableWeakHashMapImpl(): Unit = {
-    empty = ImmutableWeakHashMap.empty
+    emptyImpl = ImmutableWeakHashMap.empty
   }
 
 

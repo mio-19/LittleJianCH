@@ -34,8 +34,6 @@ implicit def lambdaToRel[T](fn: VarOr[T] => Goal)(implicit unifier: Unifier[T]):
 
 implicit def relToLambda[T](rel: Rel[T])(implicit unifier: Unifier[T]): VarOr[T] => Goal = v => GoalConj(rel.goal, rel.x === v)
 
-//implicit def relUnitToGoal(rel: Rel[Unit]): Goal = if (rel.x != ()) throw new IllegalStateException("x != ()") else rel.goal
-
 implicit def goalWithUnitToGoal(goal: GoalWith[Unit]): Goal = goal.goal
 
 implicit def toGoalWithUnitToGoal[T](goal: T => GoalWith[Unit]): T => Goal = x => goal(x).goal

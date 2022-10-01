@@ -31,6 +31,7 @@ implicit class GoalAppendGoalWith(goal: Goal) {
 }
 
 object GoalWith {
+  def apply[T](provider: (T => Goal) => Goal): GoalWith[T] = new GoalWith[T](provider)
   def apply[T](goal: Goal, value: T): GoalWith[T] = new GoalWith(k => conj2(goal, k(value)))
 
   def apply[T](value: T): GoalWith[T] = new GoalWith(_ (value))

@@ -26,12 +26,12 @@ implicit class GoalWithUnitOps(x: => GoalWith[Unit]) {
   def ||(y: => Goal): Goal = GoalDisj(GoalDelay(x), GoalDelay(y))
 }
 
-def fresh[T](implicit unifier: Unifier[T]): Rel[T] = (x: VarOr[T]) => Goal.success
-@targetName("fresh2") def fresh[T, U](implicit t: Unifier[T], u: Unifier[U]): GoalWith[(VarOr[T], VarOr[U])] = for {
+def fresh[T]: GoalWith[Var[T]] = GoalWith(k => callWithFresh[T](k))
+@targetName("fresh2") def fresh[T, U]: GoalWith[(Var[T], Var[U])] = for {
   x <- fresh[T]
   y <- fresh[U]
 } yield (x, y)
-@targetName("fresh3") def fresh[T, U, V](implicit t: Unifier[T], u: Unifier[U], v: Unifier[V]): GoalWith[(VarOr[T], VarOr[U], VarOr[V])] = for {
+@targetName("fresh3") def fresh[T, U, V]: GoalWith[(Var[T], Var[U], Var[V])] = for {
   x <- fresh[T]
   y <- fresh[U]
   z <- fresh[V]

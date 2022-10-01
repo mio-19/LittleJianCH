@@ -10,6 +10,7 @@ object Rel {
   val success: Rel[Unit] = GoalWith(Goal.success, ())
 }
 
+// TODO: GoalWith[T](f: T => Goal)
 final case class GoalWith[T](goal: Goal, x: T) {
   def map[U](f: T => U): GoalWith[U] = GoalWith(goal, f(x))
 

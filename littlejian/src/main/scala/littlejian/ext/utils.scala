@@ -26,12 +26,16 @@ implicit class GoalWithUnitOps(x: => GoalWith[Unit]) {
   def ||(y: => Goal): Goal = GoalDisj(GoalDelay(x), GoalDelay(y))
 }
 
-implicit class RelUnitOps(x: => Rel[Unit]) {
-  def &&(y: => Goal): Goal = GoalConj(GoalDelay(x), GoalDelay(y))
-
-  def ||(y: => Goal): Goal = GoalDisj(GoalDelay(x), GoalDelay(y))
-}
-
+def fresh[T]: Rel[T] = new Var[T]
+@targetName("fresh2") def fresh[T, U]: GoalWith[(VarOr[T], VarOr[U])] = for {
+  x <- fresh[T]
+  y <- fresh[U]
+} yield (x, y)
+@targetName("fresh3") def fresh[T, U, V]: GoalWith[(VarOr[T], VarOr[U], VarOr[V])] = for {
+  x <- fresh[T]
+  y <- fresh[U]
+  z <- fresh[V]
+} yield (x, y, z)
 def fresh[T, U](f: (VarOr[T], VarOr[U]) => Goal): Goal = callWithFresh[T] { t =>
   callWithFresh[U] { u =>
     f(t, u)
@@ -44,13 +48,7 @@ def fresh[T, U, V](f: (VarOr[T], VarOr[U], VarOr[V]) => Goal): Goal = callWithFr
     }
   }
 }
-def fresh[T](implicit t: Unifier[T]): Rel[T] = (x: VarOr[T]) => Goal.success
-@targetName("fresh2") def fresh[T, U]: GoalWith[(VarOr[T], VarOr[U])] = 
-@targetName("fresh3") def fresh[T, U, V]: GoalWith[(VarOr[T], VarOr[U], VarOr[V])] = for {
-  t <- fresh[T]
-  u <- fresh[U]
-  v <- fresh[V]
-} yield (t, u, v)
+
 
 implicit class EqOps[T](x: VarOr[T]) {
   def ===(y: VarOr[T])(implicit unifier: Unifier[T]): Goal = GoalEq(x, y)
@@ -100,21 +98,24 @@ implicit class EqRelOps[T](x: Rel[T]) {
 
 private def conde_[T](xs: (() => Rel[T])*)(implicit unifier: Unifier[T]): Rel[T] = {
   val v = new Var[T]
-  (result: VarOr[T]) => GoalDisj(xs.map(x=>GoalDelay(x()(result))))
+  GoalWith(GoalDisj(xs.map(arg => GoalDelay {
+    val x = arg()
+    GoalConj(x.goal, x.x === v)
+  })), v)
 }
 
-// print((1 to 10).map(x=>s"def begin[T](${(1 to x).map(i=>s"p${i.toString}: =>GoalWith[_], ").reduce(_+_)}r: GoalWith[T]): GoalWith[T] = begin(${(1 to x).map(i=>s"p${i.toString}.goal, ").reduce(_+_)}r.goal) >> r\n").reduce(_+_))
+// print((1 to 10).map(x=>s"def begin[T](${(1 to x).map(i=>s"p${i.toString}: =>GoalWith[_], ").reduce(_+_)}r: GoalWith[T]): GoalWith[T] = GoalWith(begin(${(1 to x).map(i=>s"p${i.toString}.goal, ").reduce(_+_)}r.goal), r.x)\n").reduce(_+_))
 // print((1 to 10).map(x=>s"def conde[T](${(1 to x).map(i=>s"p${i.toString}: =>Rel[T]").mkString(", ")})(implicit unifier: Unifier[T]): Rel[T] = conde_(${(1 to x).map(i=>s"() => p${i.toString}").mkString(", ")})\n").mkString(""))
-def begin[T](p1: =>GoalWith[_], r: GoalWith[T]): GoalWith[T] = begin(p1.g, r.g) >> r
-def begin[T](p1: =>GoalWith[_], p2: =>GoalWith[_], r: GoalWith[T]): GoalWith[T] = begin(p1.g, p2.g, r.g) >> r
-def begin[T](p1: =>GoalWith[_], p2: =>GoalWith[_], p3: =>GoalWith[_], r: GoalWith[T]): GoalWith[T] = begin(p1.g, p2.g, p3.g, r.g) >> r
-def begin[T](p1: =>GoalWith[_], p2: =>GoalWith[_], p3: =>GoalWith[_], p4: =>GoalWith[_], r: GoalWith[T]): GoalWith[T] = begin(p1.g, p2.g, p3.g, p4.g, r.g) >> r
-def begin[T](p1: =>GoalWith[_], p2: =>GoalWith[_], p3: =>GoalWith[_], p4: =>GoalWith[_], p5: =>GoalWith[_], r: GoalWith[T]): GoalWith[T] = begin(p1.g, p2.g, p3.g, p4.g, p5.g, r.g) >> r
-def begin[T](p1: =>GoalWith[_], p2: =>GoalWith[_], p3: =>GoalWith[_], p4: =>GoalWith[_], p5: =>GoalWith[_], p6: =>GoalWith[_], r: GoalWith[T]): GoalWith[T] = begin(p1.g, p2.g, p3.g, p4.g, p5.g, p6.g, r.g) >> r
-def begin[T](p1: =>GoalWith[_], p2: =>GoalWith[_], p3: =>GoalWith[_], p4: =>GoalWith[_], p5: =>GoalWith[_], p6: =>GoalWith[_], p7: =>GoalWith[_], r: GoalWith[T]): GoalWith[T] = begin(p1.g, p2.g, p3.g, p4.g, p5.g, p6.g, p7.g, r.g) >> r
-def begin[T](p1: =>GoalWith[_], p2: =>GoalWith[_], p3: =>GoalWith[_], p4: =>GoalWith[_], p5: =>GoalWith[_], p6: =>GoalWith[_], p7: =>GoalWith[_], p8: =>GoalWith[_], r: GoalWith[T]): GoalWith[T] = begin(p1.g, p2.g, p3.g, p4.g, p5.g, p6.g, p7.g, p8.g, r.g) >> r
-def begin[T](p1: =>GoalWith[_], p2: =>GoalWith[_], p3: =>GoalWith[_], p4: =>GoalWith[_], p5: =>GoalWith[_], p6: =>GoalWith[_], p7: =>GoalWith[_], p8: =>GoalWith[_], p9: =>GoalWith[_], r: GoalWith[T]): GoalWith[T] = begin(p1.g, p2.g, p3.g, p4.g, p5.g, p6.g, p7.g, p8.g, p9.g, r.g) >> r
-def begin[T](p1: =>GoalWith[_], p2: =>GoalWith[_], p3: =>GoalWith[_], p4: =>GoalWith[_], p5: =>GoalWith[_], p6: =>GoalWith[_], p7: =>GoalWith[_], p8: =>GoalWith[_], p9: =>GoalWith[_], p10: =>GoalWith[_], r: GoalWith[T]): GoalWith[T] = begin(p1.g, p2.g, p3.g, p4.g, p5.g, p6.g, p7.g, p8.g, p9.g, p10.g, r.g) >> r
+def begin[T](p1: => GoalWith[_], r: GoalWith[T]): GoalWith[T] = GoalWith(begin(p1.goal, r.goal), r.x)
+def begin[T](p1: => GoalWith[_], p2: => GoalWith[_], r: GoalWith[T]): GoalWith[T] = GoalWith(begin(p1.goal, p2.goal, r.goal), r.x)
+def begin[T](p1: => GoalWith[_], p2: => GoalWith[_], p3: => GoalWith[_], r: GoalWith[T]): GoalWith[T] = GoalWith(begin(p1.goal, p2.goal, p3.goal, r.goal), r.x)
+def begin[T](p1: => GoalWith[_], p2: => GoalWith[_], p3: => GoalWith[_], p4: => GoalWith[_], r: GoalWith[T]): GoalWith[T] = GoalWith(begin(p1.goal, p2.goal, p3.goal, p4.goal, r.goal), r.x)
+def begin[T](p1: => GoalWith[_], p2: => GoalWith[_], p3: => GoalWith[_], p4: => GoalWith[_], p5: => GoalWith[_], r: GoalWith[T]): GoalWith[T] = GoalWith(begin(p1.goal, p2.goal, p3.goal, p4.goal, p5.goal, r.goal), r.x)
+def begin[T](p1: => GoalWith[_], p2: => GoalWith[_], p3: => GoalWith[_], p4: => GoalWith[_], p5: => GoalWith[_], p6: => GoalWith[_], r: GoalWith[T]): GoalWith[T] = GoalWith(begin(p1.goal, p2.goal, p3.goal, p4.goal, p5.goal, p6.goal, r.goal), r.x)
+def begin[T](p1: => GoalWith[_], p2: => GoalWith[_], p3: => GoalWith[_], p4: => GoalWith[_], p5: => GoalWith[_], p6: => GoalWith[_], p7: => GoalWith[_], r: GoalWith[T]): GoalWith[T] = GoalWith(begin(p1.goal, p2.goal, p3.goal, p4.goal, p5.goal, p6.goal, p7.goal, r.goal), r.x)
+def begin[T](p1: => GoalWith[_], p2: => GoalWith[_], p3: => GoalWith[_], p4: => GoalWith[_], p5: => GoalWith[_], p6: => GoalWith[_], p7: => GoalWith[_], p8: => GoalWith[_], r: GoalWith[T]): GoalWith[T] = GoalWith(begin(p1.goal, p2.goal, p3.goal, p4.goal, p5.goal, p6.goal, p7.goal, p8.goal, r.goal), r.x)
+def begin[T](p1: => GoalWith[_], p2: => GoalWith[_], p3: => GoalWith[_], p4: => GoalWith[_], p5: => GoalWith[_], p6: => GoalWith[_], p7: => GoalWith[_], p8: => GoalWith[_], p9: => GoalWith[_], r: GoalWith[T]): GoalWith[T] = GoalWith(begin(p1.goal, p2.goal, p3.goal, p4.goal, p5.goal, p6.goal, p7.goal, p8.goal, p9.goal, r.goal), r.x)
+def begin[T](p1: => GoalWith[_], p2: => GoalWith[_], p3: => GoalWith[_], p4: => GoalWith[_], p5: => GoalWith[_], p6: => GoalWith[_], p7: => GoalWith[_], p8: => GoalWith[_], p9: => GoalWith[_], p10: => GoalWith[_], r: GoalWith[T]): GoalWith[T] = GoalWith(begin(p1.goal, p2.goal, p3.goal, p4.goal, p5.goal, p6.goal, p7.goal, p8.goal, p9.goal, p10.goal, r.goal), r.x)
 
 def conde[T](p1: => Rel[T])(implicit unifier: Unifier[T]): Rel[T] = conde_(() => p1)
 def conde[T](p1: => Rel[T], p2: => Rel[T])(implicit unifier: Unifier[T]): Rel[T] = conde_(() => p1, () => p2)

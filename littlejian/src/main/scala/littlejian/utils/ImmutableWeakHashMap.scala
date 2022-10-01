@@ -5,7 +5,7 @@ import scala.collection.{MapFactory, mutable, immutable, IterableOnce}
 private val PrefixLimit = 16
 
 // TODO: Use this for subst for gc
-final class ImmutableWeakHashMap[K, V](private[utils] val prefix: immutable.HashMap[K, _ <: V],
+final class ImmutableWeakHashMap[K, V] private(private[utils] val prefix: immutable.HashMap[K, _ <: V],
                                        private[utils] val core: mutable.WeakHashMap[K, _ <: V]) extends scala.collection.immutable.AbstractMap[K, V] {
 
   def iterator: Iterator[(K, V)] = prefix.iterator ++ core.iterator.filter({ case (k, _) => !prefix.contains(k) })

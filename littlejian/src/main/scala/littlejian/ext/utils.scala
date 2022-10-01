@@ -1,6 +1,8 @@
 package littlejian.ext
 
-import littlejian._
+import littlejian.*
+
+import scala.annotation.targetName
 import scala.collection.parallel.immutable.ParVector
 import scala.reflect.ClassTag
 
@@ -18,8 +20,29 @@ implicit class GoalOps(x: => Goal) {
   def ||(y: => Goal): Goal = GoalDisj(GoalDelay(x), GoalDelay(y))
 }
 
-def hole[T]: VarOr[T] = new Var[T]
-def fresh[T]: Rel[T] = hole[T]
+def fresh[T]: Rel[T] = new Var[T]
+@targetName("fresh2") def fresh[T, U]: GoalWith[(VarOr[T], VarOr[U])] = for {
+  x <- fresh[T]
+  y <- fresh[U]
+} yield (x, y)
+@targetName("fresh3") def fresh[T, U, V]: GoalWith[(VarOr[T], VarOr[U], VarOr[V])] = for {
+  x <- fresh[T]
+  y <- fresh[U]
+  z <- fresh[V]
+} yield (x, y, z)
+def fresh[T, U](f: (VarOr[T], VarOr[U]) => Goal): Goal = callWithFresh[T] { t =>
+  callWithFresh[U] { u =>
+    f(t, u)
+  }
+}
+def fresh[T, U, V](f: (VarOr[T], VarOr[U], VarOr[V]) => Goal): Goal = callWithFresh[T] { t =>
+  callWithFresh[U] { u =>
+    callWithFresh[V] { v =>
+      f(t, u, v)
+    }
+  }
+}
+
 
 implicit class EqOps[T](x: VarOr[T]) {
   def ===(y: VarOr[T])(implicit unifier: Unifier[T]): Goal = GoalEq(x, y)

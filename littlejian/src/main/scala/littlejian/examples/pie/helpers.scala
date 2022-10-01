@@ -29,11 +29,10 @@ def walkStar(walker: Walker, x: VarOr[SExp]): VarOr[SExp] = walker(x) match {
       [(=/= x a)
        (membero x d)])))
 */
-def membero(x: VarOr[SExp], ls: VarOr[SExp]): Goal = {
-  val a = hole[SExp]
-  val d = hole[SExp]
-  ls === cons(a, d) && (a === x || a =/= x && membero(x, d))
-}
+def membero(x: VarOr[SExp], ls: VarOr[SExp]): Goal = for {
+  (a, d) <- ls.is(cons)
+  _ <- (a === x || a =/= x && membero(x, d))
+} yield ()
 
 /*
 (defrel (not-membero x ls)

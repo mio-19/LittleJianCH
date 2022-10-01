@@ -1,7 +1,7 @@
 package littlejian
 
 // using reference equality
-final class Var[T] {
+final class Var[T] private[littlejian] {
   override def toString: String =
     ToStringRecCatcher.record(this, (id, x) => s"#$id=$x", id => s"#$id") {
       prettyPrintContext.get match {
@@ -15,3 +15,7 @@ final class Var[T] {
 }
 
 type VarOr[T] = Var[T] | T
+
+
+def hole[T]: VarOr[T] = new Var[T]
+def callWithFresh[T](f: VarOr[T] => Goal): Goal = f(new Var[T])

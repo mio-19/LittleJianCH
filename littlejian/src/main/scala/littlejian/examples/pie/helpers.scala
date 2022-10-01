@@ -239,19 +239,14 @@ def freeInΓ(x: VarOr[SExp], Γ: VarOr[SExp]): Goal = conde(
 */
 def freeInρ(x: VarOr[SExp], ρ: VarOr[SExp]): Goal = conde(
   ρ === (),
-  {
-    val name = hole[SExp]
-    val τ = hole[SExp]
-    val ρ2 = hole[SExp]
-    ρ === cons(list("free", name, τ), ρ2) && freeInρ(x, ρ2)
-  },
-  {
-    val tag = hole[SExp]
-    val name = hole[SExp]
-    val d = hole[SExp]
-    val ρ2 = hole[SExp]
-    ρ === cons(listDot(tag, name, d), ρ2) && tag =/= "free" && name =/= x && freeInρ(x, ρ2)
-  }
+  (for {
+    (_, τ, ρ2) <- ρ.is((name: VarOr[SExp], τ: VarOr[SExp], ρ2: VarOr[SExp]) => cons(list("free", name, τ), ρ2))
+    _ <- freeInρ(x, ρ2)
+  } yield ()) : Goal,
+  (for {
+    (tag, name, _, ρ2) <- ρ.is((tag: VarOr[SExp], name: VarOr[SExp], d: VarOr[SExp], ρ2: VarOr[SExp]) => cons(listDot(tag, name, d), ρ2))
+    _ <- tag =/= "free" && name =/= x && freeInρ(x, ρ2)
+  } yield ()) : Goal
 )
 
 // Variable freshening

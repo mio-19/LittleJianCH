@@ -1,9 +1,11 @@
 package littlejian
 
-import scala.annotation.tailrec
-import scala.collection.parallel.immutable.ParHashMap
+import littlejian.utils.ImmutableWeakHashMap
 
-type Subst = ParHashMap[Var[_], (Unifier[_]/* for =/= usages */, _/*VarOr[_]*/)]
+import scala.annotation.tailrec
+import scala.collection.immutable.HashMap
+
+type Subst = Map[Var[_], (Unifier[_]/* for =/= usages */, _/*VarOr[_]*/)]
 
 implicit final class SubstOps(self: Subst) {
   @tailrec
@@ -25,7 +27,16 @@ implicit final class SubstOps(self: Subst) {
 }
 
 object Subst {
-  val empty: Subst = ParHashMap.empty
+  var empty: Subst = ImmutableWeakHashMap.empty
+
+  def choseHashMapImpl(): Unit = {
+    empty = HashMap.empty
+  }
+
+  def choseImmutableWeakHashMapImpl(): Unit = {
+    empty = ImmutableWeakHashMap.empty
+  }
+
 
   def walk[T](x: VarOr[T]): Unifying[VarOr[T]] = subst => Some((subst, subst.walk(x)))
 

@@ -33,7 +33,7 @@ object NotEqState {
     case (x, y: Var[T]) => Some(ParVector(NotEqElem(y, x, req.unifier)))
     case (x, y) => req.unifier.unify(x, y)(Subst.empty) match {
       case None => Some(ParVector.empty)
-      case Some((newSubst, ())) => if (newSubst.isEmpty) None else run(eq, newSubst.toSeq.map({ case (v, (unifier, x)) => NotEqRequestUnchecked(v, x, unifier) }))
+      case Some((newSubst, ())) => if (newSubst.isEmpty) None else run(eq, newSubst.toSeq.par.map({ case (v, (unifier, x)) => NotEqRequestUnchecked(v, x, unifier) }))
     }
   }
 

@@ -4,18 +4,15 @@ import littlejian._
 import littlejian.ext._
 import littlejian.data.sexp._
 
-def lookupo(env: VarOr[SExp], id: VarOr[SExp], v: VarOr[SExp]): Goal = conde(
-  {
-    val d = hole[SExp]
-    id.isType[String] && env === cons(cons(id, v), d)
-  },
-  {
-    val aid = hole[SExp]
-    val av = hole[SExp]
-    val d = hole[SExp]
-    id.isType[String] && env === cons(cons(aid, av), d) && id =/= aid && lookupo(d, id, v)
-  }
-)
+def lookupo(env: VarOr[SExp], id: VarOr[SExp], v: VarOr[SExp]): Goal =
+  (for {
+    d <- fresh[SExp]
+    _ <- id.isType[String] && env === cons(cons(id, v), d)
+  } yield ()) ||
+    (for {
+      (aid, av, d) <- fresh[SExp, SExp, SExp]
+      _ <- id.isType[String] && env === cons(cons(aid, av), d) && id =/= aid && lookupo(d, id, v)
+    } yield ())
 
 def lookupo(env: VarOr[SExp], id: VarOr[SExp]): Rel[SExp] = lookupo(env, id, _)
 

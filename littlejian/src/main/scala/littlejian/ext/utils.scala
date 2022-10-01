@@ -20,6 +20,12 @@ implicit class GoalOps(x: => Goal) {
   def ||(y: => Goal): Goal = GoalDisj(GoalDelay(x), GoalDelay(y))
 }
 
+implicit class GoalWithUnitOps(x: => GoalWith[Unit]) {
+  def &&(y: => Goal): Goal = GoalConj(GoalDelay(x), GoalDelay(y))
+
+  def ||(y: => Goal): Goal = GoalDisj(GoalDelay(x), GoalDelay(y))
+}
+
 def fresh[T]: Rel[T] = new Var[T]
 @targetName("fresh2") def fresh[T, U]: GoalWith[(VarOr[T], VarOr[U])] = for {
   x <- fresh[T]

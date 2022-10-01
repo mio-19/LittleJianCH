@@ -135,3 +135,5 @@ object Goal {
   val success: Goal = GoalConj(ParVector())
   val failure: Goal = GoalDisj(ParVector())
 }
+
+// TODO: GoalFresh: capture fresh operators for the implementation of constructive negation

@@ -22,10 +22,7 @@ class TopSuite extends munit.FunSuite {
         x === LList(head, tail) && head === 42 && tail === 32
       }), Set("LCons(42,LCons(32,LEmpty()))"))
       assertEquals(Set.from(run(for {
-        _ <- Rel.success
-        x = hole[LList[Int]]
-        head = hole[Int]
-        tail = hole[Int]
+        (x, head, tail) <- fresh[LList[Int], Int, Int]
         _ <- x === LList(head, tail)
         _ <- head === 42 && tail === 32
       } yield x)), Set("LCons(42,LCons(32,LEmpty()))"))

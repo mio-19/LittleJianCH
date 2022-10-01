@@ -39,7 +39,6 @@ object Subst {
     emptyImpl = ImmutableWeakHashMap.empty
   }
 
-
   def walk[T](x: VarOr[T]): Unifying[VarOr[T]] = subst => Some((subst, subst.walk(x)))
 
   def addEntry[T](v: Var[T], x: VarOr[T])(implicit unifier: Unifier[T]): Unifying[Unit] = subst => Some((subst.addEntry(v, x), ()))

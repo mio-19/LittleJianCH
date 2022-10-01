@@ -23,8 +23,5 @@ def condp(keys: Seq[Walker => Seq[String]]*)(clauses: => (String, Goal)*): Goal 
 })
 
 def condp[T](keys: Seq[Walker => Seq[String]]*)(clauses: => (String, Rel[T])*)(implicit unifier: Unifier[T]): Rel[T] = {
-  val v = new Var[T]
-  GoalWith(GoalDelay {
-    condp(keys *)(clauses.map { case (id, rel) => (id, GoalConj(rel.goal, rel.x === v)) } *)
-  }, v)
+  (result: VarOr[T]) => GoalDelay(condp(keys *)(clauses.map{case (id, rel) => (id, rel(result))} *))
 }

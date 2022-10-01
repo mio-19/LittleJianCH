@@ -49,7 +49,7 @@ object NotEqState {
   private def check(eq: EqState, xs: ParVector[ParVector[NotEqRequest[_]]]): Option[NotEqState] =
     traverse(xs.map(runCheck(eq, _))).map(xs => NotEqState(xs.filter(_.nonEmpty)))
 
-  private[littlejian] def create(eq: EqState, req: NotEqRequest[_], clauses: NotEqState): Option[NotEqState] = check(eq, ParVector(req) +: clauses.clauses)
+  private[littlejian] def insert(eq: EqState, req: NotEqRequest[_], clauses: NotEqState): Option[NotEqState] = check(eq, ParVector(req) +: clauses.clauses)
 }
 
 final case class PredTypeState(xs: ParVector[(Var[_], PredTypeTag)]) {

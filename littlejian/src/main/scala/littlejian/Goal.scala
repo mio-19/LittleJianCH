@@ -21,7 +21,7 @@ final case class GoalEq[T](x: VarOr[T], y: VarOr[T])(implicit unifier: Unifier[T
 final case class GoalNotEq[T](x: VarOr[T], y: VarOr[T])(implicit unifier: Unifier[T]) extends GoalBasic {
   override def execute(state: State): Option[State] =
     for {
-      notEq <- NotEqState.create(state.eq, new NotEqRequest(x, y, unifier), state.notEq)
+      notEq <- NotEqState.insert(state.eq, new NotEqRequest(x, y, unifier), state.notEq)
     } yield state.notEqUpdated(notEq)
 
   override def toString: String = s"${x} =/= ${y}"

@@ -78,16 +78,32 @@ def mplus[T](xs: SStream[T], ys: SStream[T]): SStream[T] = xs match {
   case SEmpty() => ys
 }
 
-def flatten[T](xs: ParVector[SStream[T]]): SStream[T] = xs.fold(SEmpty())(mplus)
+// TRS2 search strategy, interleaving DFS (DFSi) in "Towards a miniKanren with fair search strategies"
+def unfairFlatten[T](xs: ParVector[SStream[T]]): SStream[T] = if(xs.isEmpty) SEmpty() else mplus(xs.head, unfairFlatten(xs.tail))
 
-def flatten[T](xs: SStream[SStream[T]]): SStream[T] = xs match {
-  case SCons(x, xs) => mplus(x, flatten(xs))
+// balanced interleaving depth-first search (DFSbi)
+def fairFlatten[T](xs: ParVector[SStream[T]]): SStream[T] =
+  if(xs.isEmpty)
+    SEmpty()
+  else if(xs.size == 1) xs.head
+  else if(xs.size == 2) mplus(xs(0), xs(1))
+  else {
+    val (left, right) = xs.splitAt(xs.size / 2)
+    mplus(fairFlatten(left), fairFlatten(right))
+  }
+
+def unfairFlatten[T](xs: SStream[SStream[T]]): SStream[T] = xs match {
+  case SCons(x, xs) => mplus(x, unfairFlatten(xs))
   case SEmpty() => SEmpty()
-  case xs: SDelay[SStream[T]] => SDelay(flatten(xs.get))
+  case xs: SDelay[SStream[T]] => SDelay(unfairFlatten(xs.get))
 }
 
-// TRS2 search strategy, interleaving DFS (DFSi) in "Towards a miniKanren with fair search strategies"
 implicit object NaiveSearcher extends Searcher {
+  // DFSi or DFSbi
+  var balenced = true
+
+  def flatten[T](xs: ParVector[SStream[T]]): SStream[T] = if(balenced) fairFlatten(xs) else unfairFlatten(xs)
+
   override def run(state: State, goal: Goal): Stream[State] = runs(state, goal).toStream
 
   var enableParallel = false
@@ -107,7 +123,7 @@ implicit object NaiveSearcher extends Searcher {
       case GoalDisj(xs) => SDelay(flatten(parallelReduce(xs.map(runs(state, _)))))
       case GoalConj(xs) => if (xs.isEmpty) SStream(state) else {
         val tail = GoalConj(xs.tail)
-        SDelay(flatten(runs(state, xs.head).map(runs(_, tail))))
+        SDelay(unfairFlatten(runs(state, xs.head).map(runs(_, tail))))
       }
       case GoalReadSubst(f) => SDelay(runs(state, f(state.eq.subst)))
       case goal: GoalDelay => SDelay(runs(state, goal.get))
@@ -129,7 +145,7 @@ implicit object NaiveSearcher extends Searcher {
           val rest = xs.tail
           runs(state, test).caseOnEmpty({
             runs(state, GoalDisjA(rest))
-          }, { states => flatten(states.map(runs(_, goal))) })
+          }, { states => unfairFlatten(states.map(runs(_, goal))) })
         }
     }
 }

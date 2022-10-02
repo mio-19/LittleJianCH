@@ -46,7 +46,7 @@ implicit object GradualSearcher extends Searcher {
     val result = xs.map(_.run)
     val states = result.map(_._1).flatten
     val next = SDelay {
-      flatten(result.map(_._2).map(runTask))
+      unfairFlatten(result.map(_._2).map(runTask))
     }
     SStream.append(states, next)
   }

@@ -66,9 +66,7 @@ def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
   lookupo(env, x),
   for {
     (f, args) <- x.is(cons)
-    _ <- x === cons(f, args)
-    args0 <- mapo(evalo(env, _), args)
-    result <- applyo.app(evalo(env, f), args0)
+    result <- applyo app(evalo(env, f), mapo(evalo(env, _), args))
   } yield result,
   for {
     _ <- notInEnvo(env, "lambda")
@@ -83,14 +81,13 @@ def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
   for {
     ignored <- notInEnvo(env, "cons")
     (a, b) <- x.is[SExp, SExp](list("cons", _, _))
-    a0 <- evalo(env, a)
-    b0 <- evalo(env, b)
-  } yield cons(a0, b0),
+    result <- cons call(evalo(env, a), evalo(env, b))
+  } yield result,
   for {
     _ <- notInEnvo(env, "list")
     xs <- x.is[SExp](cons("list", _))
-    xs0 <- mapo(evalo(env, _), xs)
-  } yield xs0,
+    result <- mapo(evalo(env, _), xs)
+  } yield result,
   for {
     _ <- notInEnvo(env, "car")
     p <- x.is[SExp](list("car", _))

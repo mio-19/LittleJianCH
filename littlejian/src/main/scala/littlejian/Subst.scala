@@ -27,7 +27,7 @@ implicit final class SubstOps(self: Subst) {
 }
 
 object Subst {
-  private var emptyImpl: Subst = ImmutableWeakHashMap.empty
+  private var emptyImpl: Subst = HashMap.empty
 
   def empty: Subst = emptyImpl
 

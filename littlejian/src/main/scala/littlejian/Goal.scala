@@ -91,10 +91,10 @@ object GoalDisj {
 }
 
 final case class GoalConj(xs: Vector[Goal]) extends GoalControl {
-  private def flatten: Vector[Goal] = xs.map({
+  private def flatten: Vector[Goal] = xs.flatMap {
     case x: GoalConj => x.flatten
     case v => Vector(v)
-  }).flatten
+  }
 
   override def toString: String = s"begin(${this.flatten.mkString(", ")})"
 }

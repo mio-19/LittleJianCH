@@ -47,8 +47,7 @@ def closureo(env: VarOr[SExp], params: VarOr[SExp], body: VarOr[SExp]): VarOr[SE
 def applyo(f: VarOr[SExp], args: VarOr[SExp]): Rel[SExp] =
   for {
     (env, params, body) <- f.is[SExp, SExp, SExp](closureo)
-    newEnv <- envExto(env, params, args)
-    result <- evalo(newEnv, body)
+    result <- evalo.app(envExto(env, params, args), body)
   } yield result
 
 def applyo(f: VarOr[SExp], args: VarOr[SExp], result: VarOr[SExp]): Goal = applyo(f, args)(result)

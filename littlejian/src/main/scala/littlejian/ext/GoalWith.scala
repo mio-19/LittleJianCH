@@ -12,8 +12,8 @@ object Rel {
 }
 
 private def conj2(x: Goal, y: Goal): Goal =
-  if (x == Goal.success) y
-  else if (y == Goal.success) x
+  if (x eq Goal.success) y
+  else if (y eq Goal.success) x
   else GoalConj(x, y)
 
 final case class GoalWith[T](provider: (T => Goal) => Goal) {

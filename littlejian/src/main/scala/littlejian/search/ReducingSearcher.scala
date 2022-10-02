@@ -9,21 +9,7 @@ implicit object ReducingSearcher extends Searcher {
   // TODO: parallel execution
   private def runBasics(state: State, xs: Seq[GoalBasic]): Option[State] = if (xs.isEmpty) Some(state) else xs.head.execute(state).flatMap(runBasics(_, xs.tail))
 
-  private val maxTasks = 8
-
-  def exec(xs: ParVector[StateWithGoals]): SStream[State] =
-    if(xs.isEmpty) SStream.empty
-    else {
-      if(xs.length > maxTasks) {
-        val (left, right) = xs.splitAt(xs.length / 2)
-        mplus(exec(left), exec(right))
-      }
-      val result = xs.map(_.run)
-      val (ok, rest) = (result.flatMap(_._1), result.flatMap(_._2))
-      SStream.append(ok, SDelay(exec(rest)))
-    }
-
-  override def run(state: State, goal: Goal): Stream[State] = exec(ParVector(StateWithGoals(state, Vector(goal)))).toStream
+  override def run(state: State, goal: Goal): Stream[State] = StateWithGoals(state, Vector(goal)).exec.toStream
 
   final case class StateWithGoals(state: State, goals: Vector[Goal]) {
     def reduceNotSplit: Option[(StateWithGoals, Vector[GoalDisj])] =
@@ -69,5 +55,10 @@ implicit object ReducingSearcher extends Searcher {
         case None => (None, ParVector.empty)
         case Some((state, disjs)) => (None, state.split(disjs))
       }
+
+    def exec: SStream[State] = this.run match {
+      case (Some(state), rest) => SCons(state, SDelay(fairFlatten(rest.map(_.exec))))
+      case (None, rest) => SDelay(fairFlatten(rest.map(_.exec)))
+    }
   }
 }

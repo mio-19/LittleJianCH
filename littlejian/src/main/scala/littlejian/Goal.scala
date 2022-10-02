@@ -74,10 +74,10 @@ final class GoalDelay(x: => Goal) extends GoalControl {
 }
 
 final case class GoalDisj(xs: ParVector[Goal]) extends GoalControl {
-  private def flatten: ParVector[Goal] = xs.map({
+  private def flatten: ParVector[Goal] = xs.flatMap {
     case x: GoalDisj => x.flatten
-    case v => ParVector(v)
-  }).flatten
+    case v => Some(v)
+  }
 
   override def toString: String = s"conde(${this.flatten.mkString(", ")})"
 }
@@ -93,7 +93,7 @@ object GoalDisj {
 final case class GoalConj(xs: Vector[Goal]) extends GoalControl {
   private def flatten: Vector[Goal] = xs.flatMap {
     case x: GoalConj => x.flatten
-    case v => Vector(v)
+    case v => Some(v)
   }
 
   override def toString: String = s"begin(${this.flatten.mkString(", ")})"
@@ -115,7 +115,7 @@ sealed trait GoalControlImpure extends GoalControl
 
 // conda
 final case class GoalDisjA(xs: ParVector[(Goal, Goal)]) extends GoalControlImpure {
-  override def toString: String = s"conda(${xs.map({case (test, goal) => s"(${test}, ${goal})"})mkString(", ")})"
+  override def toString: String = s"conda(${xs.map({ case (test, goal) => s"(${test}, ${goal})" }) mkString (", ")})"
 }
 
 object GoalDisjA {
@@ -124,7 +124,7 @@ object GoalDisjA {
 
 // condu
 final case class GoalDisjU(xs: ParVector[(Goal, Goal)]) extends GoalControlImpure {
-  override def toString: String = s"condu(${xs.map({case (test, goal) => s"(${test}, ${goal})"})mkString(", ")})"
+  override def toString: String = s"condu(${xs.map({ case (test, goal) => s"(${test}, ${goal})" }) mkString (", ")})"
 }
 
 object GoalDisjU {

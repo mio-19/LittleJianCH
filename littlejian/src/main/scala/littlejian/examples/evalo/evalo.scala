@@ -56,9 +56,8 @@ def mapo(f: VarOr[SExp] => Rel[SExp], xs: VarOr[SExp]): Rel[SExp] = conde(
   begin(xs === (), ()),
   for {
     (head, tail) <- xs.is(cons)
-    head0 <- f(head)
-    tail0 <- mapo(f, tail)
-  } yield cons(head0, tail0)
+    result <- cons.call(f(head), mapo(f, tail))
+  } yield result
 )
 
 def evalo(env: VarOr[SExp], x: VarOr[SExp], result: VarOr[SExp]): Goal = evalo(env, x)(result)

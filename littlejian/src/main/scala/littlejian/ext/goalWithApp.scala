@@ -1,5 +1,7 @@
 package littlejian.ext
 
+import littlejian._
+
 import scala.language.implicitConversions
 
 implicit class GoalWithApp1[A, R](fn: A => GoalWith[R]) {
@@ -40,3 +42,30 @@ implicit def goalWithApp1[A, R](fn: A => GoalWith[R]): GoalWith[A] => GoalWith[R
 implicit def goalWithApp2[A, B, R](fn: (A, B) => GoalWith[R]): (GoalWith[A], GoalWith[B]) => GoalWith[R] = fn.app
 implicit def goalWithApp3[A, B, C, R](fn: (A, B, C) => GoalWith[R]): (GoalWith[A], GoalWith[B], GoalWith[C]) => GoalWith[R] = fn.app
 implicit def goalWithApp4[A, B, C, D, R](fn: (A, B, C, D) => GoalWith[R]): (GoalWith[A], GoalWith[B], GoalWith[C], GoalWith[D]) => GoalWith[R] = fn.app
+
+implicit class RelFnApp1[A, R](fn: A => R) {
+  def call(a: GoalWith[A]): GoalWith[R] = for {
+    x <- a
+  } yield fn(x)
+}
+implicit class RelFnApp2[A, B, R](fn: (A, B) => R) {
+  def call(a: GoalWith[A], b: GoalWith[B]): GoalWith[R] = for {
+    x <- a
+    y <- b
+  } yield fn(x, y)
+}
+implicit class RelFnApp3[A, B, C, R](fn: (A, B, C) => R) {
+  def call(a: GoalWith[A], b: GoalWith[B], c: GoalWith[C]): GoalWith[R] = for {
+    x <- a
+    y <- b
+    z <- c
+  } yield fn(x, y, z)
+}
+implicit class RelFnApp4[A, B, C, D, R](fn: (A, B, C, D) => R) {
+  def call(a: GoalWith[A], b: GoalWith[B], c: GoalWith[C], d: GoalWith[D]): GoalWith[R] = for {
+    x <- a
+    y <- b
+    z <- c
+    w <- d
+  } yield fn(x, y, z, w)
+}

@@ -1,8 +1,9 @@
 package littlejian.search
 
 import scala.collection.parallel.immutable.ParVector
-import littlejian._
-import littlejian.search._
+import littlejian.*
+import littlejian.search.*
+
 import scala.annotation.tailrec
 
 sealed trait SStream[T] {
@@ -25,6 +26,18 @@ sealed trait SStream[T] {
     case x: SDelay[_] => SDelay(x.get.caseOnEmpty(default, f))
     case SCons(_, _) => f(this)
   }
+
+  def reduce(n: Int): SStream[T] = {
+    var times = n
+    var result = this
+    while (times > 0 && result.isInstanceOf[SDelay[_]]) {
+      result = result.asInstanceOf[SDelay[T]].get
+      times -= 1
+    }
+    result
+  }
+  // TODO
+  def parMapImmediate(f: T => T): SStream[T] = this
 }
 
 final case class SEmpty[T]() extends SStream[T]
@@ -77,10 +90,21 @@ def flatten[T](xs: SStream[SStream[T]]): SStream[T] = xs match {
 implicit object NaiveSearcher extends Searcher {
   override def run(state: State, goal: Goal): Stream[State] = runs(state, goal).toStream
 
+  var enableParallel = true
+  private val reduceTimes = 4
+
+  private def parallelReduce[T](xs: ParVector[SStream[T]]): ParVector[SStream[T]] =
+    if(enableParallel) xs.map(_.reduce(reduceTimes))
+    else xs
+
+  private def parallelReduce[T](xs: SStream[SStream[T]]): SStream[SStream[T]] =
+    if(enableParallel) xs.reduce(reduceTimes).parMapImmediate(_.reduce(reduceTimes))
+    else xs
+
   def runs(state: State, goal: Goal): SStream[State] =
     goal match {
       case goal: GoalBasic => SStream.from(goal.execute(state))
-      case GoalDisj(xs) => SDelay(flatten(xs.map(runs(state, _))))
+      case GoalDisj(xs) => SDelay(flatten(parallelReduce(xs.map(runs(state, _)))))
       case GoalConj(xs) => if (xs.isEmpty) SStream(state) else {
         val tail = GoalConj(xs.tail)
         SDelay(flatten(runs(state, xs.head).map(runs(_, tail))))

@@ -8,28 +8,29 @@ type Matcher3[R, A, B, C] = (VarOr[A], VarOr[B], VarOr[C]) => VarOr[R]
 type Matcher4[R, A, B, C, D] = (VarOr[A], VarOr[B], VarOr[C], VarOr[D]) => VarOr[R]
 
 implicit class MatchOps[T](self: VarOr[T])(implicit unifier: Unifier[T]) {
-  def is[A](matcher: Matcher1[T, A]): GoalWith[VarOr[A]] = {
-    val a = hole[A]
-    begin(self === matcher(a), a)
-  }
+  def is[A](matcher: Matcher1[T, A]): GoalWith[VarOr[A]] = for {
+    a <- fresh[A]
+    _ <- self === matcher(a)
+  } yield a
 
-  def is[A, B](matcher: Matcher2[T, A, B]): GoalWith[(VarOr[A], VarOr[B])] = {
-    val a = hole[A]
-    val b = hole[B]
-    begin(self === matcher(a, b), (a, b))
-  }
+  def is[A, B](matcher: Matcher2[T, A, B]): GoalWith[(VarOr[A], VarOr[B])] = for {
+    a <- fresh[A]
+    b <- fresh[B]
+    _ <- self === matcher(a, b)
+  } yield (a, b)
 
-  def is[A, B, C](matcher: Matcher3[T, A, B, C]): GoalWith[(VarOr[A], VarOr[B], VarOr[C])] = {
-    val a = hole[A]
-    val b = hole[B]
-    val c = hole[C]
-    begin(self === matcher(a, b, c), (a, b, c))
-  }
-  def is[A, B, C, D](matcher: Matcher4[T, A, B, C, D]): GoalWith[(VarOr[A], VarOr[B], VarOr[C], VarOr[D])] = {
-    val a = hole[A]
-    val b = hole[B]
-    val c = hole[C]
-    val d = hole[D]
-    begin(self === matcher(a, b, c, d), (a, b, c, d))
-  }
+  def is[A, B, C](matcher: Matcher3[T, A, B, C]): GoalWith[(VarOr[A], VarOr[B], VarOr[C])] = for {
+    a <- fresh[A]
+    b <- fresh[B]
+    c <- fresh[C]
+    _ <- self === matcher(a, b, c)
+  } yield (a, b, c)
+
+  def is[A, B, C, D](matcher: Matcher4[T, A, B, C, D]): GoalWith[(VarOr[A], VarOr[B], VarOr[C], VarOr[D])] = for {
+    a <- fresh[A]
+    b <- fresh[B]
+    c <- fresh[C]
+    d <- fresh[D]
+    _ <- self === matcher(a, b, c, d)
+  } yield (a, b, c, d)
 }

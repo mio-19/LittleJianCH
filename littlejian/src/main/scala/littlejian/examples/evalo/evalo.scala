@@ -68,9 +68,8 @@ def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
   for {
     (f, args) <- x.is(cons)
     _ <- x === cons(f, args)
-    f0 <- evalo(env, f)
     args0 <- mapo(evalo(env, _), args)
-    result <- applyo(f0, args0)
+    result <- applyo.app(evalo(env, f), args0)
   } yield result,
   for {
     _ <- notInEnvo(env, "lambda")

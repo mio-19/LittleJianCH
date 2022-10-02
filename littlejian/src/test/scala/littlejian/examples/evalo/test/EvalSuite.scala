@@ -25,8 +25,8 @@ class EvalSuite extends munit.FunSuite {
     }), Set())
     assertEquals(Set.from(run {
       val x: VarOr[SExp] = list("quote", "a")
-      val result = hole[SExp]
       for {
+        result <- fresh[SExp]
         _ <- x === list("quote", result)
       } yield result
     }), Set("a"))

@@ -17,35 +17,40 @@ class TopSuite extends munit.FunSuite {
       assertEquals(Set.from(run { (x: VarOr[Int]) => x === 42 && x === 32 }), Set())
       assertEquals(Set.from(run { (x: VarOr[Int]) => x === 42 || x === 32 }), Set("42", "32"))
       assertEquals(Set.from(run { (x: VarOr[LList[Int]]) =>
-        val head = hole[Int]
-        val tail = hole[Int]
-        x === LList(head, tail) && head === 42 && tail === 32
+        callWithFresh[Int] { head =>
+          callWithFresh[Int] { tail =>
+            x === LList(head, tail) && head === 42 && tail === 32
+          }
+        }
       }), Set("LCons(42,LCons(32,LEmpty()))"))
       assertEquals(Set.from(run(for {
-        _ <- Rel.success
-        x = hole[LList[Int]]
-        head = hole[Int]
-        tail = hole[Int]
+        x <- fresh[LList[Int]]
+        head <- fresh[Int]
+        tail <- fresh[Int]
         _ <- x === LList(head, tail)
         _ <- head === 42 && tail === 32
       } yield x)), Set("LCons(42,LCons(32,LEmpty()))"))
       assertEquals(Set.from(run[LList[Int]] { (x) =>
-        val head = hole[Int]
-        val tail = hole[Int]
         for {
+          head <- fresh[Int]
+          tail <- fresh[Int]
           _ <- x === LList(head, tail)
           _ <- head === 42
           _ <- tail === 32
         } yield ()
       }), Set("LCons(42,LCons(32,LEmpty()))"))
       assertEquals(Set.from(run[Option[VarOr[Int]]] { x => {
-        val i = hole[Int]
-        i === 53 && x === Some(i)
+        for {
+          i <- fresh[Int]
+          _ <- i === 53 && x === Some(i)
+        } yield ()
       }
       }), Set("Some(53)"))
       assertEquals(Set.from(run[SExp] { x =>
-        val a = hole[SExp]
-        a === "a" && x === cons(a, a)
+        for {
+          a <- fresh[SExp]
+          _ <- a === "a" && x === cons(a, a)
+        } yield ()
       }), Set("(a . a)"))
       assertEquals(Set.from(run {
         conde(1, 2, 3, 4): Rel[Int]
@@ -70,14 +75,18 @@ class TopSuite extends munit.FunSuite {
         x =/= "a" && x === "a"
       }), Set())
       assertEquals(Set.from(run[SExp] { x =>
-        val y = hole[SExp]
-        val z = hole[SExp]
-        x =/= cons(y, z) && y === "a" && z === "b" && x === cons("a", "d")
+        for {
+          y <- fresh[SExp]
+          z <- fresh[SExp]
+          _ <- x =/= cons(y, z) && y === "a" && z === "b" && x === cons("a", "d")
+        } yield ()
       }), Set("(a . d)"))
       assertEquals(Set.from(run[SExp] { x =>
-        val y = hole[SExp]
-        val z = hole[SExp]
-        x =/= cons(y, z) && y === "a" && z === "b" && x === cons("a", "b")
+        for {
+          y <- fresh[SExp]
+          z <- fresh[SExp]
+          _ <- x =/= cons(y, z) && y === "a" && z === "b" && x === cons("a", "b")
+        } yield ()
       }), Set())
     }
     test(name + "absent") {
@@ -91,13 +100,17 @@ class TopSuite extends munit.FunSuite {
         x.absent("c") && x === cons("a", "a")
       }), Set("(a . a)"))
       assertEquals(Set.from(run[SExp] { x => {
-        val a = hole[SExp]
-        x.absent("b") && x === cons(a, "a") && a === "b"
+        for {
+          a <- fresh[SExp]
+          _ <- x.absent("b") && x === cons(a, "a") && a === "b"
+        } yield ()
       }
       }), Set())
       assertEquals(Set.from(run[SExp] { x => {
-        val a = hole[SExp]
-        x.absent("c") && x === cons(a, "a") && a === "b"
+        for {
+          a <- fresh[SExp]
+          _ <- x.absent("c") && x === cons(a, "a") && a === "b"
+        } yield ()
       }
       }), Set("(b . a)"))
     }

@@ -15,9 +15,21 @@ implicit class VarGet[T](self: Var[T]) {
 }
 
 implicit class GoalOps(x: => Goal) {
-  def &&(y: => Goal): Goal = GoalConj(GoalDelay(x), GoalDelay(y))
+  def &&(y: => Goal): Goal = GoalDelay({
+    val gx = x
+    val gy = y
+    if(gx eq Goal.success) return gy
+    if(gy eq Goal.success) return gx
+    GoalConj(gx, gy)
+  })
 
-  def ||(y: => Goal): Goal = GoalDisj(GoalDelay(x), GoalDelay(y))
+  def ||(y: => Goal): Goal = GoalDelay({
+    val gx = x
+    val gy = y
+    if(gx eq Goal.success) return gx
+    if(gy eq Goal.success) return gy
+    GoalDisj(gx, gy)
+  })
 }
 
 implicit class GoalWithUnitOps(x: => GoalWith[Unit]) {

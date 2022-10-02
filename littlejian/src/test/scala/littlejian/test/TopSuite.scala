@@ -10,6 +10,7 @@ import littlejian.unifier.*
 class TopSuite extends munit.FunSuite {
   runTest("NaiveSearcher ")(littlejian.search.NaiveSearcher)
   runTest("GradualSearcher ")(littlejian.search.GradualSearcher)
+  runTest("ReducingSearcher ")(littlejian.search.ReducingSearcher)
 
   def runTest(name: String = "")(implicit searcher: Searcher): Unit = {
     test(name + "basics") {

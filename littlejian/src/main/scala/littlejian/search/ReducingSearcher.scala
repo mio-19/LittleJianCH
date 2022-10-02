@@ -32,11 +32,13 @@ implicit object ReducingSearcher extends Searcher {
         val conjs = Seq.newBuilder[GoalConj]
         val disjs = Vector.newBuilder[GoalDisj]
         val readSubsts = Seq.newBuilder[GoalReadSubst]
+        val delays = Seq.newBuilder[GoalDelay]
         goals.foreach {
           case goal: GoalBasic => basics += goal
           case goal: GoalConj => conjs += goal
           case goal: GoalDisj => disjs += goal
           case goal: GoalReadSubst => readSubsts += goal
+          case goal: GoalDelay => delays += goal
           case goal: GoalControlImpure => throw new UnsupportedOperationException("not implemented")
         }
         runBasics(state, basics.result()) match {
@@ -45,6 +47,7 @@ implicit object ReducingSearcher extends Searcher {
             val goals = Vector.newBuilder[Goal]
             goals ++= conjs.result().flatMap(_.xs)
             goals ++= readSubsts.result().map(_ (state.eq.subst))
+            goals ++= delays.result().map(_.get)
             Some((StateWithGoals(state, goals.result()), disjs.result()))
           }
         }

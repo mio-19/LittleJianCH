@@ -1,5 +1,7 @@
 package littlejian.ext
 
+import scala.language.implicitConversions
+
 implicit class GoalWithApp1[A, R](fn: A => GoalWith[R]) {
   def app(a: GoalWith[A]): GoalWith[R] = for {
     x <- a
@@ -33,3 +35,8 @@ implicit class GoalWithApp4[A, B, C, D, R](fn: (A, B, C, D) => GoalWith[R]) {
     r <- fn(x, y, z, w)
   } yield r
 }
+
+implicit def goalWithApp1[A, R](fn: A => GoalWith[R]): GoalWith[A] => GoalWith[R] = fn.app
+implicit def goalWithApp2[A, B, R](fn: (A, B) => GoalWith[R]): (GoalWith[A], GoalWith[B]) => GoalWith[R] = fn.app
+implicit def goalWithApp3[A, B, C, R](fn: (A, B, C) => GoalWith[R]): (GoalWith[A], GoalWith[B], GoalWith[C]) => GoalWith[R] = fn.app
+implicit def goalWithApp4[A, B, C, D, R](fn: (A, B, C, D) => GoalWith[R]): (GoalWith[A], GoalWith[B], GoalWith[C], GoalWith[D]) => GoalWith[R] = fn.app

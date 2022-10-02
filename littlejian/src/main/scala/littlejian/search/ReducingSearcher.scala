@@ -13,7 +13,7 @@ implicit object ReducingSearcher extends Searcher {
 
   def runPar(state: State, goal: Goal): Stream[State] = exec(ParVector(StateWithGoals(state, Vector(goal)))).toStream
 
-  override def run(state: State, goal: Goal): Stream[State] = runPar(state, goal)
+  override def run(state: State, goal: Goal): Stream[State] = runSingle(state, goal)
 
   private val maxTasks = 8
 

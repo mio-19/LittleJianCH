@@ -2,10 +2,10 @@ package littlejian.ext
 
 import littlejian._
 
-type Matcher1[R, A] = VarOr[A] => R
-type Matcher2[R, A, B] = (VarOr[A], VarOr[B]) => R
-type Matcher3[R, A, B, C] = (VarOr[A], VarOr[B], VarOr[C]) => R
-type Matcher4[R, A, B, C, D] = (VarOr[A], VarOr[B], VarOr[C], VarOr[D]) => R
+type Matcher1[R, A] = VarOr[A] => VarOr[R]
+type Matcher2[R, A, B] = (VarOr[A], VarOr[B]) => VarOr[R]
+type Matcher3[R, A, B, C] = (VarOr[A], VarOr[B], VarOr[C]) => VarOr[R]
+type Matcher4[R, A, B, C, D] = (VarOr[A], VarOr[B], VarOr[C], VarOr[D]) => VarOr[R]
 
 implicit class MatchOps[T](self: VarOr[T])(implicit unifier: Unifier[T]) {
   def is[A](matcher: Matcher1[T, A]): GoalWith[VarOr[A]] = {

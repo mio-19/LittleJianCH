@@ -90,10 +90,10 @@ object GoalDisj {
   @targetName("applyMul") def apply(xs: Goal*) = new GoalDisj(ParVector(xs *))
 }
 
-final case class GoalConj(xs: ParVector[Goal]) extends GoalControl {
-  private def flatten: ParVector[Goal] = xs.map({
+final case class GoalConj(xs: Vector[Goal]) extends GoalControl {
+  private def flatten: Vector[Goal] = xs.map({
     case x: GoalConj => x.flatten
-    case v => ParVector(v)
+    case v => Vector(v)
   }).flatten
 
   override def toString: String = s"begin(${this.flatten.mkString(", ")})"
@@ -104,11 +104,11 @@ final case class GoalReadSubst(f: Subst => Goal) extends GoalControl {
 }
 
 object GoalConj {
-  def apply(xs: ParVector[Goal]) = new GoalConj(xs)
+  def apply(xs: Vector[Goal]) = new GoalConj(xs)
 
-  def apply(xs: Seq[Goal]) = new GoalConj(ParVector(xs *))
+  def apply(xs: Seq[Goal]) = new GoalConj(Vector.from(xs))
 
-  @targetName("applyMul") def apply(xs: Goal*) = new GoalConj(ParVector(xs *))
+  @targetName("applyMul") def apply(xs: Goal*) = new GoalConj(Vector.from(xs))
 }
 
 sealed trait GoalControlImpure extends GoalControl
@@ -132,7 +132,7 @@ object GoalDisjU {
 }
 
 object Goal {
-  val success: Goal = GoalConj(ParVector())
+  val success: Goal = GoalConj(Vector())
   val failure: Goal = GoalDisj(ParVector())
 }
 

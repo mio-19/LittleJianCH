@@ -137,3 +137,4 @@ object Goal {
 }
 
 // TODO: GoalFresh: capture fresh operators for the implementation of constructive negation
+def GoalFresh[T](f: Var[T] => Goal): Goal = f(new Var[T])

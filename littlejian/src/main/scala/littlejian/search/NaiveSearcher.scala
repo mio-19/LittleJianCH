@@ -91,6 +91,15 @@ def fairFlatten[T](xs: ParVector[SStream[T]]): SStream[T] =
     val (left, right) = xs.splitAt(xs.size / 2)
     mplus(fairFlatten(left), fairFlatten(right))
   }
+def fairFlatten[T](xs: Vector[SStream[T]]): SStream[T] =
+    if (xs.isEmpty)
+      SEmpty()
+    else if (xs.size == 1) xs.head
+    else if (xs.size == 2) mplus(xs(0), xs(1))
+    else {
+      val (left, right) = xs.splitAt(xs.size / 2)
+      mplus(fairFlatten(left), fairFlatten(right))
+    }
 
 def unfairFlatten[T](xs: SStream[SStream[T]]): SStream[T] = xs match {
   case SCons(x, xs) => mplus(x, unfairFlatten(xs))
@@ -98,11 +107,31 @@ def unfairFlatten[T](xs: SStream[SStream[T]]): SStream[T] = xs match {
   case xs: SDelay[SStream[T]] => SDelay(unfairFlatten(xs.get))
 }
 
+def fairFlatten[T](xs: SStream[SStream[T]]): SStream[T] = doFairFlatten(Vector.empty, xs, Vector.empty)
+private def doFairFlatten[T](left: Vector[SStream[T]], xs: SStream[SStream[T]], right: Vector[SStream[T]]): SStream[T] = (left, xs, right) match {
+  case (left, SCons(x, xs), right) => doFairFlatten(x +: left, xs, right)
+  case (left, SEmpty(), right) => fairFlatten(left ++ right)
+  case (left, xs: SDelay[SStream[T]], right) => {
+    if(left.isEmpty)
+      SDelay(doFairFlatten(right, xs.get, left))
+    else {
+      val head = left.head
+      val rest = left.tail
+      head match {
+        case SCons(x, headRest) => SCons(x, doFairFlatten(headRest +: rest, xs, right))
+        case SEmpty() => doFairFlatten(rest, xs, right)
+        case head: SDelay[T] => SDelay(doFairFlatten(rest, xs.get, head.get +: right))
+      }
+    }
+  }
+}
+
 implicit object NaiveSearcher extends Searcher {
   // DFSi or DFSbi
   var balenced = true
 
   def flatten[T](xs: ParVector[SStream[T]]): SStream[T] = if(balenced) fairFlatten(xs) else unfairFlatten(xs)
+  def flatten[T](xs: SStream[SStream[T]]): SStream[T] = if(balenced) fairFlatten(xs) else unfairFlatten(xs)
 
   override def run(state: State, goal: Goal): Stream[State] = runs(state, goal).toStream
 
@@ -123,7 +152,7 @@ implicit object NaiveSearcher extends Searcher {
       case GoalDisj(xs) => SDelay(flatten(parallelReduce(xs.map(runs(state, _)))))
       case GoalConj(xs) => if (xs.isEmpty) SStream(state) else {
         val tail = GoalConj(xs.tail)
-        SDelay(unfairFlatten(runs(state, xs.head).map(runs(_, tail))))
+        SDelay(flatten(runs(state, xs.head).map(runs(_, tail))))
       }
       case GoalReadSubst(f) => SDelay(runs(state, f(state.eq.subst)))
       case goal: GoalDelay => SDelay(runs(state, goal.get))
@@ -145,7 +174,7 @@ implicit object NaiveSearcher extends Searcher {
           val rest = xs.tail
           runs(state, test).caseOnEmpty({
             runs(state, GoalDisjA(rest))
-          }, { states => unfairFlatten(states.map(runs(_, goal))) })
+          }, { states => flatten(states.map(runs(_, goal))) })
         }
     }
 }

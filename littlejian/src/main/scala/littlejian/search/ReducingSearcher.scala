@@ -4,6 +4,7 @@ import scala.collection.parallel.immutable.ParVector
 import littlejian.*
 import littlejian.search.GradualSearcher.World
 
+// also somehow broken
 implicit object ReducingSearcher extends Searcher {
   // TODO: parallel execution
   private def runBasics(state: State, xs: Seq[GoalBasic]): Option[State] = if (xs.isEmpty) Some(state) else xs.head.execute(state).flatMap(runBasics(_, xs.tail))

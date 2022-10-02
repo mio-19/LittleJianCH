@@ -24,10 +24,11 @@ final case class GoalWith[T](provider: (T => Goal) => Goal) {
   def withFilter(p: T => Boolean): GoalWith[T] = GoalWith[T](k => provider(t => if (p(t)) k(t) else Goal.failure))
 
   def goal: Goal = provider(_ => Goal.success)
-}
 
-implicit class GoalAppendGoalWith(goal: Goal) {
-  def >>[T](x: GoalWith[T]): GoalWith[T] = GoalWith[T](k => conj2(goal, x.provider(k)))
+  def >>[U](next: GoalWith[U]): GoalWith[U] = for {
+    ignored <- this
+    result <- next
+  } yield result
 }
 
 object GoalWith {

@@ -1,4 +1,5 @@
 package littlejian.examples.pie
+
 import littlejian.*
 import littlejian.ext.*
 import littlejian.data.sexp.*
@@ -6,7 +7,7 @@ import littlejian.data.sexp.*
 import scala.language.implicitConversions
 
 
-implicit def SeqToSExp(ls: Seq[String]): SExp = list(ls*)
+implicit def SeqToSExp(ls: Seq[String]): SExp = list(ls *)
 def car(x: VarOr[SExp]): VarOr[SExp] = x match {
   case Cons(v, _) => v
   case _ => throw new IllegalArgumentException("car: not a cons cell")
@@ -44,11 +45,10 @@ def membero(x: VarOr[SExp], ls: VarOr[SExp]): Goal = for {
        (not-membero x d))]))
 */
 def notMembero(x: VarOr[SExp], ls: VarOr[SExp]): Goal = {
-  ls === () || {
-    val a = hole[SExp]
-    val d = hole[SExp]
-    ls === cons(a, d) && x =/= a && notMembero(x, d)
-  }
+  ls === () || (for {
+    (a, d) <- ls.is(cons)
+    _ <- x =/= a && notMembero(x, d)
+  } yield ())
 }
 
 /*
@@ -66,20 +66,16 @@ def notMembero(x: VarOr[SExp], ls: VarOr[SExp]): Goal = {
 */
 def removeo(x: VarOr[SExp], ls: VarOr[SExp]): Rel[SExp] = conde(
   begin(ls === (), ()),
-  {
-    val d = hole[SExp]
-    begin(ls === cons(x, d), removeo(x, d))
-  },
-  {
-    val a = hole[SExp]
-    val d = hole[SExp]
-    for {
-      _ <- ls === cons(a, d)
-      _ <- x =/= a
-      rest <- removeo(x, d)
-    } yield cons(a, rest)
-  }
-)
+  for {
+    d <- fresh[SExp]
+    _ <- ls === cons(x, d)
+    o <- removeo(x, d)
+  } yield o,
+  for {
+    (a, d) <- ls.is(cons)
+    _ <- x =/= a
+    o_ <- removeo(x, d)
+  } yield cons(a, o_))
 
 /*
 (defrel (uniono l1 l2 o)
@@ -93,15 +89,11 @@ def removeo(x: VarOr[SExp], ls: VarOr[SExp]): Rel[SExp] = conde(
 */
 def uniono(l1: VarOr[SExp], l2: VarOr[SExp]): Rel[SExp] = conde(
   begin(l1 === (), l2),
-  {
-    val a = hole[SExp]
-    val d = hole[SExp]
-    for {
-      _ <- l1 === cons(a, d)
-      tmp <- uniono(d, l2)
-      rm <- removeo(a, tmp)
-    } yield cons(a, rm)
-  }
+  for {
+    (a, d) <- l1.is(cons)
+    tmp <- uniono(d, l2)
+    rm <- removeo(a, tmp)
+  } yield cons(a, rm)
 )
 
 // symbols that might be confused with a function of 1 argument
@@ -141,20 +133,23 @@ def nonReservedPieSymbol(x: VarOr[SExp]): Goal = x =/= "Atom" && x =/= "zero" &&
       (== Γ `(,assoc . ,Γ^))
       (apply-Γ Γ^ y τ))]))
 */
-def applyΓ(Γ: VarOr[SExp], y: VarOr[SExp], τ: VarOr[SExp]): Goal = {
-  val Γ2 = hole[SExp]
-  conde(
-    Γ === cons(list("free", y, τ), Γ2),
-    {
-      val v = hole[SExp]
-      Γ === cons(list("def", y, v, τ), Γ2)
-    },
-    {
-      val assoc = hole[SExp]
-      assoc =/= "free" && assoc =/= "def" &&  Γ === cons(assoc, Γ2) && applyΓ(Γ2, y, τ)
-    }
-  )
-}
+def applyΓ(Γ: VarOr[SExp], y: VarOr[SExp], τ: VarOr[SExp]): Goal = conde(
+  for {
+    Γ_ <- fresh[SExp]
+    _ <- Γ === cons(list("free", y, τ), Γ_)
+  } yield (),
+  for {
+    Γ_ <- fresh[SExp]
+    v <- fresh[SExp]
+    _ <- Γ === cons(list("def", y, v, τ), Γ_)
+  } yield (),
+  for {
+    Γ_ <- fresh[SExp]
+    assoc <- fresh[SExp]
+    _ <- Γ === cons(assoc, Γ_)
+    _ <- assoc =/= "free" && assoc =/= "def"
+    _ <- applyΓ(Γ_, y, τ)
+  } yield ())
 
 /*
 (defrel (apply-ρ ρ y v)
@@ -168,21 +163,22 @@ def applyΓ(Γ: VarOr[SExp], y: VarOr[SExp], τ: VarOr[SExp]): Goal = {
       (apply-ρ ρ^ y v))]))
 */
 def applyρ(ρ: VarOr[SExp], y: VarOr[SExp], v: VarOr[SExp]): Goal = conde(
-  {
-    val ρ2 = hole[SExp]
-    val τ = hole[SExp]
-    ρ === cons(list("def", y, v, τ), ρ2)
-  },
-  {
-    val ρ2 = hole[SExp]
-    ρ === cons(list("val", y, v), ρ2)
-  },
-  {
-    val assoc = hole[SExp]
-    val ρ2 = hole[SExp]
-    assoc =/= "val" && assoc =/= "def" && ρ === cons(assoc, ρ2) && applyρ(ρ2, y, v)
-  }
-)
+  for {
+    ρ_ <- fresh[SExp]
+    τ <- fresh[SExp]
+    _ <- ρ === cons(list("def", y, v, τ), ρ_)
+  } yield (),
+  for {
+    ρ_ <- fresh[SExp]
+    _ <- ρ === cons(list("val", y, v), ρ_)
+  } yield (),
+  for {
+    ρ_ <- fresh[SExp]
+    assoc <- fresh[SExp]
+    _ <- ρ === cons(assoc, ρ_)
+    _ <- assoc =/= "val" && assoc =/= "def"
+    _ <- applyρ(ρ_, y, v)
+  } yield ())
 
 /*
 (defrel (extend-Γ Γ y τ new-Γ)
@@ -215,14 +211,15 @@ def extendEnv(ρ: VarOr[SExp], y: VarOr[SExp], v: VarOr[SExp], τ: VarOr[SExp]):
 */
 def freeInΓ(x: VarOr[SExp], Γ: VarOr[SExp]): Goal = conde(
   Γ === (),
-  {
-    val tag = hole[SExp]
-    val y = hole[SExp]
-    val d = hole[SExp]
-    val Γ2 = hole[SExp]
-    Γ === cons(listDot(tag, y, d), Γ2) && x =/= y && freeInΓ(x, Γ2)
-  }
-)
+  for {
+    tag <- fresh[SExp]
+    y <- fresh[SExp]
+    d <- fresh[SExp]
+    Γ_ <- fresh[SExp]
+    _ <- Γ === cons(list(tag, y, d), Γ_)
+    _ <- x =/= y
+    _ <- freeInΓ(x, Γ_)
+  } yield ())
 
 /*
 (defrel (free-in-ρ x ρ)
@@ -242,11 +239,11 @@ def freeInρ(x: VarOr[SExp], ρ: VarOr[SExp]): Goal = conde(
   (for {
     (_, τ, ρ2) <- ρ.is((name: VarOr[SExp], τ: VarOr[SExp], ρ2: VarOr[SExp]) => cons(list("free", name, τ), ρ2))
     _ <- freeInρ(x, ρ2)
-  } yield ()) : Goal,
+  } yield ()): Goal,
   (for {
     (tag, name, _, ρ2) <- ρ.is((tag: VarOr[SExp], name: VarOr[SExp], d: VarOr[SExp], ρ2: VarOr[SExp]) => cons(listDot(tag, name, d), ρ2))
     _ <- tag =/= "free" && name =/= x && freeInρ(x, ρ2)
-  } yield ()) : Goal
+  } yield ()): Goal
 )
 
 // Variable freshening
@@ -266,30 +263,30 @@ def freeInρ(x: VarOr[SExp], ρ: VarOr[SExp]): Goal = conde(
              (just-names Γ^ o)
              (== names `(,x . ,o))]))]))
 */
-def justNames(Γ: VarOr[SExp], names: VarOr[SExp]): Goal = justNames(Γ)(names) 
+def justNames(Γ: VarOr[SExp], names: VarOr[SExp]): Goal = justNames(Γ)(names)
 def justNames(Γ: VarOr[SExp]): Rel[SExp] = conde(
-  begin(Γ === (), ()),
-  {
-    val x = hole[SExp]
-    val v = hole[SExp]
-    val t = hole[SExp]
-    val Γ2 = hole[SExp]
-    conde(
+  for {
+    _ <- Γ === ()
+  } yield (),
+  for {
+    x <- fresh[SExp]
+    v <- fresh[SExp]
+    t <- fresh[SExp]
+    Γ_ <- fresh[SExp]
+    result <- conde(
       for {
-        _ <- Γ === cons(list("def", x, v, t), Γ2)
-        o <- justNames(Γ2)
-      } yield cons(x, o),
+        _ <- Γ === cons(list("def", x, v, t), Γ_)
+        o <- justNames(Γ_)
+      } yield cons(x, o) : SExp,
       for {
-        _ <- Γ === cons(list("free", x, t), Γ2)
-        o <- justNames(Γ2)
-      } yield cons(x, o),
+        _ <- Γ === cons(list("free", x, t), Γ_)
+        o <- justNames(Γ_)
+      } yield cons(x, o) : SExp,
       for {
-        _ <- Γ === cons(list("val", x, v), Γ2)
-        o <- justNames(Γ2)
-      } yield cons(x, o)
-    ) : Rel[SExp]
-  }
-)
+        _ <- Γ === cons(list("val", x, v), Γ_)
+        o <- justNames(Γ_)
+      } yield cons(x, o) : SExp): Rel[SExp]
+  } yield result)
 
 /*
 (define (add-* x)

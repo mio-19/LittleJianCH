@@ -76,14 +76,15 @@ implicit class VarOrPredOps[T](x: VarOr[T]) {
 }
 
 implicit class VarOrCast[T](x: VarOr[T]) {
-  def cast[U](implicit u: ClassTag[U], unifier: Unifier[U]): Rel[U] = {
-    val result = hole[U]
-    begin(
-      x.isType[U],
-      result === x.asInstanceOf[VarOr[U]],
-      result
-    )
-  }
+  def cast[U](implicit u: ClassTag[U], unifier: Unifier[U]): Rel[U] = for {
+    result <- fresh[U]
+    _ <- x.isType[U]
+    _ <- try {
+      result === x.asInstanceOf[VarOr[U]]
+    } catch {
+      case _: ClassCastException => Goal.failure
+    }
+  } yield result
 }
 
 def begin(xs: => Goal*): Goal = GoalDelay(GoalConj(xs))

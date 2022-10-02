@@ -90,7 +90,7 @@ def flatten[T](xs: SStream[SStream[T]]): SStream[T] = xs match {
 implicit object NaiveSearcher extends Searcher {
   override def run(state: State, goal: Goal): Stream[State] = runs(state, goal).toStream
 
-  var enableParallel = true
+  var enableParallel = false
   private val reduceTimes = 4
 
   private def parallelReduce[T](xs: ParVector[SStream[T]]): ParVector[SStream[T]] =

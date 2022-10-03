@@ -21,9 +21,9 @@ implicit class UnifyingOps[T](self: Unifying[T]) {
 
   def getSubstPatch(subst: Subst): Option[SubstPatch] = self.run((subst, SubstPatch.empty)).map(_._1._2)
 
-  def map[U](f: T => U): Unifying[U] = StateOptionOps(self).map(f)
+  def map[U](f: T => U): Unifying[U] = self.map(f)
 
-  def flatMap[U](f: T => Unifying[U]): Unifying[U] = StateOptionOps(self).flatMap(f)
+  def flatMap[U](f: T => Unifying[U]): Unifying[U] = self.flatMap(f)
 }
 
 trait Unifier[T] {

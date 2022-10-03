@@ -1,5 +1,5 @@
 package littlejian
 
 trait Searcher {
-  def run(state: State, goal: Goal): Stream[State]
+  def run(state: State, goal: Goal): Seq[State]
 }

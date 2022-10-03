@@ -45,7 +45,7 @@ implicit object BFSimp extends Searcher {
     def from[T](x: IterableOnce[T]) = new SizedStream[T](Vector.from(x), None)
   }
 
-  override def run(state: State, goal: Goal): Stream[State] = runs(state, goal).toStream
+  override def run(state: State, goal: Goal): Stream[State] = exec(state, goal).toStream
 
   def flatten[T](x: ParVector[SizedStream[T]]): SizedStream[T] = {
     if (x.isEmpty) SizedStream.empty
@@ -56,25 +56,25 @@ implicit object BFSimp extends Searcher {
     }
   }
 
-  def runs(state: State, goal: Goal): SizedStream[State] =
+  def exec(state: State, goal: Goal): SizedStream[State] =
     goal match {
       case goal: GoalBasic => SizedStream.from(goal.execute(state))
-      case GoalDisj(xs) => SizedStream(flatten(xs.map(runs(state, _))))
+      case GoalDisj(xs) => SizedStream(flatten(xs.map(exec(state, _))))
       case GoalConj(xs) => if (xs.isEmpty) SizedStream(state) else {
         val tail = GoalConj(xs.tail)
-        SizedStream(runs(state, xs.head).appendMapFair(runs(_, tail)))
+        SizedStream(exec(state, xs.head).appendMapFair(exec(_, tail)))
       }
-      case GoalReadSubst(f) => runs(state, f(state.eq.subst))
-      case goal: GoalDelay => SizedStream(runs(state, goal.get))
+      case GoalReadSubst(f) => exec(state, f(state.eq.subst))
+      case goal: GoalDelay => SizedStream(exec(state, goal.get))
       case GoalDisjU(xs) =>
         if (xs.isEmpty)
           SizedStream.empty
         else SizedStream {
           val (test, goal) = xs.head
           val rest = xs.tail
-          runs(state, test).take1FlatMap({
-            runs(state, GoalDisjU(rest))
-          }, { state => runs(state, goal) })
+          exec(state, test).take1FlatMap({
+            exec(state, GoalDisjU(rest))
+          }, { state => exec(state, goal) })
         }
       case GoalDisjA(xs) =>
         if (xs.isEmpty)
@@ -82,9 +82,9 @@ implicit object BFSimp extends Searcher {
         else SizedStream {
           val (test, goal) = xs.head
           val rest = xs.tail
-          runs(state, test).caseOnEmpty({
-            runs(state, GoalDisjA(rest))
-          }, { states => states.appendMapFair(runs(_, goal)) })
+          exec(state, test).caseOnEmpty({
+            exec(state, GoalDisjA(rest))
+          }, { states => states.appendMapFair(exec(_, goal)) })
         }
     }
 }

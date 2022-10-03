@@ -133,7 +133,7 @@ implicit object NaiveSearcher extends Searcher {
   def flatten[T](xs: ParVector[SStream[T]]): SStream[T] = if(balenced) fairFlatten(xs) else unfairFlatten(xs)
   def flatten[T](xs: SStream[SStream[T]]): SStream[T] = if(balenced) fairFlatten(xs) else unfairFlatten(xs)
 
-  override def run(state: State, goal: Goal): Stream[State] = runs(state, goal).toStream
+  override def run(state: State, goal: Goal): Stream[State] = exec(state, goal).toStream
 
   var enableParallel = false
   private val reduceTimes = 4
@@ -146,25 +146,25 @@ implicit object NaiveSearcher extends Searcher {
     if(enableParallel) xs.reduce(reduceTimes).parMapImmediate(_.reduce(reduceTimes))
     else xs
 
-  def runs(state: State, goal: Goal): SStream[State] =
+  def exec(state: State, goal: Goal): SStream[State] =
     goal match {
       case goal: GoalBasic => SStream.from(goal.execute(state))
-      case GoalDisj(xs) => SDelay(flatten(parallelReduce(xs.map(runs(state, _)))))
+      case GoalDisj(xs) => SDelay(flatten(parallelReduce(xs.map(exec(state, _)))))
       case GoalConj(xs) => if (xs.isEmpty) SStream(state) else {
         val tail = GoalConj(xs.tail)
-        SDelay(flatten(runs(state, xs.head).map(runs(_, tail))))
+        SDelay(flatten(exec(state, xs.head).map(exec(_, tail))))
       }
-      case GoalReadSubst(f) => runs(state, f(state.eq.subst))
-      case goal: GoalDelay => SDelay(runs(state, goal.get))
+      case GoalReadSubst(f) => exec(state, f(state.eq.subst))
+      case goal: GoalDelay => SDelay(exec(state, goal.get))
       case GoalDisjU(xs) =>
         if (xs.isEmpty)
           SStream.empty
         else SDelay {
           val (test, goal) = xs.head
           val rest = xs.tail
-          runs(state, test).take1FlatMap({
-            runs(state, GoalDisjU(rest))
-          }, { state => runs(state, goal) })
+          exec(state, test).take1FlatMap({
+            exec(state, GoalDisjU(rest))
+          }, { state => exec(state, goal) })
         }
       case GoalDisjA(xs) =>
         if (xs.isEmpty)
@@ -172,9 +172,9 @@ implicit object NaiveSearcher extends Searcher {
         else SDelay {
           val (test, goal) = xs.head
           val rest = xs.tail
-          runs(state, test).caseOnEmpty({
-            runs(state, GoalDisjA(rest))
-          }, { states => flatten(states.map(runs(_, goal))) })
+          exec(state, test).caseOnEmpty({
+            exec(state, GoalDisjA(rest))
+          }, { states => flatten(states.map(exec(_, goal))) })
         }
     }
 }

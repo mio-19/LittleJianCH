@@ -21,12 +21,16 @@ final case class NotEqElem[T](override val x: Var[T], override val y: VarOr[T], 
     val vs: Set[Any] = v.asInstanceOf[Set[Any]]
     vs.contains(x) || vs.contains(y)
   }
+
+  override def toString: String = s"$x =/= $y"
 }
 
 final case class NotEqState(clauses: ParVector /*conj*/ [ParVector[NotEqElem[_]] /*disj not eq*/ ]) {
   def onEq(eq: EqState, updatedVars: /*nullable*/ Set[Var[_]]): Option[NotEqState] =
     if (clauses.isEmpty) Some(this) else // optimize
       NotEqState.check(eq, clauses, updatedVars)
+
+  def print: String = if(clauses.isEmpty) "" else clauses.map(_.map(_.toString).mkString(" || ")).mkString("\n")
 }
 
 object NotEqState {
@@ -77,6 +81,8 @@ final case class PredTypeState(xs: ParVector[(Var[_], PredTypeTag)]) {
     })
     if (concretes.forall(x => checkPredTypeTag(x._2, x._1))) Some(PredTypeState(vars.map(x => (x._1.asInstanceOf[Var[_]], x._2)) ++ rest)) else None
   }
+
+  def print: String = if(xs.isEmpty) "" else xs.map(x => s"${x._1}.isType[${x._2}]").mkString("\n")
 }
 
 object PredTypeState {
@@ -96,6 +102,8 @@ final case class PredNotTypeState(xs: ParVector[(Var[_], PredTypeTag)]) {
     })
     if (concretes.forall(x => !checkPredTypeTag(x._2, x._1))) Some(PredNotTypeState(vars.map(x => (x._1.asInstanceOf[Var[_]], x._2)) ++ rest)) else None
   }
+
+  def print: String = if(xs.isEmpty) "" else xs.map(x => s"${x._1}.isNotType[${x._2}]").mkString("\n")
 }
 
 object PredNotTypeState {
@@ -109,6 +117,8 @@ final case class AbsentState(absents: ParVector /*conj*/ [(Any, ParVector /*disj
   }
 
   def onEq(eq: EqState): Option[AbsentState] = AbsentState.check(eq, absents)
+
+  def print: String = if(absents.isEmpty) "" else absents.map(x => x._2.map(wi => s"${x._1}.absent(${wi.x})").mkString(" || ")).mkString("\n")
 }
 
 object AbsentState {
@@ -153,6 +163,13 @@ final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, 
   } yield State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
 
   def setEq(eq: EqState) = this.eqUpdated(eq).onEq()
+
+  def printConstraints: String = Vector(
+    notEq.print,
+    predType.print,
+    predNotType.print,
+    absent.print
+  ).filter(_.nonEmpty).mkString("\n")
 }
 
 object State {

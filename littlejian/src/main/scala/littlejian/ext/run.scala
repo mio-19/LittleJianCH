@@ -8,13 +8,11 @@ implicit class StateOps(self: State)(implicit searcher: Searcher) {
   def execute(goal: Goal): Seq[State] = searcher.run(self, goal)
 }
 
-def printRoot(root: Var[_], state: State): String = prettyPrintContext.callWith(new PrettyPrintContext(state.eq.subst)) {
-  root.toString
+def printState(root: Var[_], state: State): String = prettyPrintContext.callWith(new PrettyPrintContext(state.eq.subst)) {
+  val r = root.toString
+  val c = state.printConstraints
+  if (c.isEmpty) r else r + "\n" + c
 }
-
-def printConstraints(state: State): String = "" // TODO
-
-def printState(root: Var[_], state: State): String = printRoot(root, state) + printConstraints(state)
 
 // useful for maybe infinite spaces
 def displaySpace(root: Var[_], space: Seq[State]): Unit = space.foreach(s => println(printState(root, s)))

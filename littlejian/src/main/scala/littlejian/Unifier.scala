@@ -1,58 +1,29 @@
 package littlejian
 
+import littlejian.utils._
+
 import scala.annotation.{tailrec, targetName}
 import scala.language.implicitConversions
 
-type Trampoline[T] = TrampolineMore[T] | T
-
-final case class TrampolineMore[T](call: () => Trampoline[T])
-
-object Trampoline {
-  @tailrec
-  def get[T](t: Trampoline[T]): T = t match {
-    case more: TrampolineMore[_] => get(more.call().asInstanceOf[Trampoline[T]])
-    case _ => t.asInstanceOf[T]
-  }
-  def apply[T](t: => Trampoline[T]): Trampoline[T] = TrampolineMore(() => t)
-}
-
-implicit class TrampolineOps[T](self: Trampoline[T]) {
-  def get: T = Trampoline.get(self)
-
-  def flatMap[U](f: T => Trampoline[U]): Trampoline[U] = self match {
-    case more: TrampolineMore[_] => TrampolineMore(() => more.call().asInstanceOf[Trampoline[T]].flatMap(f))
-    case _ => f(self.asInstanceOf[T])
-  }
-}
-
 // Monad
-type Unifying[T] = (state: (Subst, SubstPatch)) => Trampoline[Option[((Subst, SubstPatch), T)]]
-
+type Unifying[T] = StateOption[(Subst, SubstPatch), T]
 
 object Unifying {
-  def success[T](x: T): Unifying[T] = state => Some(state, x)
+  def success[T](x: T): Unifying[T] = StateOption.success(x)
 
-  def failure[T]: Unifying[T] = _ => None
+  def failure[T]: Unifying[T] = StateOption.failure
 
-  def guard(x: Boolean): Unifying[Unit] = if (x) success(()) else failure
+  def guard(x: Boolean): Unifying[Unit] = StateOption.guard(x)
 }
 
 implicit class UnifyingOps[T](self: Unifying[T]) {
-  def getSubst(subst: Subst): Option[Subst] = self((subst, SubstPatch.empty)).get.map(_._1._1)
+  def getSubst(subst: Subst): Option[Subst] = self.run((subst, SubstPatch.empty)).map(_._1._1)
 
-  def getSubstPatch(subst: Subst): Option[SubstPatch] = self((subst, SubstPatch.empty)).get.map(_._1._2)
+  def getSubstPatch(subst: Subst): Option[SubstPatch] = self.run((subst, SubstPatch.empty)).map(_._1._2)
 
-  def map[U](f: T => U): Unifying[U] = state => self(state) flatMap {
-    case Some((state, x)) => Trampoline(Some((state, f(x))))
-    case None => None
-  }
+  def map[U](f: T => U): Unifying[U] = StateOptionOps(self).map(f)
 
-  def flatMap[U](f: T => Unifying[U]): Unifying[U] = state => self(state) flatMap {
-    case Some((state, x)) => Trampoline(f(x)(state))
-    case None => None
-  }
-
-  def >>[U](other: Unifying[U]): Unifying[U] = self.flatMap(_ => other)
+  def flatMap[U](f: T => Unifying[U]): Unifying[U] = StateOptionOps(self).flatMap(f)
 }
 
 trait Unifier[T] {

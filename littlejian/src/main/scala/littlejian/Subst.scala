@@ -1,6 +1,6 @@
 package littlejian
 
-import littlejian.utils.ImmutableWeakHashMap
+import littlejian.utils._
 
 import scala.annotation.tailrec
 import scala.collection.immutable.HashMap
@@ -48,11 +48,11 @@ object Subst {
     emptyImpl = ImmutableWeakHashMap.empty
   }
 
-  def walk[T](x: VarOr[T]): Unifying[VarOr[T]] = {
+  def walk[T](x: VarOr[T]): Unifying[VarOr[T]] = StateOption {
     case state@(subst, _) => Some((state, subst.walk(x)))
   }
 
-  def addEntry[T](v: Var[T], x: VarOr[T])(implicit unifier: Unifier[T]): Unifying[Unit] = {
+  def addEntry[T](v: Var[T], x: VarOr[T])(implicit unifier: Unifier[T]): Unifying[Unit] = StateOption {
     case (subst, patch) => Some(((subst.addEntry(v, x), (v, unifier, x) +: patch), ()))
   }
 

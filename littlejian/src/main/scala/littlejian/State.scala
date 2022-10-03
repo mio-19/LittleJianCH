@@ -25,6 +25,11 @@ final case class NotEqElem[T](override val x: Var[T], override val y: VarOr[T], 
   override def toString: String = s"$x =/= $y"
 }
 
+object NotEqElem {
+  def unchecked(x: Var[_], y: Any, unifier: Unifier[_]): NotEqElem[_] =
+    NotEqElem(x.asInstanceOf[Var[Any]], y.asInstanceOf[VarOr[Any]], unifier.asInstanceOf[Unifier[Any]])
+}
+
 final case class NotEqState(clauses: ParVector /*conj*/ [ParVector[NotEqElem[_]] /*disj not eq*/ ]) {
   def onEq(eq: EqState, updatedVars: /*nullable*/ Set[Var[_]]): Option[NotEqState] =
     if (clauses.isEmpty) Some(this) else // optimize
@@ -46,9 +51,9 @@ object NotEqState {
       case (x: Var[T], y: Var[T]) if x == y => None
       case (x: Var[T], y) => Some(ParVector(NotEqElem(x, y, req.unifier)))
       case (x, y: Var[T]) => Some(ParVector(NotEqElem(y, x, req.unifier)))
-      case (x, y) => req.unifier.unify(x, y)(Subst.empty) match {
+      case (x, y) => req.unifier.unify(x, y).getSubstPatch(eq.subst) match {
         case None => Some(ParVector.empty)
-        case Some((newSubst, ())) => if (newSubst.isEmpty) None else runCheck(eq, newSubst.toSeq.par.map({ case (v, (unifier, x)) => NotEqRequestUnchecked(v, x, unifier) }), updatedVars)
+        case Some(newSubst) => if (newSubst.isEmpty) None else Some(newSubst.par.map({ case (v, unifier, x) => NotEqElem.unchecked(v, x, unifier) }))
       }
     }
 

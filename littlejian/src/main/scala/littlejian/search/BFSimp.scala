@@ -11,6 +11,17 @@ implicit object BFSimp extends Searcher {
         case (Some(xs), Some(ys)) => Some(() => xs().appendFair(ys()))
       })
     }
+
+    def elim[U](default: => SizedStream[U], kf: (T, SizedStream[T]) => SizedStream[U]): SizedStream[U] = {
+      if (bucket.isEmpty) {
+        thunk match {
+          case None => default
+          case Some(xs) => SizedStream(xs().elim(default, kf))
+        }
+      } else {
+        kf(bucket.head, new SizedStream(bucket.tail, thunk))
+      }
+    }
   }
 
   object SizedStream {

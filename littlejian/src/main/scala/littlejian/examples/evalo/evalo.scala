@@ -4,15 +4,17 @@ import littlejian._
 import littlejian.ext._
 import littlejian.data.sexp._
 
-def lookupo(env: VarOr[SExp], id: VarOr[SExp], v: VarOr[SExp]): Goal =
-  (for {
+
+def lookupo(env: VarOr[SExp], id: VarOr[SExp], v: VarOr[SExp]): Goal = conde(
+  for {
     d <- fresh[SExp]
-    _ <- id.isType[String] && env === cons(cons(id, v), d)
-  } yield ()) ||
-    (for {
-      (aid, av, d) <- fresh[SExp, SExp, SExp]
-      _ <- id.isType[String] && env === cons(cons(aid, av), d) && id =/= aid && lookupo(d, id, v)
-    } yield ())
+    _ <- env === cons(cons(id, v), d)
+  } yield (),
+  for {
+    (aid, av, d) <- fresh[SExp, SExp, SExp]
+    _ <- env === cons(cons(aid, av), d) && id =/= aid && lookupo(d, id, v)
+  } yield ()
+)
 
 def lookupo(env: VarOr[SExp], id: VarOr[SExp]): Rel[SExp] = lookupo(env, id, _)
 
@@ -52,18 +54,10 @@ def applyo(f: VarOr[SExp], args: VarOr[SExp]): Rel[SExp] =
 
 def applyo(f: VarOr[SExp], args: VarOr[SExp], result: VarOr[SExp]): Goal = applyo(f, args)(result)
 
-def mapo(f: VarOr[SExp] => Rel[SExp], xs: VarOr[SExp]): Rel[SExp] = conde(
-  begin(xs === (), ()),
-  for {
-    (head, tail) <- xs.is(cons)
-    result <- cons call(f(head), mapo(f, tail))
-  } yield result
-)
-
 def evalo(env: VarOr[SExp], x: VarOr[SExp], result: VarOr[SExp]): Goal = evalo(env, x)(result)
 
 def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
-  lookupo(env, x),
+  x.isType[String] >> lookupo(env, x),
   for {
     (f, args) <- x.is(cons)
     result <- applyo app(evalo(env, f), mapo(evalo(env, _), args))

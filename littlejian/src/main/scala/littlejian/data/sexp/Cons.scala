@@ -1,6 +1,7 @@
 package littlejian.data.sexp
 
 import littlejian._
+import littlejian.ext._
 
 import scala.annotation.tailrec
 
@@ -46,7 +47,7 @@ private def convertListDot(xs: Seq[VarOr[SExp]]): VarOr[SExp] = {
   if(tail.isEmpty) head else cons(head, convertListDot(tail))
 }
 object list {
-  def apply(xs: VarOr[SExp]*) = convertList(xs)
+  def apply(xs: VarOr[SExp]*): SExp = convertList(xs)
   def unapplySeq(x: VarOr[SExp]): Option[Seq[VarOr[SExp]]] = x match {
     case Cons(a, d) => unapplySeq(d).map(a +: _)
     case () => Some(Seq())
@@ -55,3 +56,10 @@ object list {
 }
 def listDot(xs: VarOr[SExp]*) = convertListDot(xs)
 
+def mapo(f: VarOr[SExp] => Rel[SExp], xs: VarOr[SExp]): Rel[SExp] = conde(
+  begin(xs === (), ()),
+  for {
+    (head, tail) <- xs.is(cons)
+    result <- cons call(f(head), mapo(f, tail))
+  } yield result
+)

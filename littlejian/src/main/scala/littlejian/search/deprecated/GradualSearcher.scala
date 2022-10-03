@@ -1,9 +1,10 @@
-package littlejian.search
+package littlejian.search.deprecated
 
-import scala.collection.parallel.immutable.ParVector
+import littlejian.search.*
 import littlejian.*
 
-import scala.util.control.Breaks.*
+import scala.collection.parallel.immutable.ParVector
+import scala.util.control.Breaks.{break, breakable}
 
 // Broken, GoalControlImpure not supported
 implicit object GradualSearcher extends Searcher {

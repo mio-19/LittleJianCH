@@ -1,8 +1,9 @@
-package littlejian.search
+package littlejian.search.deprecated
+
+import littlejian.search.*
+import littlejian.*
 
 import scala.collection.parallel.immutable.ParVector
-import littlejian.*
-import littlejian.search.GradualSearcher.World
 
 // also broken
 implicit object ReducingSearcher extends Searcher {

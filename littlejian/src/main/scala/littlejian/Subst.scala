@@ -5,7 +5,7 @@ import littlejian.utils.ImmutableWeakHashMap
 import scala.annotation.tailrec
 import scala.collection.immutable.HashMap
 
-type Subst = Map[Var[_], (Unifier[_]/* for =/= usages */, _/*VarOr[_]*/)]
+type Subst = Map[Var[_], (Unifier[_] /* for =/= usages */ , _ /*VarOr[_]*/ )]
 
 type SubstPatch = Vector[(Var[_], Unifier[_], _)]
 
@@ -30,6 +30,7 @@ implicit final class SubstOps(self: Subst) {
 
   def addEntry[T](v: Var[T], x: VarOr[T])(implicit unifier: Unifier[T]): Subst =
     if (self.contains(v)) throw new IllegalArgumentException("duplicate add") else self.updated(v, (unifier, x))
+
   def addEntryUnchecked(v: Var[_], x: Any)(unifier: Unifier[_]): Subst =
     if (self.contains(v)) throw new IllegalArgumentException("duplicate add") else self.updated(v, (unifier, x))
 }
@@ -47,9 +48,13 @@ object Subst {
     emptyImpl = ImmutableWeakHashMap.empty
   }
 
-  def walk[T](x: VarOr[T]): Unifying[VarOr[T]] = subst => Some((SubstPatch.empty, subst.walk(x)))
+  def walk[T](x: VarOr[T]): Unifying[VarOr[T]] = {
+    case state@(subst, _) => Some((state, subst.walk(x)))
+  }
 
-  def addEntry[T](v: Var[T], x: VarOr[T])(implicit unifier: Unifier[T]): Unifying[Unit] = subst => Some((Vector((v, unifier, x)), ()))
+  def addEntry[T](v: Var[T], x: VarOr[T])(implicit unifier: Unifier[T]): Unifying[Unit] = {
+    case (subst, patch) => Some(((subst.addEntry(v, x), (v, unifier, x) +: patch), ()))
+  }
 
   def patch(subst: Subst, p: SubstPatch): Subst = p.foldLeft(subst) {
     case (subst, (v, unifier, x)) => subst.addEntryUnchecked(v, x)(unifier)

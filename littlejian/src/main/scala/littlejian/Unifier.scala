@@ -4,30 +4,28 @@ import scala.annotation.targetName
 import scala.language.implicitConversions
 
 // Monad
-type Unifying[T] = Subst => Option[(SubstPatch, T)]
+type Unifying[T] = (state: (Subst, SubstPatch)) => Option[((Subst, SubstPatch), T)]
 
 object Unifying {
-  def success[T](x: T): Unifying[T] = s => Some(SubstPatch.empty, x)
+  def success[T](x: T): Unifying[T] = state => Some(state, x)
 
-  def failure[T]: Unifying[T] = s => None
+  def failure[T]: Unifying[T] = _ => None
 
   def guard(x: Boolean): Unifying[Unit] = if (x) success(()) else failure
 }
 
 implicit class UnifyingOps[T](self: Unifying[T]) {
-  def getSubst(subst: Subst): Option[Subst] = (self >> (s=>Some((SubstPatch.empty, s))))(subst).map(_._2)
-  def getSubstPatch(subst: Subst): Option[SubstPatch] = self(subst).map(_._1)
-  
-  def map[U](f: T => U): Unifying[U] = subst => self(subst) match {
-    case Some((s, x)) => Some((s, f(x)))
+  def getSubst(subst: Subst): Option[Subst] = self((subst, SubstPatch.empty)).map(_._1._1)
+
+  def getSubstPatch(subst: Subst): Option[SubstPatch] = self((subst, SubstPatch.empty)).map(_._1._2)
+
+  def map[U](f: T => U): Unifying[U] = state => self(state) match {
+    case Some((state, x)) => Some((state, f(x)))
     case None => None
   }
 
-  def flatMap[U](f: T => Unifying[U]): Unifying[U] = subst => self(subst) match {
-    case Some((s, x)) => f(x)(Subst.patch(subst, s)) match {
-      case Some((s2, y)) => Some((s ++ s2, y))
-      case None => None
-    }
+  def flatMap[U](f: T => Unifying[U]): Unifying[U] = state => self(state) match {
+    case Some((state, x)) => f(x)(state)
     case None => None
   }
 
@@ -114,7 +112,8 @@ def U$Union[T, U, V, W](tr: => Unifier[T], ur: => Unifier[U], vr: => Unifier[V],
 trait EqualUnifier[T] extends Unifier[T] {
   override def concreteUnify(self: T, other: T): Unifying[Unit] = Unifying.guard(self == other)
 }
-def equalUnifier[T]: Unifier[T] =  new EqualUnifier[T] {}
+
+def equalUnifier[T]: Unifier[T] = new EqualUnifier[T] {}
 
 implicit object U$Symbol extends EqualUnifier[Symbol]
 

@@ -4,14 +4,14 @@ import littlejian.*
 import littlejian.data.*
 import littlejian.data.sexp.*
 import littlejian.ext.*
-import littlejian.search.deprecated.{GradualSearcher, ReducingSearcher}
 import littlejian.unifier.*
 
 
 class TopSuite extends munit.FunSuite {
   runTest("NaiveSearcher ")(littlejian.search.NaiveSearcher)
-  runTest("GradualSearcher ")(GradualSearcher)
-  runTest("ReducingSearcher ")(ReducingSearcher)
+  runTest("GradualSearcher ")(littlejian.search.deprecated.GradualSearcher)
+  runTest("ReducingSearcher ")(littlejian.search.deprecated.ReducingSearcher)
+  runTest("BFSimp ")(littlejian.search.BFSimp)
 
   def runTest(name: String = "")(implicit searcher: Searcher): Unit = {
     test(name + "basics") {

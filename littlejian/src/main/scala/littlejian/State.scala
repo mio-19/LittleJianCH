@@ -30,7 +30,7 @@ final case class NotEqState(clauses: ParVector /*conj*/ [ParVector[NotEqElem[_]]
     if (clauses.isEmpty) Some(this) else // optimize
       NotEqState.check(eq, clauses, updatedVars)
 
-  def print: String = if(clauses.isEmpty) "" else clauses.map(_.map(_.toString).mkString(" || ")).mkString("\n")
+  def print: String = if(clauses.isEmpty) "" else clauses.seq.map(_.seq.map(_.toString).mkString(" || ")).mkString("\n")
 }
 
 object NotEqState {

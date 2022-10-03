@@ -90,6 +90,12 @@ class TopSuite extends munit.FunSuite {
           _ <- x =/= cons(y, z) && y === "a" && z === "b" && x === cons("a", "b")
         } yield ()
       }), Set())
+      assertEquals(Set.from(run[SExp] {
+        _ =/= "a"
+      }), Set(
+        """$1
+$1 =/= a"""
+      ))
     }
     test(name + "absent") {
       assertEquals(Set.from(run[SExp] { x =>

@@ -38,7 +38,6 @@ def evalExpo(exp: VarOr[SExp], env: VarOr[SExp]): Rel[SExp] = conde(
   for {
     as <- exp.is[SExp](cons("list", _))
     _ <- notInEnvo(env, "list")
-    _ <- as.absent("closure")
     result <- mapo(evalExpo(_, env), as)
   } yield result,
   exp.isType[String] >> lookupo(env, exp),

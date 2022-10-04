@@ -34,8 +34,11 @@ def add(x: VarOr[Boolean], y: VarOr[Boolean], z: VarOr[Boolean]): GoalWith[(VarO
 
 trait IntN[T <: IntN[T]] {
   def plus(that: T): GoalWith[(VarOr[Boolean], T)]
+
   def plus(that: T, carry: VarOr[Boolean]): GoalWith[(VarOr[Boolean], T)]
+
   def succ: GoalWith[(VarOr[Boolean], T)]
+
   def unary_! : GoalWith[T]
 
   def unary_- : GoalWith[T] = for {
@@ -44,6 +47,7 @@ trait IntN[T <: IntN[T]] {
   } yield r
 
   def bits: Vector[VarOr[Boolean]]
+
   override def toString: String = {
     val bs = bits.map(_.toString)
     if (bs.forall(x => x == "true" || x == "false")) {
@@ -85,7 +89,9 @@ final case class Int4(bit0: VarOr[Boolean], bit1: VarOr[Boolean], bit2: VarOr[Bo
 
 abstract class VarOrIntNOps[T <: IntN[T]](self: VarOr[T]) {
   protected def consThis(x: VarOr[T]): VarOrIntNOps[T]
+
   def get: GoalWith[T]
+
   def +(other: VarOr[T]): Rel[T] = for {
     x <- this.get
     y <- consThis(other).get
@@ -105,6 +111,7 @@ abstract class VarOrIntNOps[T <: IntN[T]](self: VarOr[T]) {
 
 implicit class VarOrInt4Ops(self: VarOr[Int4]) extends VarOrIntNOps[Int4](self) {
   override protected def consThis(x: VarOr[Int4]): VarOrInt4Ops = VarOrInt4Ops(x)
+
   override def get: GoalWith[Int4] = for {
     x <- self.is[Boolean, Boolean, Boolean, Boolean](Int4(_, _, _, _))
   } yield Int4(x._1, x._2, x._3, x._4)
@@ -124,40 +131,25 @@ object Int4 {
 }
 
 
-final case class Int8(lo: Int4, hi: Int4) extends Product2[Int4, Int4] {
-  def plus(that: Int8): GoalWith[(VarOr[Boolean], Int8)] = for {
+final case class Int8(lo: Int4, hi: Int4) extends Product2[Int4, Int4] with IntN[Int8] {
+  override def plus(that: Int8): GoalWith[(VarOr[Boolean], Int8)] = for {
     (c, r) <- lo.plus(that.lo)
     (c2, r2) <- hi.plus(that.hi, c)
   } yield (c2, Int8(r, r2))
 
-  def plus(that: Int8, carry: VarOr[Boolean]): GoalWith[(VarOr[Boolean], Int8)] = for {
+  override def plus(that: Int8, carry: VarOr[Boolean]): GoalWith[(VarOr[Boolean], Int8)] = for {
     (c, r) <- lo.plus(that.lo, carry)
     (c2, r2) <- hi.plus(that.hi, c)
   } yield (c2, Int8(r, r2))
 
-  def succ: GoalWith[(VarOr[Boolean], Int8)] = plus(Int8.one)
+  override def succ: GoalWith[(VarOr[Boolean], Int8)] = plus(Int8.one)
 
-  def unary_! : GoalWith[Int8] = for {
+  override def unary_! : GoalWith[Int8] = for {
     l <- !lo
     h <- !hi
   } yield Int8(l, h)
 
-  def unary_- : GoalWith[Int8] = for {
-    n <- !this
-    (c, r) <- n.succ
-  } yield r
-
-  def bits: Vector[VarOr[Boolean]] = lo.bits ++ hi.bits
-  override def toString: String = {
-    val bs = bits.map(_.toString)
-    if(bs.forall(x=>x=="true"||x=="false")) {
-      val bs0: Vector[Int] = bs.map(x=>if(x=="true") 1 else 0)
-      val result: Int = bs0(0) + bs0(1)*2 + bs0(2)*4 + bs0(3)*8 + bs0(4)*16 + bs0(5)*32 + bs0(6)*64 + bs0(7)*128
-      result.toString
-    } else {
-      s"Int8(${bs.mkString(" , ")})"
-    }
-  }
+  override def bits: Vector[VarOr[Boolean]] = lo.bits ++ hi.bits
 }
 
 object Int8 {
@@ -172,48 +164,45 @@ object Int8 {
   }
 }
 
-implicit class VarOrInt8Ops(self: VarOr[Int8]) {
+implicit class VarOrInt8Ops(self: VarOr[Int8]) extends VarOrIntNOps[Int8](self) {
+  override protected def consThis(x: VarOr[Int8]): VarOrInt8Ops = VarOrInt8Ops(x)
+
   def get: GoalWith[Int8] = for {
     (b0, b1, b2, b3) <- fresh[Boolean, Boolean, Boolean, Boolean]
     (b4, b5, b6, b7) <- fresh[Boolean, Boolean, Boolean, Boolean]
     result = Int8(Int4(b0, b1, b2, b3), Int4(b4, b5, b6, b7))
     _ <- self == result
   } yield result
-
-  def +(other: VarOr[Int8]): Rel[Int8] = for {
-    x <- self.get
-    y <- other.get
-    (c, r) <- x.plus(x)
-  } yield r
-
-  def unary_- : Rel[Int8] = for {
-    x <- self.get
-    r <- -x
-  } yield r
-
-  def -(other: VarOr[Int8]): Rel[Int8] = for {
-    y <- -other
-    r <- self + y
-  } yield r
 }
 
 
 implicit val U$Int8: Unifier[Int8] = U$Product
 
-final case class Int16(lo: Int8, hi: Int8) extends Product2[Int8, Int8] {
-  def plus(that: Int16): GoalWith[(VarOr[Boolean], Int16)] = for {
+final case class Int16(lo: Int8, hi: Int8) extends Product2[Int8, Int8] with IntN[Int16] {
+  override def plus(that: Int16): GoalWith[(VarOr[Boolean], Int16)] = for {
     (c, r) <- lo.plus(that.lo)
     (c2, r2) <- hi.plus(that.hi, c)
   } yield (c2, Int16(r, r2))
 
-  def plus(that: Int16, carry: VarOr[Boolean]): GoalWith[(VarOr[Boolean], Int16)] = for {
+  override def plus(that: Int16, carry: VarOr[Boolean]): GoalWith[(VarOr[Boolean], Int16)] = for {
     (c, r) <- lo.plus(that.lo, carry)
     (c2, r2) <- hi.plus(that.hi, c)
   } yield (c2, Int16(r, r2))
+
+  override def succ: GoalWith[(VarOr[Boolean], Int16)] = plus(Int16.one)
+
+  override def unary_! : GoalWith[Int16] = for {
+    l <- !lo
+    h <- !hi
+  } yield Int16(l, h)
+
+  override def bits: Vector[VarOr[Boolean]] = lo.bits ++ hi.bits
 }
 
-implicit class VarOrInt16Ops(self: VarOr[Int16]) {
-  def get: GoalWith[Int16] = for {
+implicit class VarOrInt16Ops(self: VarOr[Int16]) extends VarOrIntNOps[Int16](self) {
+  override protected def consThis(x: VarOr[Int16]): VarOrIntNOps[Int16] = VarOrInt16Ops(x)
+
+  override def get: GoalWith[Int16] = for {
     (b0, b1, b2, b3) <- fresh[Boolean, Boolean, Boolean, Boolean]
     (b4, b5, b6, b7) <- fresh[Boolean, Boolean, Boolean, Boolean]
     (b8, b9, b10, b11) <- fresh[Boolean, Boolean, Boolean, Boolean]
@@ -221,27 +210,15 @@ implicit class VarOrInt16Ops(self: VarOr[Int16]) {
     result = Int16(Int8(Int4(b0, b1, b2, b3), Int4(b4, b5, b6, b7)), Int8(Int4(b8, b9, b10, b11), Int4(b12, b13, b14, b15)))
     _ <- self == result
   } yield result
-
-  def +(other: VarOr[Int16]): Rel[Int16] = for {
-    x <- self.get
-    y <- other.get
-    (c, r) <- x.plus(x)
-  } yield r
-
-  def unary_- : Rel[Int16] = for {
-    x <- self.get
-    r <- -x
-  } yield r
-
-  def -(other: VarOr[Int16]): Rel[Int16] = for {
-    y <- -other
-    r <- self + y
-  } yield r
 }
 
 implicit val U$Int16: Unifier[Int16] = U$Product
 
 object Int16 {
+  def zero = from(0)
+
+  def one = from(1)
+
   def from(x: Short): Int16 = {
     val lo = Int8.from((x & 0xff).toByte)
     val hi = Int8.from(((x >> 8) & 0xff).toByte)
@@ -249,20 +226,31 @@ object Int16 {
   }
 }
 
-final case class Int32(lo: Int16, hi: Int16) extends Product2[Int16, Int16] {
-  def plus(that: Int32): GoalWith[(VarOr[Boolean], Int32)] = for {
+final case class Int32(lo: Int16, hi: Int16) extends Product2[Int16, Int16] with IntN[Int32] {
+  override def plus(that: Int32): GoalWith[(VarOr[Boolean], Int32)] = for {
     (c, r) <- lo.plus(that.lo)
     (c2, r2) <- hi.plus(that.hi, c)
   } yield (c2, Int32(r, r2))
 
-  def plus(that: Int32, carry: VarOr[Boolean]): GoalWith[(VarOr[Boolean], Int32)] = for {
+  override def plus(that: Int32, carry: VarOr[Boolean]): GoalWith[(VarOr[Boolean], Int32)] = for {
     (c, r) <- lo.plus(that.lo, carry)
     (c2, r2) <- hi.plus(that.hi, c)
   } yield (c2, Int32(r, r2))
+
+  override def succ: GoalWith[(VarOr[Boolean], Int32)] = plus(Int32.one)
+
+  override def unary_! : GoalWith[Int32] = for {
+    l <- !lo
+    h <- !hi
+  } yield Int32(l, h)
+
+  override def bits: Vector[VarOr[Boolean]] = lo.bits ++ hi.bits
 }
 
-implicit class VarOrInt32Ops(self: VarOr[Int32]) {
-  def get: GoalWith[Int32] = for {
+implicit class VarOrInt32Ops(self: VarOr[Int32]) extends VarOrIntNOps[Int32](self) {
+  override protected def consThis(x: VarOr[Int32]): VarOrIntNOps[Int32] = VarOrInt32Ops(x)
+
+  override def get: GoalWith[Int32] = for {
     (b0, b1, b2, b3) <- fresh[Boolean, Boolean, Boolean, Boolean]
     (b4, b5, b6, b7) <- fresh[Boolean, Boolean, Boolean, Boolean]
     (b8, b9, b10, b11) <- fresh[Boolean, Boolean, Boolean, Boolean]
@@ -274,25 +262,13 @@ implicit class VarOrInt32Ops(self: VarOr[Int32]) {
     result = Int32(Int16(Int8(Int4(b0, b1, b2, b3), Int4(b4, b5, b6, b7)), Int8(Int4(b8, b9, b10, b11), Int4(b12, b13, b14, b15))), Int16(Int8(Int4(b16, b17, b18, b19), Int4(b20, b21, b22, b23)), Int8(Int4(b24, b25, b26, b27), Int4(b28, b29, b30, b31))))
     _ <- self == result
   } yield result
-
-  def +(other: VarOr[Int32]): Rel[Int32] = for {
-    x <- self.get
-    y <- other.get
-    (c, r) <- x.plus(x)
-  } yield r
-
-  def unary_- : Rel[Int32] = for {
-    x <- self.get
-    r <- -x
-  } yield r
-
-  def -(other: VarOr[Int32]): Rel[Int32] = for {
-    y <- -other
-    r <- self + y
-  } yield r
 }
 
 object Int32 {
+  def zero = from(0)
+
+  def one = from(1)
+
   def from(n: Int): Int32 = {
     val lo = Int16.from((n & 0xffff).toShort)
     val hi = Int16.from(((n >> 16) & 0xffff).toShort)

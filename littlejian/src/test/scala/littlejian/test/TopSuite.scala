@@ -130,6 +130,7 @@ $1 =/= a"""
       assertEquals(Set.from(run[Int4] { x => Int4.from(7) - Int4.from(8) === x }), Set("15")) // -1
       assertEquals(Set.from(run[Int4] { x => Int4.from(9) - Int4.from(8) === x }), Set("1"))
       assertEquals(Set.from(run[Int4] { x => x - Int4.from(8) === Int4.from(1) }), Set("9"))
+      assertEquals(Set.from(run[Int4] { x => x - x === x }), Set("0"))
     }
   }
 

@@ -2,19 +2,16 @@ package littlejian.examples.pie
 
 import littlejian.*
 import littlejian.ext.*
+import littlejian.data._
 import littlejian.data.sexp.*
 
 import scala.language.implicitConversions
 
 
 implicit def SeqToSExp(ls: Seq[String]): SExp = list(ls *)
-def car(x: VarOr[SExp]): VarOr[SExp] = x match {
-  case Cons(v, _) => v
-  case _ => throw new IllegalArgumentException("car: not a cons cell")
-}
 def walkStar(walker: Walker, x: VarOr[SExp]): VarOr[SExp] = walker(x) match {
   case () => ()
-  case Cons(a, d) => Cons(walkStar(walker, a), walkStar(walker, d))
+  case Pair(a, d) => Cons(walkStar(walker, a), walkStar(walker, d))
   case x: String => x
   case x: Var[_] => x
 }
@@ -338,11 +335,11 @@ val allExprs: Seq[String] = Seq("var", "the", "zero", "sole", "Nat", "Trivial", 
 val symbolExprs: Seq[String] = Seq("zero", "sole", "Atom", "Nat", "Trivial", "U")
 val nonSymbolExprs: Seq[String] = Seq("the", "quote", "add1", "same", "λ", "cons", "car", "cdr", "ind-Nat", "ind-=", "Π", "Σ", "=")
 def memv(v: VarOr[SExp], ls: VarOr[SExp]): Boolean = ls match {
-  case Cons(car, cdr) => car == v || memv(v, cdr)
+  case Pair(car, cdr) => car == v || memv(v, cdr)
   case _ => false
 }
 def expMemvQ(ls: VarOr[SExp])(e: VarOr[SExp]): Boolean = e match {
-  case Cons(car, cdr) => memv(car, ls)
+  case Pair(car, cdr) => memv(car, ls)
   case _ => false
 }
 // (define simple? (λ (x) (memv x symbol-exprs)))

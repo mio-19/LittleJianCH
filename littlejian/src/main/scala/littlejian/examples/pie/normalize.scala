@@ -1,8 +1,9 @@
 package littlejian.examples.pie
 
-import littlejian._
-import littlejian.ext._
-import littlejian.data.sexp._
+import littlejian.*
+import littlejian.data.Pair
+import littlejian.ext.*
+import littlejian.data.sexp.*
 
 // https://github.com/bboskin/SFPW2018/blob/master/condp/normalize.rkt
 
@@ -505,7 +506,7 @@ def valofoIn(exp: VarOr[SExp])(walker: Walker): Seq[String] = walkStar(walker, e
   case exp: String if simpleQ(exp) => Seq(exp)
   case _: String => Seq("var")
   case exp if expMemvQ(nonSymbolExprs)(exp) => Seq(car(exp).asInstanceOf[String])
-  case Cons(rat, ran) => Seq("app")
+  case Pair(rat, ran) => Seq("app")
   case _: Var[_] => Seq(UseMaybe)
 }
 /*
@@ -792,7 +793,7 @@ def goToType(Γ: VarOr[SExp], τ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp]
 */
 def inType(e: VarOr[SExp], τ: VarOr[SExp]): Boolean =
   getConstructors(τ).contains(e) || (e match {
-    case Cons(car, _) => getConstructors(τ).contains(car)
+    case Pair(car, _) => getConstructors(τ).contains(car)
     case _ => false
   })
 /*
@@ -958,10 +959,10 @@ def readBackTypeNeutral(Γ: VarOr[SExp], v: VarOr[SExp], norm: VarOr[SExp]): Goa
 */
 def RBTv(v: VarOr[SExp])(walker: Walker): Seq[String] = walkStar(walker, v) match {
   case v: String => Seq(v)
-  case Cons("PI", info) => Seq("Π")
-  case Cons("EQUAL", info) => Seq("=")
-  case Cons("SIGMA", info) => Seq("Σ")
-  case Cons("NEU", info) => Seq("neutral")
+  case Pair("PI", info) => Seq("Π")
+  case Pair("EQUAL", info) => Seq("=")
+  case Pair("SIGMA", info) => Seq("Σ")
+  case Pair("NEU", info) => Seq("neutral")
   case v: Var[_] => Seq(UseMaybe)
   case _ => Seq()
 }
@@ -983,9 +984,9 @@ def RBTn(e: VarOr[SExp])(walker: Walker): Seq[String] = walkStar(walker, e) matc
   case "Trivial" => Seq("TRIVIAL")
   case "Nat" => Seq("NAT")
   case "U" => Seq("UNIVERSE")
-  case Cons("Π", info) => Seq("Π")
-  case Cons("=", info) => Seq("=")
-  case Cons("Σ", info) => Seq("Σ")
+  case Pair("Π", info) => Seq("Π")
+  case Pair("=", info) => Seq("=")
+  case Pair("Σ", info) => Seq("Σ")
   case e: Var[_] => Seq("ATOM", "NAT", "UNIVERSE", "TRIVIAL", "Σ", "Π", "=", "neutral")
   case _ => Seq("neutral")
 }
@@ -1173,7 +1174,7 @@ val allRBN: Seq[String] = Seq("VAR", "CAR", "CDR", "N-APP", "IND-NAT", "IND-=")
 */
 def RBNne(v0: VarOr[SExp])(walker: Walker): Seq[String] = {
   val v = walkStar(walker, v0)
-  if(expMemvQ(allRBN)(v)) Seq(v.asInstanceOf[Cons].a.asInstanceOf[String])
+  if(expMemvQ(allRBN)(v)) Seq(car(v).asInstanceOf[String])
   else if(v.isInstanceOf[Var[_]]) allRBN
   else Seq()
 }

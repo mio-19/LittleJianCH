@@ -20,12 +20,22 @@ implicit class TrampolineOps[T](self: Trampoline[T]) {
   def get: T = Trampoline.get(self)
 
   def flatMap[U](f: T => Trampoline[U]): Trampoline[U] = self match {
-    case more: TrampolineMore[_] => TrampolineMore(() => more.call().asInstanceOf[Trampoline[T]].flatMap(f))
+    case more: TrampolineMore[_] => Trampoline {
+      val tmp = more.call().asInstanceOf[Trampoline[T]]
+      Trampoline {
+        tmp.flatMap(f)
+      }
+    }
     case _ => f(self.asInstanceOf[T])
   }
 
   def map[U](f: T => U): Trampoline[U] = self match {
-    case more: TrampolineMore[_] => TrampolineMore(() => more.call().asInstanceOf[Trampoline[T]].map(f))
+    case more: TrampolineMore[_] => Trampoline {
+      val tmp = more.call().asInstanceOf[Trampoline[T]]
+      Trampoline {
+        tmp.map(f)
+      }
+    }
     case _ => f(self.asInstanceOf[T])
   }
 }

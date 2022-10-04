@@ -5,7 +5,7 @@ import collection.parallel.CollectionConverters._
 import scala.collection.parallel.immutable.ParVector
 
 implicit object BFSimpPar extends Searcher {
-  override def run(state: State, goal: Goal): Stream[State] = exec(state, goal, initDisjReduceLevel).toStream
+  override def run(state: State, goal: Goal): Stream[State] = exec(state, goal).toStream
 
   val typicalConjUnit = 10
   val typicalDisjUnit = 10
@@ -13,7 +13,7 @@ implicit object BFSimpPar extends Searcher {
   val initDisjReduceLevel: Int = Runtime.getRuntime.availableProcessors()
 
   def collectGoalConj(x: GoalConj): Vector[Goal] = {
-    if(x.xs.length > typicalConjUnit) return x.xs
+    if (x.xs.length > typicalConjUnit) return x.xs
     x.xs.flatMap {
       case x: GoalConj => collectGoalConj(x)
       case x: GoalDelay => x.get match {
@@ -25,7 +25,7 @@ implicit object BFSimpPar extends Searcher {
   }
 
   def collectGoalDisj(x: GoalDisj): Vector[Goal] = {
-    if(x.xs.length > typicalDisjUnit) return x.xs
+    if (x.xs.length > typicalDisjUnit) return x.xs
     x.xs.flatMap {
       case x: GoalDisj => collectGoalDisj(x)
       case x: GoalDelay => x.get match {
@@ -40,38 +40,43 @@ implicit object BFSimpPar extends Searcher {
   def runBasic(state: State, xs: Vector[GoalBasic]): Option[State] = if (xs.isEmpty) Some(state) else xs.head.execute(state).flatMap(runBasic(_, xs.tail))
 
 
-  def exec(state: State, goal: Goal, disjReduceLevel: Int): SizedStream[State] =
+  val threadDisjReduceLevel: Parameter[Int] = new Parameter[Int]
+
+  def exec(state: State, goal: Goal): SizedStream[State] =
     goal match {
       case goal: GoalBasic => SizedStream.from(goal.execute(state))
       case goal: GoalDisj => {
         val xs = collectGoalDisj(goal)
+        val disjReduceLevel = threadDisjReduceLevel.get.getOrElse(initDisjReduceLevel)
         val nextDisjReduceLevel = disjReduceLevel / 2
-        SizedStream(flatten(xs.par.map(x=>exec(state, x, nextDisjReduceLevel).forceN(disjReduceLevel))))
+        SizedStream(flatten(xs.par.map(x => threadDisjReduceLevel.callWith(nextDisjReduceLevel) {
+          exec(state, x).forceN(disjReduceLevel)
+        })))
       }
       case goal: GoalConj => {
         val xs = collectGoalConj(goal)
         if (xs.isEmpty) SizedStream(state) else {
           val (basics, rest) = xs.partition(_.isInstanceOf[GoalBasic])
           runBasic(state, basics.asInstanceOf[Vector[GoalBasic]]) match {
-            case Some(state) => if(rest.isEmpty) SizedStream(state) else {
+            case Some(state) => if (rest.isEmpty) SizedStream(state) else {
               val tail = GoalConj(rest.tail)
-              SizedStream(exec(state, rest.head, disjReduceLevel).appendMapFair(exec(_, tail, disjReduceLevel)))
+              SizedStream(exec(state, rest.head).appendMapFair(exec(_, tail)))
             }
             case None => SizedStream.empty
           }
         }
       }
-      case GoalReadSubst(f) => exec(state, f(state.eq.subst), disjReduceLevel)
-      case goal: GoalDelay => SizedStream(exec(state, goal.forceN(goalReduceLevel), disjReduceLevel))
+      case GoalReadSubst(f) => exec(state, f(state.eq.subst))
+      case goal: GoalDelay => SizedStream(exec(state, goal.forceN(goalReduceLevel)))
       case GoalDisjU(xs) =>
         if (xs.isEmpty)
           SizedStream.empty
         else SizedStream {
           val (test, goal) = xs.head
           val rest = xs.tail
-          exec(state, test, disjReduceLevel).take1FlatMap({
-            exec(state, GoalDisjU(rest), disjReduceLevel)
-          }, { state => exec(state, goal, disjReduceLevel) })
+          exec(state, test).take1FlatMap({
+            exec(state, GoalDisjU(rest))
+          }, { state => exec(state, goal) })
         }
       case GoalDisjA(xs) =>
         if (xs.isEmpty)
@@ -79,9 +84,9 @@ implicit object BFSimpPar extends Searcher {
         else SizedStream {
           val (test, goal) = xs.head
           val rest = xs.tail
-          exec(state, test, disjReduceLevel).caseOnEmpty({
-            exec(state, GoalDisjA(rest), disjReduceLevel)
-          }, { states => states.appendMapFair(exec(_, goal, disjReduceLevel)) })
+          exec(state, test).caseOnEmpty({
+            exec(state, GoalDisjA(rest))
+          }, { states => states.appendMapFair(exec(_, goal)) })
         }
     }
 }

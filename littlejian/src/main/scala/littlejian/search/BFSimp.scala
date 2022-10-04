@@ -9,6 +9,14 @@ implicit object BFSimp extends Searcher {
   final class SizedStream[T](val bucket: Vector[T], val thunk: Option[() => SizedStream[T]]) {
     def toStream: Stream[T] = Stream.from(bucket) #::: thunk.map(_ ().toStream).getOrElse(Stream.empty)
 
+    def force1: SizedStream[T] = {
+      val rest = thunk match {
+        case Some(thunk) => thunk()
+        case None => SizedStream.empty
+      }
+      new SizedStream(bucket ++ rest.bucket, rest.thunk)
+    }
+
     def appendFair(other: SizedStream[T]): SizedStream[T] = {
       new SizedStream(bucket ++ other.bucket, (thunk, other.thunk) match {
         case (None, xs) => xs
@@ -55,7 +63,7 @@ implicit object BFSimp extends Searcher {
   def exec(state: State, goal: Goal): SizedStream[State] =
     goal match {
       case goal: GoalBasic => SizedStream.from(goal.execute(state))
-      case GoalDisj(xs) => SizedStream(flatten(xs.par.map(exec(state, _))))
+      case GoalDisj(xs) => SizedStream(flatten(xs.par.map(x=>exec(state, x).force1))) // force1: an optimization
       case GoalConj(xs) => if (xs.isEmpty) SizedStream(state) else {
         val tail = GoalConj(xs.tail)
         SizedStream(exec(state, xs.head).appendMapFair(exec(_, tail)))

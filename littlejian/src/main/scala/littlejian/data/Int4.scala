@@ -60,6 +60,24 @@ final case class Int4(bit0: VarOr[Boolean], bit1: VarOr[Boolean], bit2: VarOr[Bo
   } yield r
 }
 
+implicit class VarOrInt4Ops(self: VarOr[Int4]) {
+  def +(other: VarOr[Int4]): Rel[Int4] = for {
+    x <- self.is[Boolean, Boolean, Boolean, Boolean](Int4(_, _, _, _))
+    y <- other.is[Boolean, Boolean, Boolean, Boolean](Int4(_, _, _, _))
+    (c, r) <- Int4(x._1, x._2, x._3, x._4).plus(Int4(y._1, y._2, y._3, y._4))
+  } yield r
+
+  def unary_- : Rel[Int4] = for {
+    x <- self.is[Boolean, Boolean, Boolean, Boolean](Int4(_, _, _, _))
+    r <- Int4(x._1, x._2, x._3, x._4).unary_-
+  } yield r
+
+  def -(other: VarOr[Int4]): Rel[Int4] = for {
+    y <- -other
+    r <- self + y
+  } yield r
+}
+
 implicit val U$Int4: Unifier[Int4] = U$Product
 
 object Int4 {

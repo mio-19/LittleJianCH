@@ -93,7 +93,7 @@ import littlejian.data.sexp._
 
 (define (jpass) 'pass)
 */
-def jlet(key: VarOr[SExp], value: VarOr[SExp], exp: VarOr[SExp]): SExp = list("let", key, value, exp)
+def jlet(key: VarOr[JSData], value: VarOr[JSData], exp: VarOr[JSData]): JSData = list("let", key, value, exp)
 def jfun(params: VarOr[SExp], body: VarOr[SExp]): SExp = list("fun", params, body)
 def jclo(params: VarOr[SExp], body: VarOr[SExp], env: VarOr[SExp]): SExp = list("jclosure", params, body, env)
 def japp(closure: VarOr[SExp], args: VarOr[SExp]): SExp = list("app", closure, args)

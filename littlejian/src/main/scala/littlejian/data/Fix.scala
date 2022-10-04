@@ -33,7 +33,11 @@ trait FixHelper[F[_]] {
 
   implicit def unfix2fix(unfix: F[Fix0[F]]): Fix0[F] = unfix.asInstanceOf[Fix0[F]]
 
-  implicit def unfix2fixVarOr(unfix: VarOr[F[Fix0[F]]]): VarOr[Fix0[F]] = unfix.asInstanceOf[VarOr[Fix0[F]]]
+  implicit def unfix2fixU[U[_]](unfix: U[F[Fix0[F]]]): U[Fix0[F]] = unfix.asInstanceOf[U[Fix0[F]]]
 
-  implicit def fix2unfixVarOr(fix: VarOr[Fix0[F]]): VarOr[F[Fix0[F]]] = fix.asInstanceOf[VarOr[F[Fix0[F]]]]
+  implicit def fix2unfixU[U[_]](fix: U[Fix0[F]]): U[F[Fix0[F]]] = fix.asInstanceOf[U[F[Fix0[F]]]]
+
+  implicit def unfix2fixUV[U[_],V[_]](unfix: U[V[F[Fix0[F]]]]): U[V[Fix0[F]]] = unfix.asInstanceOf[U[V[Fix0[F]]]]
+
+  implicit def fix2unfixUV[U[_],V[_]](fix: U[V[Fix0[F]]]): U[V[F[Fix0[F]]]] = fix.asInstanceOf[U[V[F[Fix0[F]]]]]
 }

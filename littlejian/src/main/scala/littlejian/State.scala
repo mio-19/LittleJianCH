@@ -1,8 +1,5 @@
 package littlejian
 
-import scala.collection.parallel.immutable.{ParHashMap, ParSeq, ParVector}
-import collection.parallel.CollectionConverters.*
-
 final case class EqState(subst: Subst)
 
 object EqState {
@@ -30,7 +27,7 @@ object NotEqElem {
     NotEqElem(x.asInstanceOf[Var[Any]], y.asInstanceOf[VarOr[Any]], unifier.asInstanceOf[Unifier[Any]])
 }
 
-final case class NotEqState(clauses: ParVector /*conj*/ [ParVector[NotEqElem[_]] /*disj not eq*/ ]) {
+final case class NotEqState(clauses: Vector /*conj*/ [Vector[NotEqElem[_]] /*disj not eq*/ ]) {
   def onEq(eq: EqState, updatedVars: /*nullable*/ Set[Var[_]]): Option[NotEqState] =
     if (clauses.isEmpty) Some(this) else // optimize
       NotEqState.check(eq, clauses, updatedVars)
@@ -39,41 +36,41 @@ final case class NotEqState(clauses: ParVector /*conj*/ [ParVector[NotEqElem[_]]
 }
 
 object NotEqState {
-  val empty: NotEqState = NotEqState(ParVector.empty)
+  val empty: NotEqState = NotEqState(Vector.empty)
 
   import littlejian.utils._
 
-  def relatedOnEq(v: Set[Var[_]], xs: ParSeq[NotEqRequest[_]]): Boolean = xs.exists(_.relatedOnEq(v))
+  def relatedOnEq(v: Set[Var[_]], xs: Seq[NotEqRequest[_]]): Boolean = xs.exists(_.relatedOnEq(v))
 
-  private def execCheck[T](eq: EqState, req: NotEqRequest[T], updatedVars: /*nullable*/ Set[Var[_]]): Option[ParVector /*disj, empty means success*/ [NotEqElem[_]]] =
-    if (updatedVars != null && !req.relatedOnEq(updatedVars)) Some(ParVector(req.asInstanceOf[NotEqElem[_]]))
+  private def execCheck[T](eq: EqState, req: NotEqRequest[T], updatedVars: /*nullable*/ Set[Var[_]]): Option[Vector /*disj, empty means success*/ [NotEqElem[_]]] =
+    if (updatedVars != null && !req.relatedOnEq(updatedVars)) Some(Vector(req.asInstanceOf[NotEqElem[_]]))
     else (eq.subst.walk(req.x), eq.subst.walk(req.y)) match {
       case (x: Var[T], y: Var[T]) if x == y => None
-      case (x: Var[T], y) => Some(ParVector(NotEqElem(x, y, req.unifier)))
-      case (x, y: Var[T]) => Some(ParVector(NotEqElem(y, x, req.unifier)))
+      case (x: Var[T], y) => Some(Vector(NotEqElem(x, y, req.unifier)))
+      case (x, y: Var[T]) => Some(Vector(NotEqElem(y, x, req.unifier)))
       case (x, y) => req.unifier.unify(x, y).getSubstPatch(eq.subst) match {
-        case None => Some(ParVector.empty)
-        case Some(newSubst) => if (newSubst.isEmpty) None else Some(newSubst.par.map({ case (v, unifier, x) => NotEqElem.unchecked(v, x, unifier) }))
+        case None => Some(Vector.empty)
+        case Some(newSubst) => if (newSubst.isEmpty) None else Some(newSubst.map({ case (v, unifier, x) => NotEqElem.unchecked(v, x, unifier) }))
       }
     }
 
-  private def runCheck(eq: EqState, x: ParSeq /*disj*/ [NotEqRequest[_]], updatedVars: /*nullable*/ Set[Var[_]]): Option[ParVector /*disj, empty means success*/ [NotEqElem[_]]] =
+  private def runCheck(eq: EqState, x: Seq /*disj*/ [NotEqRequest[_]], updatedVars: /*nullable*/ Set[Var[_]]): Option[Vector /*disj, empty means success*/ [NotEqElem[_]]] =
     if (x.isEmpty) throw new IllegalArgumentException("Empty vector")
-    else if (updatedVars != null && !relatedOnEq(updatedVars, x)) Some(x.asInstanceOf[ParSeq[NotEqElem[_]]].toVector.par)
+    else if (updatedVars != null && !relatedOnEq(updatedVars, x)) Some(x.asInstanceOf[Seq[NotEqElem[_]]].toVector)
     else {
       val result = x.map(execCheck(eq, _, updatedVars)).filter(_.isDefined).map(_.get)
       if (result.isEmpty) None
-      else if (result.exists(_.isEmpty)) Some(ParVector.empty)
-      else Some(result.fold(ParVector.empty)(_ ++ _))
+      else if (result.exists(_.isEmpty)) Some(Vector.empty)
+      else Some(result.fold(Vector.empty)(_ ++ _))
     }
 
-  private def check(eq: EqState, xs: ParVector[ParVector[NotEqRequest[_]]], updatedVars: /*nullable*/ Set[Var[_]] = null): Option[NotEqState] =
+  private def check(eq: EqState, xs: Vector[Vector[NotEqRequest[_]]], updatedVars: /*nullable*/ Set[Var[_]] = null): Option[NotEqState] =
     traverse(xs.map(runCheck(eq, _, updatedVars))).map(xs => NotEqState(xs.filter(_.nonEmpty)))
 
-  private[littlejian] def insert(eq: EqState, req: NotEqRequest[_], clauses: NotEqState): Option[NotEqState] = check(eq, ParVector(req) +: clauses.clauses)
+  private[littlejian] def insert(eq: EqState, req: NotEqRequest[_], clauses: NotEqState): Option[NotEqState] = check(eq, Vector(req) +: clauses.clauses)
 }
 
-final case class PredTypeState(xs: ParVector[(Var[_], PredTypeTag)]) {
+final case class PredTypeState(xs: Vector[(Var[_], PredTypeTag)]) {
   def insert(v: Var[_], t: PredTypeTag): PredTypeState = PredTypeState((v, t) +: xs)
 
   def onEq(eq: EqState): Option[PredTypeState] = {
@@ -91,10 +88,10 @@ final case class PredTypeState(xs: ParVector[(Var[_], PredTypeTag)]) {
 }
 
 object PredTypeState {
-  val empty: PredTypeState = PredTypeState(ParVector.empty)
+  val empty: PredTypeState = PredTypeState(Vector.empty)
 }
 
-final case class PredNotTypeState(xs: ParVector[(Var[_], PredTypeTag)]) {
+final case class PredNotTypeState(xs: Vector[(Var[_], PredTypeTag)]) {
   def insert(v: Var[_], t: PredTypeTag): PredNotTypeState = PredNotTypeState((v, t) +: xs)
 
   def onEq(eq: EqState): Option[PredNotTypeState] = {
@@ -112,7 +109,7 @@ final case class PredNotTypeState(xs: ParVector[(Var[_], PredTypeTag)]) {
 }
 
 object PredNotTypeState {
-  val empty: PredNotTypeState = PredNotTypeState(ParVector.empty)
+  val empty: PredNotTypeState = PredNotTypeState(Vector.empty)
 }
 
 final case class AbsentState(absents: Vector /*conj*/ [(Any, Vector /*disj*/ [WithInspector[_]])]) {

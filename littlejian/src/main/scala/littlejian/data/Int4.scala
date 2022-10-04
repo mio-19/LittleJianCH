@@ -189,6 +189,24 @@ final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LLi
   )
 }
 
+implicit class VarOrBinaryNatOps(self: VarOr[BinaryNat]) {
+  def succ: Rel[BinaryNat] = for {
+    xs <- self.is[BinaryNatVal](BinaryNat(_))
+    result <- BinaryNat(xs).succ
+  } yield BinaryNat(result)
+
+  def +(other: VarOr[BinaryNat]): Rel[BinaryNat] = for {
+    xs <- self.is[BinaryNatVal](BinaryNat(_))
+    ys <- other.is[BinaryNatVal](BinaryNat(_))
+    result <- BinaryNat(xs).plus(ys)
+  } yield BinaryNat(result)
+
+  def -(other: VarOr[BinaryNat]): Rel[BinaryNat] = for {
+    result <- fresh[BinaryNat]
+    _ <- other + result === self
+  } yield result
+}
+
 implicit val U$BinaryNat: Unifier[BinaryNat] = U$Product(U$VarOr(U$LList(U$Boolean)))
 
 final case class BinaryInt(sign: VarOr[Boolean], x: BinaryNat) extends Product2[VarOr[Boolean], BinaryNat]

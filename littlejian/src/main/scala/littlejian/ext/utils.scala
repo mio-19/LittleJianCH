@@ -91,6 +91,37 @@ implicit class EqOps[T](x: VarOr[T]) {
   def ===(y: VarOr[T])(implicit unifier: Unifier[T]): Goal = GoalEq(x, y)
 
   def =/=(y: VarOr[T])(implicit unifier: Unifier[T]): Goal = GoalNotEq(x, y)
+  
+  def ===(y: Rel[T])(implicit unifier: Unifier[T]): Goal = for {
+    y0 <- y
+    _ <- x === y0
+  } yield ()
+  
+  def =/=(y: Rel[T])(implicit unifier: Unifier[T]): Goal = for {
+    y0 <- y
+    _ <- x =/= y0
+  } yield ()
+}
+
+implicit class EqRelOps[T](x: Rel[T]) {
+  def ===(y: Rel[T])(implicit unifier: Unifier[T]): Goal = for {
+    x0 <- x
+    y0 <- y
+    _ <- x0 === y0
+  } yield ()
+  def =/=(y: Rel[T])(implicit unifier: Unifier[T]): Goal = for {
+    x0 <- x
+    y0 <- y
+    _ <- x0 =/= y0
+  } yield ()
+  def ===(y: VarOr[T])(implicit unifier: Unifier[T]): Goal = for {
+    x0 <- x
+    _ <- x0 === y
+  } yield ()
+  def =/=(y: VarOr[T])(implicit unifier: Unifier[T]): Goal = for {
+    x0 <- x
+    _ <- x0 =/= y
+  } yield ()
 }
 
 def compare[T](x: VarOr[T], y: VarOr[T])(equals: => Goal)(notEquals: => Goal)(implicit unifier: Unifier[T]): Goal = conde(

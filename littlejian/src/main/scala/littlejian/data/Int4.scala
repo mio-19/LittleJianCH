@@ -37,6 +37,7 @@ final case class Int4(bit0: VarOr[Boolean], bit1: VarOr[Boolean], bit2: VarOr[Bo
     (c2, r2) <- add(bit2, that.bit2, c1)
     (c3, r3) <- add(bit3, that.bit3, c2)
   } yield (c3, Int4(r0, r1, r2, r3))
+
   def plus(that: Int4, carry: VarOr[Boolean]): GoalWith[(VarOr[Boolean], Int4)] = for {
     (c0, r0) <- add(bit0, that.bit0, carry)
     (c1, r1) <- add(bit1, that.bit1, c0)
@@ -46,19 +47,26 @@ final case class Int4(bit0: VarOr[Boolean], bit1: VarOr[Boolean], bit2: VarOr[Bo
 
   def succ: GoalWith[(VarOr[Boolean], Int4)] = plus(Int4(true, false, false, false))
 
-  def not: GoalWith[Int4] = for {
+  def unary_! : GoalWith[Int4] = for {
     b0 <- !bit0
     b1 <- !bit1
     b2 <- !bit2
     b3 <- !bit3
   } yield Int4(b0, b1, b2, b3)
 
-  def negative: GoalWith[Int4] = for {
-    n <- this.not
+  def unary_- : GoalWith[Int4] = for {
+    n <- !this
     (c, r) <- n.succ
   } yield r
 }
+
 implicit val U$Int4: Unifier[Int4] = U$Product
+
+object Int4 {
+  def zero: Int4 = Int4(false, false, false, false)
+
+  def one: Int4 = Int4(true, false, false, false)
+}
 
 
 final case class Int8(lo: Int4, hi: Int4) extends Product2[Int4, Int4] {
@@ -66,13 +74,30 @@ final case class Int8(lo: Int4, hi: Int4) extends Product2[Int4, Int4] {
     (c, r) <- lo.plus(that.lo)
     (c2, r2) <- hi.plus(that.hi, c)
   } yield (c2, Int8(r, r2))
+
   def plus(that: Int8, carry: VarOr[Boolean]): GoalWith[(VarOr[Boolean], Int8)] = for {
     (c, r) <- lo.plus(that.lo, carry)
     (c2, r2) <- hi.plus(that.hi, c)
   } yield (c2, Int8(r, r2))
+
+  def succ: GoalWith[(VarOr[Boolean], Int8)] = plus(Int8.one)
+
+  def unary_! : GoalWith[Int8] = for {
+    l <- !lo
+    h <- !hi
+  } yield Int8(l, h)
+
+  def unary_- : GoalWith[Int8] = for {
+    n <- !this
+    (c, r) <- n.succ
+  } yield r
 }
 
 object Int8 {
+  def zero: Int8 = Int8(Int4.zero, Int4.zero)
+
+  def one: Int8 = Int8(Int4.one, Int4.one)
+
   def from(x: Byte): Int8 = {
     val lo = Int4((x & 1) == 1, (x & 2) == 2, (x & 4) == 4, (x & 8) == 8)
     val hi = Int4((x & 16) == 16, (x & 32) == 32, (x & 64) == 64, (x & 128) == 128)
@@ -88,6 +113,7 @@ final case class Int16(lo: Int8, hi: Int8) extends Product2[Int8, Int8] {
     (c, r) <- lo.plus(that.lo)
     (c2, r2) <- hi.plus(that.hi, c)
   } yield (c2, Int16(r, r2))
+
   def plus(that: Int16, carry: VarOr[Boolean]): GoalWith[(VarOr[Boolean], Int16)] = for {
     (c, r) <- lo.plus(that.lo, carry)
     (c2, r2) <- hi.plus(that.hi, c)
@@ -109,6 +135,7 @@ final case class Int32(lo: Int16, hi: Int16) extends Product2[Int16, Int16] {
     (c, r) <- lo.plus(that.lo)
     (c2, r2) <- hi.plus(that.hi, c)
   } yield (c2, Int32(r, r2))
+
   def plus(that: Int32, carry: VarOr[Boolean]): GoalWith[(VarOr[Boolean], Int32)] = for {
     (c, r) <- lo.plus(that.lo, carry)
     (c2, r2) <- hi.plus(that.hi, c)

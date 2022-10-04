@@ -1,6 +1,16 @@
 package littlejian
 
-final case class EqState(subst: Subst)
+final case class EqState(subst: Subst) {
+  override def toString: String = {
+    def result: String = subst.map((v, entry) => s"${v}: ${entry._2}").mkString(", ")
+    prettyPrintContext.get match {
+      case None => result
+      case Some(ctx) => prettyPrintContext.callWith(ctx.disableSubst) {
+        result
+      }
+    }
+  }
+}
 
 object EqState {
   val empty: EqState = EqState(Subst.empty)
@@ -32,7 +42,7 @@ final case class NotEqState(clauses: Vector /*conj*/ [Vector[NotEqElem[_]] /*dis
     if (clauses.isEmpty) Some(this) else // optimize
       NotEqState.check(eq, clauses, updatedVars)
 
-  def print: String = if(clauses.isEmpty) "" else clauses.seq.map(_.seq.map(_.toString).mkString(" || ")).mkString("\n")
+  def print: String = if (clauses.isEmpty) "" else clauses.seq.map(_.seq.map(_.toString).mkString(" || ")).mkString("\n")
 }
 
 object NotEqState {
@@ -84,7 +94,7 @@ final case class PredTypeState(xs: Vector[(Var[_], PredTypeTag)]) {
     if (concretes.forall(x => checkPredTypeTag(x._2, x._1))) Some(PredTypeState(vars.map(x => (x._1.asInstanceOf[Var[_]], x._2)) ++ rest)) else None
   }
 
-  def print: String = if(xs.isEmpty) "" else xs.map(x => s"${x._1}.isType[${x._2}]").mkString("\n")
+  def print: String = if (xs.isEmpty) "" else xs.map(x => s"${x._1}.isType[${x._2}]").mkString("\n")
 }
 
 object PredTypeState {
@@ -105,7 +115,7 @@ final case class PredNotTypeState(xs: Vector[(Var[_], PredTypeTag)]) {
     if (concretes.forall(x => !checkPredTypeTag(x._2, x._1))) Some(PredNotTypeState(vars.map(x => (x._1.asInstanceOf[Var[_]], x._2)) ++ rest)) else None
   }
 
-  def print: String = if(xs.isEmpty) "" else xs.map(x => s"${x._1}.isNotType[${x._2}]").mkString("\n")
+  def print: String = if (xs.isEmpty) "" else xs.map(x => s"${x._1}.isNotType[${x._2}]").mkString("\n")
 }
 
 object PredNotTypeState {
@@ -120,7 +130,7 @@ final case class AbsentState(absents: Vector /*conj*/ [(Any, Vector /*disj*/ [Wi
 
   def onEq(eq: EqState): Option[AbsentState] = AbsentState.check(eq, absents)
 
-  def print: String = if(absents.isEmpty) "" else absents.map(x => x._2.map(wi => s"${x._1}.absent(${wi.x})").mkString(" || ")).mkString("\n")
+  def print: String = if (absents.isEmpty) "" else absents.map(x => x._2.map(wi => s"${x._1}.absent(${wi.x})").mkString(" || ")).mkString("\n")
 }
 
 object AbsentState {
@@ -171,6 +181,8 @@ final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, 
     predNotType.print,
     absent.print
   ).filter(_.nonEmpty).mkString("\n")
+
+  override def toString: String = Vector(eq.toString, printConstraints).filter(_.nonEmpty).mkString("\n")
 }
 
 object State {

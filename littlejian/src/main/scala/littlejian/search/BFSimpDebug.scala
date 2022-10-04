@@ -13,7 +13,9 @@ implicit object BFSimpDebug extends Searcher {
 
   def run1Internal(state: State, goal: Goal): Option[State] = ???
 
-  final case class Request(state: State, goals: Vector[Goal])
+  final case class Request(state: State, goals: Vector[Goal]) {
+    override def toString: String = s"${goals.map(_.toString).mkString(" && ")} on ${state.toString}"
+  }
 
   object Request {
     def apply(base: State | Request, goals: Vector[Goal]):Request  = base match {

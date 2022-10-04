@@ -1,6 +1,6 @@
 package littlejian
 
-final class PrettyPrintContext(var subst: Subst) {
+final class PrettyPrintVarCounter {
   var varCount: Int = 0
   var varNames: scala.collection.mutable.HashMap[Var[_], Int] = scala.collection.mutable.HashMap.empty
 
@@ -11,6 +11,17 @@ final class PrettyPrintContext(var subst: Subst) {
   }
 
   def getVar(x: Var[_]): Int = varNames.getOrElseUpdate(x, this.nextVar)
+
+
+}
+
+final class PrettyPrintContext(val subst: Subst, val counter: PrettyPrintVarCounter = new PrettyPrintVarCounter) {
+  // started from 1
+  def nextVar: Int = counter.nextVar
+
+  def getVar(x: Var[_]): Int = counter.getVar(x)
+
+  def disableSubst: PrettyPrintContext = new PrettyPrintContext(Subst.empty, this.counter)
 }
 
 val prettyPrintContext = new Parameter[PrettyPrintContext]

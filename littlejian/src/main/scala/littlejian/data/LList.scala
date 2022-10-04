@@ -14,14 +14,7 @@ implicit class VarOrLListOps[T](self: VarOr[LList[T]])(implicit U$T: Unifier[T])
   implicit val U$LListT: Unifier[LList[T]] = U$LList(U$T)
   implicit val U$SeqT: Unifier[Seq[VarOr[T]]] = U$Seq(U$VarOr(U$T))
 
-  def isEmpty: Rel[Boolean] = conde(
-    for {
-      _ <- self === LList.empty[T]
-    } yield true,
-    for {
-      _ <- self.is[T, LList[T]](LCons(_, _))
-    } yield false
-  )
+  def eqEmpty: Goal = self === LList.empty[T]
 
   @deprecated
   def toSeq: Rel[Seq[VarOr[T]]] = conde(

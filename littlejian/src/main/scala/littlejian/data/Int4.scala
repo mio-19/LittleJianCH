@@ -153,10 +153,10 @@ object Int32 {
 
 type BinaryNatVal = LList[Boolean]
 final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LList[Boolean]]] {
-  def plus(that: VarOr[BinaryNatVal]): GoalWith[(VarOr[Boolean], VarOr[BinaryNatVal])] = for {
-    (c, r) <- fresh[Boolean, BinaryNatVal]
+  def plus(that: VarOr[BinaryNatVal]): Rel[BinaryNatVal] = conde(
+    (xs.eqEmpty && that.eqEmpty) >> LList.empty
     // TODO
-  } yield (c, r)
+  )
 }
 
 implicit val U$BinaryNat: Unifier[BinaryNat] = U$Product(U$VarOr(U$LList(U$Boolean)))

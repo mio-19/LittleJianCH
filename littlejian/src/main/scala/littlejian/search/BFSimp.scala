@@ -48,14 +48,9 @@ implicit object BFSimp extends Searcher {
 
   override def run(state: State, goal: Goal): Stream[State] = exec(state, goal).toStream
 
-  def flatten[T](x: ParVector[SizedStream[T]]): SizedStream[T] = {
+  def flatten[T](x: ParVector[SizedStream[T]]): SizedStream[T] =
     if (x.isEmpty) SizedStream.empty
-    else if (x.size == 1) x.head
-    else {
-      val (xs, ys) = x.splitAt(x.size / 2)
-      flatten(xs).appendFair(flatten(ys))
-    }
-  }
+    else x.head.appendFair(flatten(x.tail))
 
   def exec(state: State, goal: Goal): SizedStream[State] =
     goal match {

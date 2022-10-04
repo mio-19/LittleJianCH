@@ -134,6 +134,7 @@ implicit class VarOrInt8Ops(self: VarOr[Int8]) {
     result = Int8(Int4(b0, b1, b2, b3), Int4(b4, b5, b6, b7))
     _ <- self == result
   } yield result
+
   def +(other: VarOr[Int8]): Rel[Int8] = for {
     x <- self.get
     y <- other.get
@@ -164,6 +165,33 @@ final case class Int16(lo: Int8, hi: Int8) extends Product2[Int8, Int8] {
     (c, r) <- lo.plus(that.lo, carry)
     (c2, r2) <- hi.plus(that.hi, c)
   } yield (c2, Int16(r, r2))
+}
+
+implicit class VarOrInt16Ops(self: VarOr[Int16]) {
+  def get: GoalWith[Int16] = for {
+    (b0, b1, b2, b3) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b4, b5, b6, b7) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b8, b9, b10, b11) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b12, b13, b14, b15) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    result = Int16(Int8(Int4(b0, b1, b2, b3), Int4(b4, b5, b6, b7)), Int8(Int4(b8, b9, b10, b11), Int4(b12, b13, b14, b15)))
+    _ <- self == result
+  } yield result
+
+  def +(other: VarOr[Int16]): Rel[Int16] = for {
+    x <- self.get
+    y <- other.get
+    (c, r) <- x.plus(x)
+  } yield r
+
+  def unary_- : Rel[Int16] = for {
+    x <- self.get
+    r <- -x
+  } yield r
+
+  def -(other: VarOr[Int16]): Rel[Int16] = for {
+    y <- -other
+    r <- self + y
+  } yield r
 }
 
 implicit val U$Int16: Unifier[Int16] = U$Product

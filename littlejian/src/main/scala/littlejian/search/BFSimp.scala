@@ -5,47 +5,47 @@ import littlejian.*
 import scala.collection.parallel.immutable.ParVector
 import collection.parallel.CollectionConverters._
 
-implicit object BFSimp extends Searcher {
-  final class SizedStream[T](val bucket: Vector[T], val thunk: Option[() => SizedStream[T]]) {
-    def toStream: Stream[T] = Stream.from(bucket) #::: thunk.map(_ ().toStream).getOrElse(Stream.empty)
+final class SizedStream[T](val bucket: Vector[T], val thunk: Option[() => SizedStream[T]]) {
+  def toStream: Stream[T] = Stream.from(bucket) #::: thunk.map(_ ().toStream).getOrElse(Stream.empty)
 
-    def appendFair(other: SizedStream[T]): SizedStream[T] = {
-      new SizedStream(bucket ++ other.bucket, (thunk, other.thunk) match {
-        case (None, xs) => xs
-        case (xs, None) => xs
-        case (Some(xs), Some(ys)) => Some(() => xs().appendFair(ys()))
-      })
-    }
+  def appendFair(other: SizedStream[T]): SizedStream[T] = {
+    new SizedStream(bucket ++ other.bucket, (thunk, other.thunk) match {
+      case (None, xs) => xs
+      case (xs, None) => xs
+      case (Some(xs), Some(ys)) => Some(() => xs().appendFair(ys()))
+    })
+  }
 
-    def appendMapFair[U](f: T => SizedStream[U]): SizedStream[U] = bucket.foldRight(thunk match {
-      case None => SizedStream.empty
-      case Some(xs) => SizedStream(xs().appendMapFair(f))
-    })((x, xs) => f(x).appendFair(xs))
+  def appendMapFair[U](f: T => SizedStream[U]): SizedStream[U] = bucket.foldRight(thunk match {
+    case None => SizedStream.empty
+    case Some(xs) => SizedStream(xs().appendMapFair(f))
+  })((x, xs) => f(x).appendFair(xs))
 
-    def caseOnEmpty[U](default: => SizedStream[U], kf: SizedStream[T] => SizedStream[U]): SizedStream[U] = {
-      if (bucket.isEmpty) {
-        thunk match {
-          case None => default
-          case Some(xs) => SizedStream(xs().caseOnEmpty(default, kf))
-        }
-      } else {
-        kf(this)
+  def caseOnEmpty[U](default: => SizedStream[U], kf: SizedStream[T] => SizedStream[U]): SizedStream[U] = {
+    if (bucket.isEmpty) {
+      thunk match {
+        case None => default
+        case Some(xs) => SizedStream(xs().caseOnEmpty(default, kf))
       }
+    } else {
+      kf(this)
     }
-
-    def take1FlatMap[U](default: => SizedStream[U], f: T => SizedStream[U]): SizedStream[U] = this.caseOnEmpty(default, _.appendMapFair(f))
   }
 
-  object SizedStream {
-    def empty[T]: SizedStream[T] = new SizedStream(Vector.empty, None)
+  def take1FlatMap[U](default: => SizedStream[U], f: T => SizedStream[U]): SizedStream[U] = this.caseOnEmpty(default, _.appendMapFair(f))
+}
 
-    def apply[T](xs: T*): SizedStream[T] = new SizedStream[T](xs.toVector, None)
+object SizedStream {
+  def empty[T]: SizedStream[T] = new SizedStream(Vector.empty, None)
 
-    def apply[T](thunk: => SizedStream[T]): SizedStream[T] = new SizedStream[T](Vector.empty, Some(() => thunk))
+  def apply[T](xs: T*): SizedStream[T] = new SizedStream[T](xs.toVector, None)
 
-    def from[T](x: IterableOnce[T]) = new SizedStream[T](Vector.from(x), None)
-  }
+  def apply[T](thunk: => SizedStream[T]): SizedStream[T] = new SizedStream[T](Vector.empty, Some(() => thunk))
 
+  def from[T](x: IterableOnce[T]) = new SizedStream[T](Vector.from(x), None)
+}
+
+implicit object BFSimp extends Searcher {
   override def run(state: State, goal: Goal): Stream[State] = exec(state, goal).toStream
 
   def flatten[T](x: ParVector[SizedStream[T]]): SizedStream[T] =

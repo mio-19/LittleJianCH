@@ -3,10 +3,23 @@ package littlejian.search
 import littlejian.*
 
 import scala.collection.parallel.immutable.ParVector
-import collection.parallel.CollectionConverters._
+import collection.parallel.CollectionConverters.*
+import scala.annotation.tailrec
 
 final class SizedStream[T](val bucket: Vector[T], val thunk: Option[() => SizedStream[T]]) {
   def toStream: Stream[T] = Stream.from(bucket) #::: thunk.map(_ ().toStream).getOrElse(Stream.empty)
+
+  def force1: SizedStream[T] = {
+    val rest = thunk match {
+      case Some(thunk) => thunk()
+      case None => SizedStream.empty[T]
+    }
+    new SizedStream(bucket ++ rest.bucket, rest.thunk)
+  }
+  @tailrec def forceN(n: Int): SizedStream[T] = {
+    if (n <= 0) this
+    else force1.forceN(n - 1)
+  }
 
   def appendFair(other: SizedStream[T]): SizedStream[T] = {
     new SizedStream(bucket ++ other.bucket, (thunk, other.thunk) match {
@@ -45,12 +58,12 @@ object SizedStream {
   def from[T](x: IterableOnce[T]) = new SizedStream[T](Vector.from(x), None)
 }
 
+def flatten[T](x: ParVector[SizedStream[T]]): SizedStream[T] =
+  if (x.isEmpty) SizedStream.empty
+  else x.head.appendFair(flatten(x.tail))
+
 implicit object BFSimp extends Searcher {
   override def run(state: State, goal: Goal): Stream[State] = exec(state, goal).toStream
-
-  def flatten[T](x: ParVector[SizedStream[T]]): SizedStream[T] =
-    if (x.isEmpty) SizedStream.empty
-    else x.head.appendFair(flatten(x.tail))
 
   def exec(state: State, goal: Goal): SizedStream[State] =
     goal match {

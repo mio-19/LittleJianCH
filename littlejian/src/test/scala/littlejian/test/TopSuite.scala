@@ -12,6 +12,7 @@ class TopSuite extends munit.FunSuite {
   runTest("GradualSearcher ")(littlejian.search.deprecated.GradualSearcher)
   runTest("ReducingSearcher ")(littlejian.search.deprecated.ReducingSearcher)
   runTest("BFSimp ")(littlejian.search.BFSimp)
+  runTest("BFSimpPar ")(littlejian.search.BFSimpPar)
 
   def runTest(name: String = "")(implicit searcher: Searcher): Unit = {
     test(name + "basics") {

@@ -1,6 +1,6 @@
 package littlejian
 
-import scala.annotation.targetName
+import scala.annotation.{tailrec, targetName}
 
 sealed trait Goal
 
@@ -63,6 +63,11 @@ val defaultGoalDelayEvalLevel = 3
 
 final class GoalDelay(x: => Goal) extends GoalControl {
   def get: Goal = x
+
+  @tailrec def forceN(n: Int): Goal = if (n <= 0) x else get match {
+    case x: GoalDelay => x.forceN(n - 1)
+    case x => x
+  }
 
   override def toString: String = {
     val level = goalDelayEvalLevel.get.getOrElse(defaultGoalDelayEvalLevel)

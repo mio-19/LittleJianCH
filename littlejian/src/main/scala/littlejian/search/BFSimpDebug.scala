@@ -24,7 +24,11 @@ implicit object BFSimpDebug extends Searcher {
   def run1Internal(state: State, goal: Goal): Option[State] = BFSimp.run(state, goal).headOption
 
   final case class Request(state: State, goals: Vector[Goal]) {
-    override def toString: String = s"${goals.map(_.toString).mkString(" && ")} on ${state.toString}"
+    override def toString: String = {
+      val c = state.printConstraints
+      if (c.nonEmpty) s"${goals.map(_.toString).mkString(" && ")} on ${state.printConstraints}"
+      else goals.map(_.toString).mkString(" && ")
+    }
 
     def goal: Goal = if (goals.size == 1) goals.head else GoalConj(goals)
 

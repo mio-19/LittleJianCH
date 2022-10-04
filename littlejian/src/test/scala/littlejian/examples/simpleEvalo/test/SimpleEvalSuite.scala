@@ -9,6 +9,10 @@ import littlejian.unifier.*
 import littlejian.search.BFSimp
 
 class SimpleEvalSuite extends munit.FunSuite {
+  val quineC = SExp.parse("((lambda (x)\n(list x (list (quote quote) x)))\n(quote\n(lambda (x)\n(list x (list (quote quote) x)))))")
+  test("quineC") {
+    assertEquals((run[SExp] { x => x === "Success" && evalExpo(quineC, (), quineC) }).head, "Success")
+  }
   test("basics") {
     if(false) {
       assertEquals(Set.from(run {

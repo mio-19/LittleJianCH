@@ -4,7 +4,7 @@ import littlejian._
 import collection.parallel.CollectionConverters._
 import scala.collection.parallel.immutable.ParVector
 
-object BFSimpPar extends Searcher {
+implicit object BFSimpPar extends Searcher {
   override def run(state: State, goal: Goal): Stream[State] = exec(state, goal, initDisjReduceLevel).toStream
 
   val typicalConjUnit = 10

@@ -5,7 +5,7 @@ import littlejian._
 import scala.language.implicitConversions
 
 
-type TypeRec[F[_]] = F[F[F[F[Any]]]]
+type TypeRec[F[_]] = F[F[F[F[F[F[F[F[Any]]]]]]]]
 
 object TypeRecHelperAny {
   implicit def U$Fix[F[_]](implicit U$F: Unifier[F[TypeRec[F]]]): Unifier[TypeRec[F]] = U$F.asInstanceOf[Unifier[TypeRec[F]]]

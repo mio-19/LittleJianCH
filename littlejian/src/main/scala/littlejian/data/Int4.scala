@@ -61,15 +61,19 @@ final case class Int4(bit0: VarOr[Boolean], bit1: VarOr[Boolean], bit2: VarOr[Bo
 }
 
 implicit class VarOrInt4Ops(self: VarOr[Int4]) {
-  def +(other: VarOr[Int4]): Rel[Int4] = for {
+  def get: GoalWith[Int4] = for {
     x <- self.is[Boolean, Boolean, Boolean, Boolean](Int4(_, _, _, _))
-    y <- other.is[Boolean, Boolean, Boolean, Boolean](Int4(_, _, _, _))
-    (c, r) <- Int4(x._1, x._2, x._3, x._4).plus(Int4(y._1, y._2, y._3, y._4))
+  } yield Int4(x._1, x._2, x._3, x._4)
+
+  def +(other: VarOr[Int4]): Rel[Int4] = for {
+    x <- self.get
+    y <- other.get
+    (c, r) <- x.plus(y)
   } yield r
 
   def unary_- : Rel[Int4] = for {
-    x <- self.is[Boolean, Boolean, Boolean, Boolean](Int4(_, _, _, _))
-    r <- Int4(x._1, x._2, x._3, x._4).unary_-
+    x <- self.get
+    r <- -x
   } yield r
 
   def -(other: VarOr[Int4]): Rel[Int4] = for {
@@ -121,6 +125,30 @@ object Int8 {
     val hi = Int4((x & 16) == 16, (x & 32) == 32, (x & 64) == 64, (x & 128) == 128)
     Int8(lo, hi)
   }
+}
+
+implicit class VarOrInt8Ops(self: VarOr[Int8]) {
+  def get: GoalWith[Int8] = for {
+    (b0, b1, b2, b3) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b4, b5, b6, b7) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    result = Int8(Int4(b0, b1, b2, b3), Int4(b4, b5, b6, b7))
+    _ <- self == result
+  } yield result
+  def +(other: VarOr[Int8]): Rel[Int8] = for {
+    x <- self.get
+    y <- other.get
+    (c, r) <- x.plus(x)
+  } yield r
+
+  def unary_- : Rel[Int8] = for {
+    x <- self.get
+    r <- -x
+  } yield r
+
+  def -(other: VarOr[Int8]): Rel[Int8] = for {
+    y <- -other
+    r <- self + y
+  } yield r
 }
 
 

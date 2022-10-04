@@ -70,6 +70,12 @@ def fresh[T]: GoalWith[Var[T]] = GoalWith(k => callWithFresh[T](k))
   y <- fresh[U]
   z <- fresh[V]
 } yield (x, y, z)
+@targetName("fresh4") def fresh[T, U, V, W]: GoalWith[(Var[T], Var[U], Var[V], Var[W])] = for {
+  x <- fresh[T]
+  y <- fresh[U]
+  z <- fresh[V]
+  w <- fresh[W]
+} yield (x, y, z, w)
 def fresh[T](f: VarOr[T] => Goal): Goal = callWithFresh[T] { t =>
   f(t)
 }

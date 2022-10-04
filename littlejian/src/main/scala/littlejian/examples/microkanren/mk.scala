@@ -15,11 +15,13 @@ final case class MKVar(id: VarOr[Nat]) extends Product1[VarOr[Nat]]
 
 implicit val U$MKVar: Unifier[MKVar] = U$Product
 
-final case class MKPair(a: VarOr[MKData], b: VarOr[MKData]) extends Product2[VarOr[MKData], VarOr[MKData]]
+final class MKPair(a: VarOr[MKData], b: VarOr[MKData]) extends Pair[MKData, MKData](a, b)
+def cons(a: VarOr[MKData], b: VarOr[MKData]): MKPair = new MKPair(a, b)
 
-implicit val U$MKPair: Unifier[MKPair] = U$Product
+implicit val U$MKPair: Unifier[MKPair] = U$Pair(U$MKData, U$MKData).asInstanceOf[Unifier[MKPair]]
 
 sealed trait MKMap
+
 implicit val U$MKMap: Unifier[MKMap] = U$Union[MKMapEmpty.type, MKMapCons].asInstanceOf[Unifier[MKMap]]
 implicit val U$VarOr$MKMap: Unifier[VarOr[MKMap]] = U$VarOr(U$MKMap)
 
@@ -79,7 +81,7 @@ final case class MKReg(x: VarOr[MKData]) extends Product1[VarOr[MKData]]
 
 implicit val U$MKReg: Unifier[MKReg] = U$Product
 
-def list(xs: VarOr[MKData]*): VarOr[MKData] = xs.foldRight[VarOr[MKData]](())(MKPair)
+def list(xs: VarOr[MKData]*): VarOr[MKData] = xs.foldRight[VarOr[MKData]](())(cons)
 
 def microo(x: VarOr[MKData], env: VarOr[MKMap]): Rel[MKData] = ???
 

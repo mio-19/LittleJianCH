@@ -2,6 +2,7 @@ package littlejian.search.deprecated
 
 import littlejian.search.*
 import littlejian.*
+import collection.parallel.CollectionConverters._
 
 import scala.collection.parallel.immutable.ParVector
 
@@ -67,22 +68,22 @@ implicit object ReducingSearcher extends Searcher {
         (state, disjs2) <- x.fullyReduceNotSplit
       } yield (state, disjs ++ disjs2)
 
-    def split1(xs: Seq[GoalDisj]): ParVector[StateWithGoals] =
-      if (xs.isEmpty) ParVector(this)
+    def split1(xs: Seq[GoalDisj]): Vector[StateWithGoals] =
+      if (xs.isEmpty) Vector(this)
       else {
         val gs = goals ++ xs.tail
         xs.head.xs.map(g => StateWithGoals(state, g +: gs))
       }
 
-    def run: (Option[State], ParVector[StateWithGoals]) =
-      if (goals.isEmpty) (Some(state), ParVector.empty)
+    def run: (Option[State], Vector[StateWithGoals]) =
+      if (goals.isEmpty) (Some(state), Vector.empty)
       else this.fullyReduceNotSplit match {
-        case None => (None, ParVector.empty)
+        case None => (None, Vector.empty)
         case Some((state, disjs)) => (None, StateWithGoals(state, Vector.empty).split1(disjs))
       }
 
     def exec: SStream[State] = this.run match {
-      case (Some(state), rest) => SCons(state, SDelay(fairFlatten(rest.map(_.exec))))
+      case (Some(state), rest) => SCons(state, SDelay(fairFlatten(rest.par.map(_.exec))))
       case (None, rest) => SDelay(fairFlatten(rest.map(_.exec)))
     }
   }

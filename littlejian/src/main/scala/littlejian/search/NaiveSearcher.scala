@@ -3,6 +3,7 @@ package littlejian.search
 import scala.collection.parallel.immutable.ParVector
 import littlejian.*
 import littlejian.search.*
+import collection.parallel.CollectionConverters._
 
 import scala.annotation.tailrec
 
@@ -149,7 +150,7 @@ implicit object NaiveSearcher extends Searcher {
   def exec(state: State, goal: Goal): SStream[State] =
     goal match {
       case goal: GoalBasic => SStream.from(goal.execute(state))
-      case GoalDisj(xs) => SDelay(flatten(parallelReduce(xs.map(exec(state, _)))))
+      case GoalDisj(xs) => SDelay(flatten(parallelReduce(xs.par.map(exec(state, _)))))
       case GoalConj(xs) => if (xs.isEmpty) SStream(state) else {
         val tail = GoalConj(xs.tail)
         SDelay(flatten(exec(state, xs.head).map(exec(_, tail))))

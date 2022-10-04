@@ -3,6 +3,7 @@ package littlejian.search
 import littlejian.*
 
 import scala.collection.parallel.immutable.ParVector
+import collection.parallel.CollectionConverters._
 
 implicit object BFSimp extends Searcher {
   final class SizedStream[T](val bucket: Vector[T], val thunk: Option[() => SizedStream[T]]) {
@@ -59,7 +60,7 @@ implicit object BFSimp extends Searcher {
   def exec(state: State, goal: Goal): SizedStream[State] =
     goal match {
       case goal: GoalBasic => SizedStream.from(goal.execute(state))
-      case GoalDisj(xs) => SizedStream(flatten(xs.map(exec(state, _))))
+      case GoalDisj(xs) => SizedStream(flatten(xs.par.map(exec(state, _))))
       case GoalConj(xs) => if (xs.isEmpty) SizedStream(state) else {
         val tail = GoalConj(xs.tail)
         SizedStream(exec(state, xs.head).appendMapFair(exec(_, tail)))

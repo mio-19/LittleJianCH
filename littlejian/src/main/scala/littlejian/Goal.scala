@@ -73,8 +73,8 @@ final class GoalDelay(x: => Goal) extends GoalControl {
   }
 }
 
-final case class GoalDisj(xs: ParVector[Goal]) extends GoalControl {
-  private def flatten: ParVector[Goal] = xs.flatMap {
+final case class GoalDisj(xs: Vector[Goal]) extends GoalControl {
+  private def flatten: Vector[Goal] = xs.flatMap {
     case x: GoalDisj => x.flatten
     case v => Some(v)
   }
@@ -83,11 +83,11 @@ final case class GoalDisj(xs: ParVector[Goal]) extends GoalControl {
 }
 
 object GoalDisj {
-  def apply(xs: ParVector[Goal]) = new GoalDisj(xs)
+  def apply(xs: Vector[Goal]) = new GoalDisj(xs)
 
-  def apply(xs: Seq[Goal]) = new GoalDisj(ParVector(xs *))
+  def apply(xs: Seq[Goal]) = new GoalDisj(Vector(xs *))
 
-  @targetName("applyMul") def apply(xs: Goal*) = new GoalDisj(ParVector(xs *))
+  @targetName("applyMul") def apply(xs: Goal*) = new GoalDisj(Vector(xs *))
 }
 
 final case class GoalConj(xs: Vector[Goal]) extends GoalControl {
@@ -133,7 +133,7 @@ object GoalDisjU {
 
 object Goal {
   val success: Goal = GoalConj(Vector())
-  val failure: Goal = GoalDisj(ParVector())
+  val failure: Goal = GoalDisj(Vector())
 }
 
 // TODO: GoalFresh: capture fresh operators for the implementation of constructive negation

@@ -9,8 +9,8 @@ import scala.language.implicitConversions
 
 type SExp0[SExp] = Pair[SExp, SExp] | Unit | String
 type SExp = SExp0[Fix[SExp0]]
-implicit def varorzeroToSExp(x: VarOr[Fix[SExp0]]): VarOr[SExp0[Fix[SExp0]]] = x.asInstanceOf[VarOr[SExp]]
-implicit def varorsExpTOzero(x: VarOr[SExp0[Fix[SExp0]]]): VarOr[Fix[SExp0]] = x.asInstanceOf[VarOr[Fix[SExp0]]]
+object Helper$SExp extends FixHelper[SExp0]
+import Helper$SExp._
 
 object SExp {
   def parse(s: String): SExp = {

@@ -156,7 +156,6 @@ final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, 
   def predNotTypeMap(f: PredNotTypeState => PredNotTypeState): State = predNotTypeUpdated(f(predNotType))
 
   // Update Constraints
-  // TODO: implement updatedVars
   def onEq(updatedVars: Set[Var[_]] = null): Option[State] = for {
     notEq <- notEq.onEq(eq, updatedVars)
     predType <- predType.onEq(eq)
@@ -164,7 +163,7 @@ final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, 
     absent <- absent.onEq(eq)
   } yield State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
 
-  def setEq(eq: EqState) = this.eqUpdated(eq).onEq()
+  def setEq(eq: EqState, updatedVars: Set[Var[_]] = null): Option[State] = this.eqUpdated(eq).onEq(updatedVars)
 
   def printConstraints: String = Vector(
     notEq.print,

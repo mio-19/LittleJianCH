@@ -2,12 +2,8 @@ package littlejian
 
 final case class EqState(subst: Subst) {
   override def toString: String = {
-    def result: String = subst.map((v, entry) => s"${v}: ${entry._2}").mkString(", ")
-    prettyPrintContext.get match {
-      case None => result
-      case Some(ctx) => prettyPrintContext.callWith(ctx.disableSubst) {
-        result
-      }
+    prettyPrintContext.updateWith(_.disableSubst) {
+      subst.map((v, entry) => s"${v}: ${entry._2}").mkString(", ")
     }
   }
 }
@@ -182,7 +178,9 @@ final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, 
     absent.print
   ).filter(_.nonEmpty).mkString("\n")
 
-  override def toString: String = Vector(eq.toString, printConstraints).filter(_.nonEmpty).mkString("\n")
+  override def toString: String = prettyPrintContext.callWithOrUpdate(new PrettyPrintContext(eq.subst), _.setSubst(eq.subst)) {
+    Vector(eq.toString, printConstraints).filter(_.nonEmpty).mkString("\n")
+  }
 }
 
 object State {

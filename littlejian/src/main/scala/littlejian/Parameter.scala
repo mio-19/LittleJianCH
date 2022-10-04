@@ -12,4 +12,17 @@ final class Parameter[T] {
   }
 
   def get: Option[T] = Option(current.get())
+  
+  def callWithOrUpdate[U](default: =>T, f: T => T)(block: => U): U = this.get match {
+    case Some(x) => callWith(f(x))(block)
+    case None => callWith(default)(block)
+  }
+  def updateWith[U](f: T => T)(block: => U): U = this.get match {
+    case Some(x) => callWith(f(x))(block)
+    case None => block
+  }
+  def defaultWith[U](default: =>T)(block: => U): U = this.get match {
+    case Some(_) => block
+    case None => callWith(default)(block)
+  }
 }

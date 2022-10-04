@@ -46,7 +46,7 @@ implicit object BFSimpDebug extends Searcher {
   }
 
   def exec(candidates: Vector[Request]): Stream[State] = {
-    def result = {
+    prettyPrintContext.defaultWith(new PrettyPrintContext(Subst.empty)) {
       println(s"\n\n---- Running ----:${candidates.map(_.toString).mkString("\n-- Or --\n")}\n\n")
       val next = candidates.flatMap(_.Exec)
       val (result0, rest0) = next.partition(_.isInstanceOf[State])
@@ -54,10 +54,6 @@ implicit object BFSimpDebug extends Searcher {
       val rest = rest0.asInstanceOf[Vector[Request]]
       if (result.isEmpty) exec(rest)
       else Stream.from(result) #::: exec(rest)
-    }
-
-    if (prettyPrintContext.get.nonEmpty) result else prettyPrintContext.callWith(new PrettyPrintContext(Subst.empty)) {
-      result
     }
   }
 

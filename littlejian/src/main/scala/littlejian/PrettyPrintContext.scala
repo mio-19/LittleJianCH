@@ -22,6 +22,7 @@ final class PrettyPrintContext(val subst: Subst, val counter: PrettyPrintVarCoun
   def getVar(x: Var[_]): Int = counter.getVar(x)
 
   def disableSubst: PrettyPrintContext = new PrettyPrintContext(Subst.empty, this.counter)
+  def setSubst(subst: Subst): PrettyPrintContext = new PrettyPrintContext(subst, this.counter)
 }
 
 val prettyPrintContext = new Parameter[PrettyPrintContext]

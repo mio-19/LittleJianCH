@@ -1173,7 +1173,7 @@ val allRBN: Seq[String] = Seq("VAR", "CAR", "CDR", "N-APP", "IND-NAT", "IND-=")
 */
 def RBNne(v0: VarOr[SExp])(walker: Walker): Seq[String] = {
   val v = walkStar(walker, v0)
-  if(expMemvQ(allRBN)(v)) Seq(car(v).asInstanceOf[String])
+  if(expMemvQ(allRBN)(v)) Seq(v.asInstanceOf[Cons].a.asInstanceOf[String])
   else if(v.isInstanceOf[Var[_]]) allRBN
   else Seq()
 }

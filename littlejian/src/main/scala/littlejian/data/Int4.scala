@@ -149,3 +149,8 @@ object Int32 {
     Int32(lo, hi)
   }
 }
+
+
+final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LList[Boolean]]]
+
+implicit val U$BinaryNat: Unifier[BinaryNat] = U$Product(U$VarOr(U$LList(U$Boolean)))

@@ -1,9 +1,42 @@
 package littlejian.data
 
-import littlejian._
+import littlejian.*
+import littlejian.ext._
+
+def add(x: VarOr[Boolean], y: VarOr[Boolean]): GoalWith[(VarOr[Boolean], VarOr[Boolean])] = for {
+  c <- fresh[Boolean]
+  r <- fresh[Boolean]
+  _ <- conde(
+    begin(x === true, y === true, c === true, r === false), // 1+1=10
+    begin(x === true, y === false, c === false, r === true), // 1+0=01
+    begin(x === false, y === true, c === false, r === true), // 0+1=01
+    begin(x === false, y === false, c === false, r === false) // 0+0=00
+  )
+} yield (c, r)
+
+def add(x: VarOr[Boolean], y: VarOr[Boolean], z: VarOr[Boolean]): GoalWith[(VarOr[Boolean], VarOr[Boolean])] = for {
+  c <- fresh[Boolean]
+  r <- fresh[Boolean]
+  _ <- conde(
+    begin(x === true, y === true, z === true, c === true, r === true), // 1+1+1=11
+    begin(x === true, y === true, z === false, c === true, r === false), // 1+1+0=10
+    begin(x === true, y === false, z === true, c === true, r === false), // 1+0+1=10
+    begin(x === true, y === false, z === false, c === false, r === true), // 1+0+0=01
+    begin(x === false, y === true, z === true, c === true, r === false), // 0+1+1=10
+    begin(x === false, y === true, z === false, c === false, r === true), // 0+1+0=01
+    begin(x === false, y === false, z === true, c === false, r === true), // 0+0+1=01
+    begin(x === false, y === false, z === false, c === false, r === false) // 0+0+0=00
+  )
+} yield (c, r)
+
 
 final case class Int4(bit0: VarOr[Boolean], bit1: VarOr[Boolean], bit2: VarOr[Boolean], bit3: VarOr[Boolean]) extends Product4[VarOr[Boolean], VarOr[Boolean], VarOr[Boolean], VarOr[Boolean]] {
-
+  def add2(that: Int4): GoalWith[(VarOr[Boolean], Int4)] = for {
+    (c0, r0) <- add(bit0, that.bit0)
+    (c1, r1) <- add(bit1, that.bit1, c0)
+    (c2, r2) <- add(bit2, that.bit2, c1)
+    (c3, r3) <- add(bit3, that.bit3, c2)
+  } yield (c3, Int4(r0, r1, r2, r3))
 }
 implicit val U$Int4: Unifier[Int4] = U$Product
 

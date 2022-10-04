@@ -53,6 +53,17 @@ class EvalSuite extends munit.FunSuite {
   test("quineC"){
     assertEquals((run[SExp] { x => x === "Success" && evalo((), quineC, quineC) }).head,  "Success")
   }
+  if(false) {
+    test("quine3") {
+      assertEquals(Set.from(run {
+        for {
+          (p, q, r) <- fresh[SExp, SExp, SExp]
+          _ <- p =/= q && p =/= r && q =/= r
+          _ <- evalo((), p, q) && evalo((), q, r) && evalo((), r, p)
+        } yield list(p, q, r): VarOr[SExp]
+      }), Set())
+    }
+  }
   test("apply"){
     assertEquals(Set.from(run {
       evalo((), list(list("lambda", list("x"), "x"), list("quote", "a")))

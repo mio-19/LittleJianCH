@@ -8,8 +8,8 @@ import scala.annotation.tailrec
 import scala.language.implicitConversions
 
 type SExp0[SExp] = Pair[SExp, SExp] | Unit | String
-type SExp = SExp0[Fix[SExp0]]
-object Helper$SExp extends FixHelper[SExp0]
+type SExp = SExp0[TypeRec[SExp0]]
+object Helper$SExp extends TypeRecHelper[SExp0]
 import Helper$SExp._
 
 object SExp {

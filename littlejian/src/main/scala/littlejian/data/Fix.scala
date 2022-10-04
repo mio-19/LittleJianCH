@@ -5,33 +5,33 @@ import littlejian._
 import scala.language.implicitConversions
 
 
-type Fix[F[_]] = F[F[F[F[Any]]]]
+type TypeRec[F[_]] = F[F[F[F[Any]]]]
 
-object FixHelperAny {
-  implicit def U$Fix[F[_]](implicit U$F: Unifier[F[Fix[F]]]): Unifier[Fix[F]] = U$F.asInstanceOf[Unifier[Fix[F]]]
+object TypeRecHelperAny {
+  implicit def U$Fix[F[_]](implicit U$F: Unifier[F[TypeRec[F]]]): Unifier[TypeRec[F]] = U$F.asInstanceOf[Unifier[TypeRec[F]]]
 
-  implicit def I$Fix[F[_]](implicit I$F: Inspector[F[Fix[F]]]): Inspector[Fix[F]] = I$F.asInstanceOf[Inspector[Fix[F]]]
+  implicit def I$Fix[F[_]](implicit I$F: Inspector[F[TypeRec[F]]]): Inspector[TypeRec[F]] = I$F.asInstanceOf[Inspector[TypeRec[F]]]
 
-  implicit def fix2unfix[F[_]](fix: Fix[F]): F[Fix[F]] = fix.asInstanceOf[F[Fix[F]]]
+  implicit def fix2unfix[F[_]](fix: TypeRec[F]): F[TypeRec[F]] = fix.asInstanceOf[F[TypeRec[F]]]
 
-  implicit def unfix2fix[F[_]](unfix: F[Fix[F]]): Fix[F] = unfix.asInstanceOf[Fix[F]]
+  implicit def unfix2fix[F[_]](unfix: F[TypeRec[F]]): TypeRec[F] = unfix.asInstanceOf[TypeRec[F]]
 
-  implicit def unfix2fixVarOr[F[_]](unfix: VarOr[F[Fix[F]]]): VarOr[Fix[F]] = unfix.asInstanceOf[VarOr[Fix[F]]]
+  implicit def unfix2fixVarOr[F[_]](unfix: VarOr[F[TypeRec[F]]]): VarOr[TypeRec[F]] = unfix.asInstanceOf[VarOr[TypeRec[F]]]
 
-  implicit def fix2unfixVarOr[F[_]](fix: VarOr[Fix[F]]): VarOr[F[Fix[F]]] = fix.asInstanceOf[VarOr[F[Fix[F]]]]
+  implicit def fix2unfixVarOr[F[_]](fix: VarOr[TypeRec[F]]): VarOr[F[TypeRec[F]]] = fix.asInstanceOf[VarOr[F[TypeRec[F]]]]
 
 }
 
 
-trait FixHelper[F[_]] {
-  implicit def U$Fix(implicit U$F: Unifier[F[Fix[F]]]): Unifier[Fix[F]] = U$F.asInstanceOf[Unifier[Fix[F]]]
-  implicit def I$Fix(implicit I$F: Inspector[F[Fix[F]]]): Inspector[Fix[F]] = I$F.asInstanceOf[Inspector[Fix[F]]]
+trait TypeRecHelper[F[_]] {
+  implicit def U$Fix(implicit U$F: Unifier[F[TypeRec[F]]]): Unifier[TypeRec[F]] = U$F.asInstanceOf[Unifier[TypeRec[F]]]
+  implicit def I$Fix(implicit I$F: Inspector[F[TypeRec[F]]]): Inspector[TypeRec[F]] = I$F.asInstanceOf[Inspector[TypeRec[F]]]
 
-  implicit def fix2unfix(fix: Fix[F]): F[Fix[F]] = fix.asInstanceOf[F[Fix[F]]]
+  implicit def fix2unfix(fix: TypeRec[F]): F[TypeRec[F]] = fix.asInstanceOf[F[TypeRec[F]]]
 
-  implicit def unfix2fix(unfix: F[Fix[F]]): Fix[F] = unfix.asInstanceOf[Fix[F]]
+  implicit def unfix2fix(unfix: F[TypeRec[F]]): TypeRec[F] = unfix.asInstanceOf[TypeRec[F]]
 
-  implicit def unfix2fixVarOr(unfix: VarOr[F[Fix[F]]]): VarOr[Fix[F]] = unfix.asInstanceOf[VarOr[Fix[F]]]
+  implicit def unfix2fixVarOr(unfix: VarOr[F[TypeRec[F]]]): VarOr[TypeRec[F]] = unfix.asInstanceOf[VarOr[TypeRec[F]]]
 
-  implicit def fix2unfixVarOr(fix: VarOr[Fix[F]]): VarOr[F[Fix[F]]] = fix.asInstanceOf[VarOr[F[Fix[F]]]]
+  implicit def fix2unfixVarOr(fix: VarOr[TypeRec[F]]): VarOr[F[TypeRec[F]]] = fix.asInstanceOf[VarOr[F[TypeRec[F]]]]
 }

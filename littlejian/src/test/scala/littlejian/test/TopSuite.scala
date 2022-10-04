@@ -123,14 +123,19 @@ $1 =/= a"""
       }
       }), Set("(b . a)"))
     }
-    test(name+"numbers"){
-      assertEquals(Set.from(run[Int4] { x => x + Int4.from(4) === Int4.from(8)}), Set("4"))
+    test(name + "numbers") {
+      assertEquals(Set.from(run[Int4] { x => x + Int4.from(4) === Int4.from(8) }), Set("4"))
       assertEquals(Set.from(run[Int4] { x => Int4.from(3) + Int4.from(4) === x }), Set("7"))
+      assertEquals(Set.from(run[Int4] { x => Int4.from(7) - Int4.from(4) === x }), Set("3"))
+      assertEquals(Set.from(run[Int4] { x => Int4.from(7) - Int4.from(8) === x }), Set("15")) // -1
+      assertEquals(Set.from(run[Int4] { x => Int4.from(9) - Int4.from(8) === x }), Set("1"))
+      assertEquals(Set.from(run[Int4] { x => x - Int4.from(8) === Int4.from(1) }), Set("9"))
     }
   }
+
   def runMoreTest: Unit = {
     import littlejian.search.BFSimpPar
-    test("numbers"){
+    test("numbers") {
       assertEquals(Set.from(run[Int8] { x => Int8.from(30) + Int8.from(4) === x }), Set("34"))
     }
   }

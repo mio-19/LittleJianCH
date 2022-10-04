@@ -117,6 +117,7 @@ implicit class VarOrCast[T](x: VarOr[T]) {
 }
 
 implicit class VarOrForceApply[T](x: VarOr[T]) {
+  @deprecated
   def forceApply[U](f: T => U)(implicit unifier: Unifier[U]): Rel[U] = for {
     result <- fresh[U]
     _ <- GoalReadSubst { subst =>

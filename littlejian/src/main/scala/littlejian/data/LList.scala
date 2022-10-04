@@ -13,6 +13,8 @@ sealed trait LList[T] {
 implicit class VarOrLListOps[T](self: VarOr[LList[T]])(implicit U$T: Unifier[T]) {
   implicit val U$LListT: Unifier[LList[T]] = U$LList(U$T)
   implicit val U$SeqT: Unifier[Seq[VarOr[T]]] = U$Seq(U$VarOr(U$T))
+
+  @deprecated
   def toSeq: Rel[Seq[VarOr[T]]] = conde(
     for {
       _ <- self === LEmpty[T]()

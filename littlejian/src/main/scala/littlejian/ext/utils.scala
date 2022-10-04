@@ -37,30 +37,30 @@ implicit class VarGet[T](self: Var[T]) {
 }
 
 implicit class GoalOps(x: => Goal) {
-  def &&(y: => Goal): Goal = GoalDelay({
+  def &&(y: Goal): Goal = {
     val gx = x
     val gy = y
     if (gx eq Goal.success) return gy
     if (gy eq Goal.success) return gx
     GoalConj(gx, gy)
-  })
+  }
 
-  def ||(y: => Goal): Goal = GoalDelay({
+  def ||(y: Goal): Goal = {
     val gx = x
     val gy = y
     if (gx eq Goal.success) return gx
     if (gy eq Goal.success) return gy
     GoalDisj(gx, gy)
-  })
+  }
 }
 
-implicit class GoalWithUnitOps(x: => GoalWith[Unit]) {
-  @inline def &&(y: => Goal): Goal = GoalConj(GoalDelay(x), GoalDelay(y))
+implicit class GoalWithUnitOps(x: GoalWith[Unit]) {
+  @inline def &&(y: Goal): Goal = GoalOps(x).&&(y)
 
-  @inline def ||(y: => Goal): Goal = GoalDisj(GoalDelay(x), GoalDelay(y))
+  @inline def ||(y: Goal): Goal = GoalOps(x).&&(y)
 }
 
-def fresh[T]: GoalWith[Var[T]] = GoalWith(k => callWithFresh[T](k))
+@inline def fresh[T]: GoalWith[Var[T]] = GoalWith(k => callWithFresh[T](k))
 @targetName("fresh2") def fresh[T, U]: GoalWith[(Var[T], Var[U])] = for {
   x <- fresh[T]
   y <- fresh[U]
@@ -76,15 +76,15 @@ def fresh[T]: GoalWith[Var[T]] = GoalWith(k => callWithFresh[T](k))
   z <- fresh[V]
   w <- fresh[W]
 } yield (x, y, z, w)
-def fresh[T](f: VarOr[T] => Goal): Goal = callWithFresh[T] { t =>
+@inline def fresh[T](f: VarOr[T] => Goal): Goal = callWithFresh[T] { t =>
   f(t)
 }
-def fresh[T, U](f: (VarOr[T], VarOr[U]) => Goal): Goal = callWithFresh[T] { t =>
+@inline def fresh[T, U](f: (VarOr[T], VarOr[U]) => Goal): Goal = callWithFresh[T] { t =>
   callWithFresh[U] { u =>
     f(t, u)
   }
 }
-def fresh[T, U, V](f: (VarOr[T], VarOr[U], VarOr[V]) => Goal): Goal = callWithFresh[T] { t =>
+@inline def fresh[T, U, V](f: (VarOr[T], VarOr[U], VarOr[V]) => Goal): Goal = callWithFresh[T] { t =>
   callWithFresh[U] { u =>
     callWithFresh[V] { v =>
       f(t, u, v)

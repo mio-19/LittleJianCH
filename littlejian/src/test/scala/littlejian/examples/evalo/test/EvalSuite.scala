@@ -9,6 +9,7 @@ import littlejian.search.BFSimp
 import littlejian.examples.evalo._
 
 class EvalSuite extends munit.FunSuite {
+  val quineC = SExp.parse("((lambda (x)\n(list x (list (quote quote) x)))\n(quote\n(lambda (x)\n(list x (list (quote quote) x)))))")
   test("basics") {
     assertEquals(Set.from(run { lookupo(list(cons("a", "b")), "a") }), Set("b"))
     assertEquals(Set.from(run {
@@ -48,6 +49,9 @@ class EvalSuite extends munit.FunSuite {
   }
   test("What eval to a") {
     assertEquals(run[SExp] { x => evalo((), x, "a") }.head, "(quote a)")
+  }
+  test("quineC"){
+    assertEquals((run[SExp] { x => x === "Success" && evalo((), quineC, quineC) }).head,  "Success")
   }
   test("apply"){
     assertEquals(Set.from(run {

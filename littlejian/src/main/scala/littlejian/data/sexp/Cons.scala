@@ -2,10 +2,12 @@ package littlejian.data.sexp
 
 import littlejian._
 import littlejian.ext._
+import littlejian.data._
 
 import scala.annotation.tailrec
 
-type SExp = Cons | Unit | String
+type SExp0[SExp] = Pair[SExp, SExp] | Unit | String
+type SExp = SExp0[Fix[SExp0]]
 
 object SExp {
   def parse(s: String): SExp = {
@@ -47,9 +49,9 @@ object SExp {
   }
 }
 
-implicit val U$SExp: Unifier[SExp] = U$Union[Cons, Unit, String]
+implicit val U$SExp: Unifier[SExp] = U$Union(U$Pair, U$Unit, U$String)
 
-implicit val I$SExp: Inspector[SExp] = I$Union(I$Cons, I$Unit, I$String)
+implicit val I$SExp: Inspector[SExp] = I$Union(I$Pair, I$Unit, I$String)
 
 private def consDot(xs: Vector[VarOr[SExp]], next: Var[SExp] | String): String =
   if (xs.isEmpty)
@@ -57,28 +59,20 @@ private def consDot(xs: Vector[VarOr[SExp]], next: Var[SExp] | String): String =
   else
     s"(${xs.map(_.toString).mkString(" ")} . ${next.toString})"
 
-@tailrec
-private def consToString(xs: Vector[VarOr[SExp]], next: VarOr[SExp]): String = next match {
-  case Cons(a, d) => consToString(xs ++ Seq(a), d)
-  case () => s"(${xs.map(_.toString).mkString(" ")})"
-  case v: Var[SExp] => prettyPrintContext.get match {
-    case Some(context) => context.subst.getOption(v) match {
-      case Some(x) => consToString(xs, x)
-      case None => consDot(xs, v)
-    }
-    case None => consDot(xs, v)
+object Cons {
+  def apply(a: VarOr[SExp], d: VarOr[SExp]): SExp = Pair(a, d)
+  def unapply(s: VarOr[SExp]): Option[(VarOr[SExp], VarOr[SExp])] = s match {
+    case Pair(a, d) => Some((a, d))
+    case _ => None
   }
-  case s: String => consDot(xs, s)
 }
 
-final case class Cons(a: VarOr[SExp], d: VarOr[SExp]) extends Product2[VarOr[SExp], VarOr[SExp]] {
-  override def toString: String = consToString(Vector(a), d)
+def cons(a: VarOr[SExp], d: VarOr[SExp]): SExp = Pair(a, d)
+
+def car(s: VarOr[SExp]): VarOr[SExp] = s match {
+  case Cons(a, _) => a
+  case _ => throw new Exception(s"car: not a pair: $s")
 }
-implicit val U$Cons: Unifier[Cons] = U$Product
-
-implicit val I$Cons: Inspector[Cons] = I$Product
-
-def cons(a: VarOr[SExp], d: VarOr[SExp]): SExp = Cons(a, d)
 
 private def convertList(xs: Seq[VarOr[SExp]]): SExp = if (xs.isEmpty) () else cons(xs.head, convertList(xs.tail))
 private def convertListDot(xs: Seq[VarOr[SExp]]): VarOr[SExp] = {
@@ -100,7 +94,7 @@ def listDot(xs: VarOr[SExp]*) = convertListDot(xs)
 def mapo(f: VarOr[SExp] => Rel[SExp], xs: VarOr[SExp]): Rel[SExp] = conde(
   begin(xs === (), ()),
   for {
-    (head, tail) <- xs.is(cons)
-    result <- cons call(f(head), mapo(f, tail))
+    (head, tail) <- xs.is[SExp, SExp](cons.apply)
+    result <- cons.apply call(f(head), mapo(f, tail))
   } yield result
 )

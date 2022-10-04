@@ -31,8 +31,14 @@ def add(x: VarOr[Boolean], y: VarOr[Boolean], z: VarOr[Boolean]): GoalWith[(VarO
 
 
 final case class Int4(bit0: VarOr[Boolean], bit1: VarOr[Boolean], bit2: VarOr[Boolean], bit3: VarOr[Boolean]) extends Product4[VarOr[Boolean], VarOr[Boolean], VarOr[Boolean], VarOr[Boolean]] {
-  def add2(that: Int4): GoalWith[(VarOr[Boolean], Int4)] = for {
+  def plus(that: Int4): GoalWith[(VarOr[Boolean], Int4)] = for {
     (c0, r0) <- add(bit0, that.bit0)
+    (c1, r1) <- add(bit1, that.bit1, c0)
+    (c2, r2) <- add(bit2, that.bit2, c1)
+    (c3, r3) <- add(bit3, that.bit3, c2)
+  } yield (c3, Int4(r0, r1, r2, r3))
+  def plus(that: Int4, carry: VarOr[Boolean]): GoalWith[(VarOr[Boolean], Int4)] = for {
+    (c0, r0) <- add(bit0, that.bit0, carry)
     (c1, r1) <- add(bit1, that.bit1, c0)
     (c2, r2) <- add(bit2, that.bit2, c1)
     (c3, r3) <- add(bit3, that.bit3, c2)
@@ -42,6 +48,14 @@ implicit val U$Int4: Unifier[Int4] = U$Product
 
 
 final case class Int8(lo: Int4, hi: Int4) extends Product2[Int4, Int4] {
+  def plus(that: Int8): GoalWith[(VarOr[Boolean], Int8)] = for {
+    (c, r) <- lo.plus(that.lo)
+    (c2, r2) <- hi.plus(that.hi, c)
+  } yield (c2, Int8(r, r2))
+  def plus(that: Int8, carry: VarOr[Boolean]): GoalWith[(VarOr[Boolean], Int8)] = for {
+    (c, r) <- lo.plus(that.lo, carry)
+    (c2, r2) <- hi.plus(that.hi, c)
+  } yield (c2, Int8(r, r2))
 }
 
 object Int8 {
@@ -56,6 +70,14 @@ object Int8 {
 implicit val U$Int8: Unifier[Int8] = U$Product
 
 final case class Int16(lo: Int8, hi: Int8) extends Product2[Int8, Int8] {
+  def plus(that: Int16): GoalWith[(VarOr[Boolean], Int16)] = for {
+    (c, r) <- lo.plus(that.lo)
+    (c2, r2) <- hi.plus(that.hi, c)
+  } yield (c2, Int16(r, r2))
+  def plus(that: Int16, carry: VarOr[Boolean]): GoalWith[(VarOr[Boolean], Int16)] = for {
+    (c, r) <- lo.plus(that.lo, carry)
+    (c2, r2) <- hi.plus(that.hi, c)
+  } yield (c2, Int16(r, r2))
 }
 
 implicit val U$Int16: Unifier[Int16] = U$Product
@@ -69,19 +91,14 @@ object Int16 {
 }
 
 final case class Int32(lo: Int16, hi: Int16) extends Product2[Int16, Int16] {
-  def +(other: Int32): Int32 = ???
-
-  def -(other: Int32): Int32 = ???
-
-  def *(other: Int32): Int32 = ???
-
-  def divUnsigned(other: Int32): Int32 = ???
-
-  def /(other: Int32): Int32 = ???
-
-  def modUnsigned(other: Int32): Int32 = ???
-
-  def %(other: Int32): Int32 = ???
+  def plus(that: Int32): GoalWith[(VarOr[Boolean], Int32)] = for {
+    (c, r) <- lo.plus(that.lo)
+    (c2, r2) <- hi.plus(that.hi, c)
+  } yield (c2, Int32(r, r2))
+  def plus(that: Int32, carry: VarOr[Boolean]): GoalWith[(VarOr[Boolean], Int32)] = for {
+    (c, r) <- lo.plus(that.lo, carry)
+    (c2, r2) <- hi.plus(that.hi, c)
+  } yield (c2, Int32(r, r2))
 }
 
 object Int32 {

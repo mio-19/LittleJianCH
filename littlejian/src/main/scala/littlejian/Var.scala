@@ -16,4 +16,4 @@ final class Var[T] private[littlejian] {
 
 type VarOr[T] = Var[T] | T
 
-def callWithFresh[T](f: Var[T] => Goal): Goal = GoalFresh(f)
+@inline def callWithFresh[T](f: Var[T] => Goal): Goal = GoalFresh(f)

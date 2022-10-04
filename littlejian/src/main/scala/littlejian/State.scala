@@ -147,19 +147,19 @@ object AbsentState {
 }
 
 final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, predNotType: PredNotTypeState, absent: AbsentState) {
-  def eqUpdated(eq: EqState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
+  @inline def eqUpdated(eq: EqState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
 
-  def notEqUpdated(notEq: NotEqState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
+  @inline def notEqUpdated(notEq: NotEqState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
 
-  def predTypeUpdated(predType: PredTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
+  @inline def predTypeUpdated(predType: PredTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
 
-  def predNotTypeUpdated(predNotType: PredNotTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
+  @inline def predNotTypeUpdated(predNotType: PredNotTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
 
-  def absentUpdated(absent: AbsentState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
+  @inline def absentUpdated(absent: AbsentState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
 
-  def predTypeMap(f: PredTypeState => PredTypeState): State = predTypeUpdated(f(predType))
+  @inline def predTypeMap(f: PredTypeState => PredTypeState): State = predTypeUpdated(f(predType))
 
-  def predNotTypeMap(f: PredNotTypeState => PredNotTypeState): State = predNotTypeUpdated(f(predNotType))
+  @inline def predNotTypeMap(f: PredNotTypeState => PredNotTypeState): State = predNotTypeUpdated(f(predNotType))
 
   // Update Constraints
   def onEq(updatedVars: Set[Var[_]] = null): Option[State] = for {
@@ -169,7 +169,7 @@ final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, 
     absent <- absent.onEq(eq)
   } yield State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
 
-  def setEq(eq: EqState, updatedVars: Set[Var[_]] = null): Option[State] = this.eqUpdated(eq).onEq(updatedVars)
+  @inline def setEq(eq: EqState, updatedVars: Set[Var[_]] = null): Option[State] = this.eqUpdated(eq).onEq(updatedVars)
 
   def printConstraints: String = Vector(
     notEq.print,

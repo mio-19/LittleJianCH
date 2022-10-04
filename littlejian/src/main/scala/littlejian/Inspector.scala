@@ -32,7 +32,7 @@ trait Inspector[T] {
   // None: contains
   // Some(Seq()): not contains
   // Some(Seq(...)): uncertain
-  final def scanUncertain(x: T, resolver: Any => Any, v: Any): Option[Seq[WithInspector[_]]] = WithInspector(x)(this).scanUncertain(resolver, v)
+  @inline final def scanUncertain(x: T, resolver: Any => Any, v: Any): Option[Seq[WithInspector[_]]] = WithInspector(x)(this).scanUncertain(resolver, v)
 }
 
 object Inspector {

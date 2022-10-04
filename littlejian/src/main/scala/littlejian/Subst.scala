@@ -10,7 +10,7 @@ type Subst = Map[Var[_], (Unifier[_] /* for =/= usages */ , _ /*VarOr[_]*/ )]
 type SubstPatch = Vector[(Var[_], Unifier[_], _)]
 
 object SubstPatch {
-  def empty: SubstPatch = Vector.empty
+  val empty: SubstPatch = Vector.empty
 }
 
 implicit final class SubstOps(self: Subst) {

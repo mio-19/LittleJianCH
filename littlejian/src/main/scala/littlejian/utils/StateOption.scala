@@ -41,24 +41,24 @@ final class StateOption[S, T](val fn: StateVar[S] => Trampoline[Option[T]]) {
     fn(stateVar).get.map { t => (stateVar.value, t) }
   }
 
-  def map[U](f: T => U): StateOption[S, U] = new StateOption(s => fn(s).map(_.map(f)))
+  @inline def map[U](f: T => U): StateOption[S, U] = new StateOption(s => fn(s).map(_.map(f)))
 
-  def flatMap[U](f: T => StateOption[S, U]): StateOption[S, U] = new StateOption(s => fn(s).flatMap {
+  @inline def flatMap[U](f: T => StateOption[S, U]): StateOption[S, U] = new StateOption(s => fn(s).flatMap {
     case Some(t) => Trampoline(f(t).fn(s))
     case None => None
   })
 
-  def >>[U](other: StateOption[S, U]): StateOption[S, U] = flatMap(_ => other)
+  @inline def >>[U](other: StateOption[S, U]): StateOption[S, U] = flatMap(_ => other)
 }
 
 object StateOption {
-  def success[S, T](t: T): StateOption[S, T] = new StateOption(_ => Some(t))
+  @inline def success[S, T](t: T): StateOption[S, T] = new StateOption(_ => Some(t))
 
-  def failure[S, T]: StateOption[S, T] = new StateOption(_ => None)
+  @inline def failure[S, T]: StateOption[S, T] = new StateOption(_ => None)
 
-  def guard[S](x: Boolean): StateOption[S, Unit] = if (x) success(()) else failure
+  @inline def guard[S](x: Boolean): StateOption[S, Unit] = if (x) success(()) else failure
 
-  def apply[S, T](f: S => Option[(S, T)]): StateOption[S, T] =
+  @inline def apply[S, T](f: S => Option[(S, T)]): StateOption[S, T] =
     new StateOption(s => f(s.value).match {
       case Some((s1, t)) => s.value = s1; Some(t)
       case None => None

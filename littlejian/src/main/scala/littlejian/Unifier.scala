@@ -9,11 +9,11 @@ import scala.language.implicitConversions
 type Unifying[T] = StateOption[(Subst, SubstPatch), T]
 
 object Unifying {
-  def success[T](x: T): Unifying[T] = StateOption.success(x)
+  @inline def success[T](x: T): Unifying[T] = StateOption.success(x)
 
-  def failure[T]: Unifying[T] = StateOption.failure
+  @inline def failure[T]: Unifying[T] = StateOption.failure
 
-  def guard(x: Boolean): Unifying[Unit] = StateOption.guard(x)
+  @inline def guard(x: Boolean): Unifying[Unit] = StateOption.guard(x)
 }
 
 implicit class UnifyingOps[T](self: Unifying[T]) {
@@ -23,9 +23,9 @@ implicit class UnifyingOps[T](self: Unifying[T]) {
 
   def getSubstPatch(subst: Subst): Option[SubstPatch] = self.run((subst, SubstPatch.empty)).map(_._1._2)
 
-  def map[U](f: T => U): Unifying[U] = self.map(f)
+  @inline def map[U](f: T => U): Unifying[U] = self.map(f)
 
-  def flatMap[U](f: T => Unifying[U]): Unifying[U] = self.flatMap(f)
+  @inline def flatMap[U](f: T => Unifying[U]): Unifying[U] = self.flatMap(f)
 }
 
 trait Unifier[T] {

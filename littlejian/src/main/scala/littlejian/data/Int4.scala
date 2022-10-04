@@ -88,6 +88,11 @@ object Int4 {
   def zero: Int4 = Int4(false, false, false, false)
 
   def one: Int4 = Int4(true, false, false, false)
+
+  def from(x: Int): Int4 = {
+    if (x < 0 || x > 15) throw new IllegalArgumentException("x must be in [0, 15]")
+    Int4((x & 1) == 1, (x & 2) == 2, (x & 4) == 4, (x & 8) == 8)
+  }
 }
 
 
@@ -121,8 +126,8 @@ object Int8 {
   def one: Int8 = Int8(Int4.one, Int4.one)
 
   def from(x: Byte): Int8 = {
-    val lo = Int4((x & 1) == 1, (x & 2) == 2, (x & 4) == 4, (x & 8) == 8)
-    val hi = Int4((x & 16) == 16, (x & 32) == 32, (x & 64) == 64, (x & 128) == 128)
+    val lo = Int4.from(x & 15)
+    val hi = Int4.from((x >> 4) & 15)
     Int8(lo, hi)
   }
 }
@@ -229,15 +234,18 @@ implicit class VarOrInt32Ops(self: VarOr[Int32]) {
     result = Int32(Int16(Int8(Int4(b0, b1, b2, b3), Int4(b4, b5, b6, b7)), Int8(Int4(b8, b9, b10, b11), Int4(b12, b13, b14, b15))), Int16(Int8(Int4(b16, b17, b18, b19), Int4(b20, b21, b22, b23)), Int8(Int4(b24, b25, b26, b27), Int4(b28, b29, b30, b31))))
     _ <- self == result
   } yield result
+
   def +(other: VarOr[Int32]): Rel[Int32] = for {
     x <- self.get
     y <- other.get
     (c, r) <- x.plus(x)
   } yield r
+
   def unary_- : Rel[Int32] = for {
     x <- self.get
     r <- -x
   } yield r
+
   def -(other: VarOr[Int32]): Rel[Int32] = for {
     y <- -other
     r <- self + y

@@ -123,5 +123,8 @@ $1 =/= a"""
       }
       }), Set("(b . a)"))
     }
+    test(name+"numbers"){
+      assertEquals(Set.from(run[Int4] { x => x + Int4.from(4) === Int4.from(8)}), Set("Int4(false,false,true,false)"))
+    }
   }
 }

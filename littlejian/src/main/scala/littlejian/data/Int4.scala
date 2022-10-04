@@ -43,6 +43,20 @@ final case class Int4(bit0: VarOr[Boolean], bit1: VarOr[Boolean], bit2: VarOr[Bo
     (c2, r2) <- add(bit2, that.bit2, c1)
     (c3, r3) <- add(bit3, that.bit3, c2)
   } yield (c3, Int4(r0, r1, r2, r3))
+
+  def succ: GoalWith[(VarOr[Boolean], Int4)] = plus(Int4(true, false, false, false))
+
+  def not: GoalWith[Int4] = for {
+    b0 <- !bit0
+    b1 <- !bit1
+    b2 <- !bit2
+    b3 <- !bit3
+  } yield Int4(b0, b1, b2, b3)
+
+  def negative: GoalWith[Int4] = for {
+    n <- this.not
+    (c, r) <- n.succ
+  } yield r
 }
 implicit val U$Int4: Unifier[Int4] = U$Product
 

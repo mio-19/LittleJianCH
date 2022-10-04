@@ -6,6 +6,23 @@ import scala.annotation.targetName
 import scala.collection.parallel.immutable.ParVector
 import scala.reflect.ClassTag
 
+implicit class VarOrBooleanOps(x: VarOr[Boolean]) {
+  def unary_! : Rel[Boolean] = conde(
+    begin(x === true, false),
+    begin(x === false, true)
+  )
+
+  def &&(y: VarOr[Boolean]): Rel[Boolean] = conde(
+    begin(x === true, y),
+    begin(x === false, false)
+  )
+
+  def ||(y: VarOr[Boolean]): Rel[Boolean] = conde(
+    begin(x === true, true),
+    begin(x === false, y)
+  )
+}
+
 implicit class StateResolve(self: State) {
   def resolve[T](x: VarOr[T]): VarOr[T] = self.eq.subst.walk(x)
 }
@@ -18,16 +35,16 @@ implicit class GoalOps(x: => Goal) {
   def &&(y: => Goal): Goal = GoalDelay({
     val gx = x
     val gy = y
-    if(gx eq Goal.success) return gy
-    if(gy eq Goal.success) return gx
+    if (gx eq Goal.success) return gy
+    if (gy eq Goal.success) return gx
     GoalConj(gx, gy)
   })
 
   def ||(y: => Goal): Goal = GoalDelay({
     val gx = x
     val gy = y
-    if(gx eq Goal.success) return gx
-    if(gy eq Goal.success) return gy
+    if (gx eq Goal.success) return gx
+    if (gy eq Goal.success) return gy
     GoalDisj(gx, gy)
   })
 }

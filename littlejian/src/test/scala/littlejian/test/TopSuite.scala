@@ -128,4 +128,11 @@ $1 =/= a"""
       assertEquals(Set.from(run[Int4] { x => Int4.from(3) + Int4.from(4) === x }), Set("7"))
     }
   }
+  def runMoreTest: Unit = {
+    import littlejian.search.BFSimpPar
+    test("numbers"){
+      assertEquals(Set.from(run[Int8] { x => Int8.from(30) + Int8.from(4) === x }), Set("34"))
+    }
+  }
+  //runMoreTest
 }

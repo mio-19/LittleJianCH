@@ -154,7 +154,8 @@ object Int32 {
 type BinaryNatVal = LList[Boolean]
 final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LList[Boolean]]] {
   def plus(that: VarOr[BinaryNatVal]): Rel[BinaryNatVal] = conde(
-    (xs.eqEmpty && that.eqEmpty) >> LList.empty
+    xs.eqEmpty >> that,
+    that.eqEmpty >> xs
     // TODO
   )
 }

@@ -1,10 +1,28 @@
 package littlejian.data
 
 import littlejian._
+import littlejian.ext._
+import littlejian.unifier._
 import scala.language.implicitConversions
 
 sealed trait LList[T] {
   def ::(elem: VarOr[T]): LList[T] = LCons(elem, this)
+
+}
+
+implicit class VarOrLListOps[T](self: VarOr[LList[T]])(implicit U$T: Unifier[T]) {
+  implicit val U$LListT: Unifier[LList[T]] = U$LList(U$T)
+  implicit val U$SeqT: Unifier[Seq[VarOr[T]]] = U$Seq(U$VarOr(U$T))
+  def toSeq: Rel[Seq[VarOr[T]]] = conde(
+    for {
+      _ <- self === LEmpty[T]()
+    } yield Seq.empty,
+    for {
+      (head, tail) <- self.is[T, LList[T]](LCons(_, _))
+      tailSeq <- tail.toSeq
+      result <- tailSeq.forceApply[Seq[VarOr[T]]](head +: _)
+    } yield result
+  )
 }
 
 object LList {

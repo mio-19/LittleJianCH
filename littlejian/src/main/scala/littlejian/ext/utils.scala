@@ -116,6 +116,18 @@ implicit class VarOrCast[T](x: VarOr[T]) {
   } yield result
 }
 
+implicit class VarOrForceApply[T](x: VarOr[T]) {
+  def forceApply[U](f: T => U)(implicit unifier: Unifier[U]): Rel[U] = for {
+    result <- fresh[U]
+    _ <- GoalReadSubst { subst =>
+      subst.walk(x) match {
+        case _: Var[_] => Goal.failure
+        case v => result === f(v.asInstanceOf[T])
+      }
+    }
+  } yield result
+}
+
 def begin(xs: => Goal*): Goal = GoalDelay(GoalConj(xs))
 
 def conde(xs: => Goal*): Goal = GoalDelay(GoalDisj(xs))

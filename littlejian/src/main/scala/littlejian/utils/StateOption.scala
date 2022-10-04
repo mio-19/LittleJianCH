@@ -2,31 +2,6 @@ package littlejian.utils
 
 private object DeprecatedStateOption {
 
-  import scala.annotation.tailrec
-
-  type Trampoline[T] = TrampolineMore[T] | T
-
-  final case class TrampolineMore[T](call: () => Trampoline[T])
-
-  object Trampoline {
-    @tailrec
-    def get[T](t: Trampoline[T]): T = t match {
-      case more: TrampolineMore[_] => get(more.call().asInstanceOf[Trampoline[T]])
-      case _ => t.asInstanceOf[T]
-    }
-
-    def apply[T](t: => Trampoline[T]): Trampoline[T] = TrampolineMore(() => t)
-  }
-
-  implicit class TrampolineOps[T](self: Trampoline[T]) {
-    def get: T = Trampoline.get(self)
-
-    def flatMap[U](f: T => Trampoline[U]): Trampoline[U] = self match {
-      case more: TrampolineMore[_] => TrampolineMore(() => more.call().asInstanceOf[Trampoline[T]].flatMap(f))
-      case _ => f(self.asInstanceOf[T])
-    }
-  }
-
   // Monad
   type StateOption[State, T] = State => Trampoline[Option[(State, T)]]
 
@@ -60,15 +35,18 @@ private object DeprecatedStateOption {
 
 private final class StateVar[T](var value: T)
 
-final class StateOption[S, T](val fn: StateVar[S] => Option[T]) {
+final class StateOption[S, T](val fn: StateVar[S] => Trampoline[Option[T]]) {
   def run(state: S): Option[(S, T)] = {
     val stateVar = new StateVar(state)
-    fn(stateVar) map { t => (stateVar.value, t) }
+    fn(stateVar).get.map { t => (stateVar.value, t) }
   }
 
-  def map[U](f: T => U): StateOption[S, U] = new StateOption(s => fn(s) map f)
+  def map[U](f: T => U): StateOption[S, U] = new StateOption(s => fn(s).map(_.map(f)))
 
-  def flatMap[U](f: T => StateOption[S, U]): StateOption[S, U] = new StateOption(s => fn(s).flatMap(v=>f(v).fn(s)))
+  def flatMap[U](f: T => StateOption[S, U]): StateOption[S, U] = new StateOption(s => fn(s).flatMap {
+    case Some(t) => Trampoline(f(t).fn(s))
+    case None => None
+  })
 
   def >>[U](other: StateOption[S, U]): StateOption[S, U] = flatMap(_ => other)
 }

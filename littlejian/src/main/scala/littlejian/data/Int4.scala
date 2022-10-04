@@ -189,6 +189,21 @@ final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LLi
   )
 }
 
+object BinaryNat {
+  def zero = from(0)
+
+  def one = from(1)
+
+  def from(n: Int): BinaryNat =
+    if (n < 0) throw new IllegalArgumentException("n must be non-negative")
+    else if (n == 0) BinaryNat(LList.empty)
+    else {
+      val lo = (n & 1) == 1
+      val hi = BinaryNat.from(n >> 1).xs
+      BinaryNat(LCons(lo, hi))
+    }
+}
+
 implicit class VarOrBinaryNatOps(self: VarOr[BinaryNat]) {
   def succ: Rel[BinaryNat] = for {
     xs <- self.is[BinaryNatVal](BinaryNat(_))
@@ -210,5 +225,11 @@ implicit class VarOrBinaryNatOps(self: VarOr[BinaryNat]) {
 implicit val U$BinaryNat: Unifier[BinaryNat] = U$Product(U$VarOr(U$LList(U$Boolean)))
 
 final case class BinaryInt(sign: VarOr[Boolean], x: BinaryNat) extends Product2[VarOr[Boolean], BinaryNat]
+
+object BinaryInt {
+  def from(n: BinaryNat): BinaryInt = BinaryInt(true, n)
+
+  def from(n: Int): BinaryInt = if (n >= 0) from(BinaryNat.from(n)) else BinaryInt(false, BinaryNat.from((-n) - 1))
+}
 
 implicit val U$BinaryInt: Unifier[BinaryInt] = U$Product

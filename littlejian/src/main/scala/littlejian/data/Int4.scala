@@ -58,6 +58,18 @@ final case class Int4(bit0: VarOr[Boolean], bit1: VarOr[Boolean], bit2: VarOr[Bo
     n <- !this
     (c, r) <- n.succ
   } yield r
+
+  def bits: Vector[VarOr[Boolean]] = Vector(bit0, bit1, bit2, bit3)
+  override def toString: String = {
+    val bs = bits.map(_.toString)
+    if(bs.forall(x=>x=="true"||x=="false")) {
+      val bs0: Vector[Int] = bs.map(x=>if(x=="true") 1 else 0)
+      val result: Int = bs0(0) + bs0(1)*2 + bs0(2)*4 + bs0(3)*8
+      result.toString
+    } else {
+      s"Int4(${bs.mkString(" , ")})"
+    }
+  }
 }
 
 implicit class VarOrInt4Ops(self: VarOr[Int4]) {
@@ -118,6 +130,18 @@ final case class Int8(lo: Int4, hi: Int4) extends Product2[Int4, Int4] {
     n <- !this
     (c, r) <- n.succ
   } yield r
+
+  def bits: Vector[VarOr[Boolean]] = lo.bits ++ hi.bits
+  override def toString: String = {
+    val bs = bits.map(_.toString)
+    if(bs.forall(x=>x=="true"||x=="false")) {
+      val bs0: Vector[Int] = bs.map(x=>if(x=="true") 1 else 0)
+      val result: Int = bs0(0) + bs0(1)*2 + bs0(2)*4 + bs0(3)*8 + bs0(4)*16 + bs0(5)*32 + bs0(6)*64 + bs0(7)*128
+      result.toString
+    } else {
+      s"Int8(${bs.mkString(" , ")})"
+    }
+  }
 }
 
 object Int8 {

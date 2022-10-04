@@ -53,7 +53,7 @@ class EvalSuite extends munit.FunSuite {
   test("quineC"){
     assertEquals((run[SExp] { x => x === "Success" && evalo((), quineC, quineC) }).head,  "Success")
   }
-  if(true) {
+  if(false) {
     test("quine3") {
       assertEquals(Set.from(run {
         for {

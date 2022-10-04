@@ -1,7 +1,9 @@
 package littlejian.data
 
 import littlejian.*
-import littlejian.ext._
+import littlejian.ext.*
+
+import scala.language.implicitConversions
 
 def add(x: VarOr[Boolean], y: VarOr[Boolean]): GoalWith[(VarOr[Boolean], VarOr[Boolean])] = for {
   c <- fresh[Boolean]
@@ -30,68 +32,82 @@ def add(x: VarOr[Boolean], y: VarOr[Boolean], z: VarOr[Boolean]): GoalWith[(VarO
 } yield (c, r)
 
 
-final case class Int4(bit0: VarOr[Boolean], bit1: VarOr[Boolean], bit2: VarOr[Boolean], bit3: VarOr[Boolean]) extends Product4[VarOr[Boolean], VarOr[Boolean], VarOr[Boolean], VarOr[Boolean]] {
-  def plus(that: Int4): GoalWith[(VarOr[Boolean], Int4)] = for {
+trait IntN[T <: IntN[T]] {
+  def plus(that: T): GoalWith[(VarOr[Boolean], T)]
+  def plus(that: T, carry: VarOr[Boolean]): GoalWith[(VarOr[Boolean], T)]
+  def succ: GoalWith[(VarOr[Boolean], T)]
+  def unary_! : GoalWith[T]
+
+  def unary_- : GoalWith[T] = for {
+    n <- !this
+    (c, r) <- n.succ
+  } yield r
+
+  def bits: Vector[VarOr[Boolean]]
+  override def toString: String = {
+    val bs = bits.map(_.toString)
+    if (bs.forall(x => x == "true" || x == "false")) {
+      val bs0: Vector[Int] = bs.map(x => if (x == "true") 1 else 0)
+      val result: Int = bs0.zipWithIndex.map(x => x._1 << x._2).sum
+      result.toString
+    } else {
+      super.toString
+    }
+  }
+}
+
+final case class Int4(bit0: VarOr[Boolean], bit1: VarOr[Boolean], bit2: VarOr[Boolean], bit3: VarOr[Boolean]) extends Product4[VarOr[Boolean], VarOr[Boolean], VarOr[Boolean], VarOr[Boolean]] with IntN[Int4] {
+  override def plus(that: Int4): GoalWith[(VarOr[Boolean], Int4)] = for {
     (c0, r0) <- add(bit0, that.bit0)
     (c1, r1) <- add(bit1, that.bit1, c0)
     (c2, r2) <- add(bit2, that.bit2, c1)
     (c3, r3) <- add(bit3, that.bit3, c2)
   } yield (c3, Int4(r0, r1, r2, r3))
 
-  def plus(that: Int4, carry: VarOr[Boolean]): GoalWith[(VarOr[Boolean], Int4)] = for {
+  override def plus(that: Int4, carry: VarOr[Boolean]): GoalWith[(VarOr[Boolean], Int4)] = for {
     (c0, r0) <- add(bit0, that.bit0, carry)
     (c1, r1) <- add(bit1, that.bit1, c0)
     (c2, r2) <- add(bit2, that.bit2, c1)
     (c3, r3) <- add(bit3, that.bit3, c2)
   } yield (c3, Int4(r0, r1, r2, r3))
 
-  def succ: GoalWith[(VarOr[Boolean], Int4)] = plus(Int4(true, false, false, false))
+  override def succ: GoalWith[(VarOr[Boolean], Int4)] = plus(Int4(true, false, false, false))
 
-  def unary_! : GoalWith[Int4] = for {
+  override def unary_! : GoalWith[Int4] = for {
     b0 <- !bit0
     b1 <- !bit1
     b2 <- !bit2
     b3 <- !bit3
   } yield Int4(b0, b1, b2, b3)
 
-  def unary_- : GoalWith[Int4] = for {
-    n <- !this
-    (c, r) <- n.succ
-  } yield r
-
-  def bits: Vector[VarOr[Boolean]] = Vector(bit0, bit1, bit2, bit3)
-  override def toString: String = {
-    val bs = bits.map(_.toString)
-    if(bs.forall(x=>x=="true"||x=="false")) {
-      val bs0: Vector[Int] = bs.map(x=>if(x=="true") 1 else 0)
-      val result: Int = bs0(0) + bs0(1)*2 + bs0(2)*4 + bs0(3)*8
-      result.toString
-    } else {
-      s"Int4(${bs.mkString(" , ")})"
-    }
-  }
+  override def bits: Vector[VarOr[Boolean]] = Vector(bit0, bit1, bit2, bit3)
 }
 
-implicit class VarOrInt4Ops(self: VarOr[Int4]) {
-  def get: GoalWith[Int4] = for {
-    x <- self.is[Boolean, Boolean, Boolean, Boolean](Int4(_, _, _, _))
-  } yield Int4(x._1, x._2, x._3, x._4)
-
-  def +(other: VarOr[Int4]): Rel[Int4] = for {
-    x <- self.get
-    y <- other.get
+abstract class VarOrIntNOps[T <: IntN[T]](self: VarOr[T]) {
+  protected def consThis(x: VarOr[T]): VarOrIntNOps[T]
+  def get: GoalWith[T]
+  def +(other: VarOr[T]): Rel[T] = for {
+    x <- this.get
+    y <- consThis(other).get
     (c, r) <- x.plus(y)
   } yield r
 
-  def unary_- : Rel[Int4] = for {
-    x <- self.get
+  def unary_- : Rel[T] = for {
+    x <- this.get
     r <- -x
   } yield r
 
-  def -(other: VarOr[Int4]): Rel[Int4] = for {
-    y <- -other
-    r <- self + y
+  def -(other: VarOr[T]): Rel[T] = for {
+    y <- -consThis(other)
+    r <- this + y
   } yield r
+}
+
+implicit class VarOrInt4Ops(self: VarOr[Int4]) extends VarOrIntNOps[Int4](self) {
+  override protected def consThis(x: VarOr[Int4]): VarOrInt4Ops = VarOrInt4Ops(x)
+  override def get: GoalWith[Int4] = for {
+    x <- self.is[Boolean, Boolean, Boolean, Boolean](Int4(_, _, _, _))
+  } yield Int4(x._1, x._2, x._3, x._4)
 }
 
 implicit val U$Int4: Unifier[Int4] = U$Product

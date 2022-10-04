@@ -216,6 +216,34 @@ final case class Int32(lo: Int16, hi: Int16) extends Product2[Int16, Int16] {
   } yield (c2, Int32(r, r2))
 }
 
+implicit class VarOrInt32Ops(self: VarOr[Int32]) {
+  def get: GoalWith[Int32] = for {
+    (b0, b1, b2, b3) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b4, b5, b6, b7) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b8, b9, b10, b11) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b12, b13, b14, b15) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b16, b17, b18, b19) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b20, b21, b22, b23) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b24, b25, b26, b27) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b28, b29, b30, b31) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    result = Int32(Int16(Int8(Int4(b0, b1, b2, b3), Int4(b4, b5, b6, b7)), Int8(Int4(b8, b9, b10, b11), Int4(b12, b13, b14, b15))), Int16(Int8(Int4(b16, b17, b18, b19), Int4(b20, b21, b22, b23)), Int8(Int4(b24, b25, b26, b27), Int4(b28, b29, b30, b31))))
+    _ <- self == result
+  } yield result
+  def +(other: VarOr[Int32]): Rel[Int32] = for {
+    x <- self.get
+    y <- other.get
+    (c, r) <- x.plus(x)
+  } yield r
+  def unary_- : Rel[Int32] = for {
+    x <- self.get
+    r <- -x
+  } yield r
+  def -(other: VarOr[Int32]): Rel[Int32] = for {
+    y <- -other
+    r <- self + y
+  } yield r
+}
+
 object Int32 {
   def from(n: Int): Int32 = {
     val lo = Int16.from((n & 0xffff).toShort)

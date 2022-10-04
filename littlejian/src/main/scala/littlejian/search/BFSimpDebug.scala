@@ -29,6 +29,7 @@ implicit object BFSimpDebug extends Searcher {
     def goal: Goal = if (goals.size == 1) goals.head else GoalConj(goals)
 
     def Exec: Vector[State | Request] = exec(state, goal)
+    def RunMust1: Vector[State | Request] = runInternal(state, goal).getOrElse(Vector.empty)
   }
 
   object Request {
@@ -67,7 +68,7 @@ implicit object BFSimpDebug extends Searcher {
       case GoalDisj(xs) => xs.map(Request(state, _))
       case GoalConj(xs) => if (xs.isEmpty) Vector(state) else {
         val tail = xs.tail
-        exec(state, xs.head).map(Request(_, tail))
+        Request(state, xs.head).RunMust1.map(Request(_, tail))
       }
       case GoalReadSubst(f) => exec(state, f(state.eq.subst))
       case goal: GoalDelay => Vector(Request(state, goal.get))

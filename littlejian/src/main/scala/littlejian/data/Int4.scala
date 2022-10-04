@@ -152,11 +152,40 @@ object Int32 {
 
 
 type BinaryNatVal = LList[Boolean]
+
 final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LList[Boolean]]] {
+  def succ: Rel[BinaryNatVal] = conde(
+    xs.eqEmpty >> LList(true),
+    for {
+      (xh, xt) <- xs.is[Boolean, LList[Boolean]](LCons(_, _))
+      (c, r) <- add(xh, true)
+      rest <- c.switch(BinaryNat(xt).succ, xt)
+    } yield LCons(r, rest)
+  )
+
   def plus(that: VarOr[BinaryNatVal]): Rel[BinaryNatVal] = conde(
     xs.eqEmpty >> that,
-    that.eqEmpty >> xs
-    // TODO
+    that.eqEmpty >> xs,
+    for {
+      (xh, xt) <- xs.is[Boolean, LList[Boolean]](LCons(_, _))
+      (yh, yt) <- that.is[Boolean, LList[Boolean]](LCons(_, _))
+      (c, r) <- add(xh, yh)
+      rest <- BinaryNat(xt).plus(yt, c)
+    } yield LCons(r, rest)
+  )
+
+  def plus(that: VarOr[BinaryNatVal], c: VarOr[Boolean]): Rel[BinaryNatVal] = c.switch(
+    conde(
+      xs.eqEmpty >> BinaryNat(that).succ,
+      that.eqEmpty >> this.succ,
+      for {
+        (xh, xt) <- xs.is[Boolean, LList[Boolean]](LCons(_, _))
+        (yh, yt) <- that.is[Boolean, LList[Boolean]](LCons(_, _))
+        (c, r) <- add(xh, yh, true)
+        rest <- BinaryNat(xt).plus(yt, c)
+      } yield LCons(r, rest)
+    ),
+    this.plus(that)
   )
 }
 

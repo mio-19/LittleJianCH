@@ -21,6 +21,11 @@ implicit class VarOrBooleanOps(x: VarOr[Boolean]) {
     begin(x === true, true),
     begin(x === false, y)
   )
+  
+  def switch[T](whenTrue: Rel[T], whenFalse: Rel[T])(implicit unifier: Unifier[T]): Rel[T] = conde(
+    begin(x === true, whenTrue),
+    begin(x === false, whenFalse)
+  )
 }
 
 implicit class StateResolve(self: State) {

@@ -3,7 +3,6 @@ package littlejian
 import scala.annotation.targetName
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
-import scala.collection.parallel.immutable.ParVector
 import littlejian.utils.*
 import scala.collection.immutable.HashSet
 
@@ -42,7 +41,7 @@ object Inspector {
   // Some(Seq(...)): uncertain
   def scanUncertain[T](x: WithInspector[T], resolver: Any => Any, v: Any): Option[Seq[WithInspector[_]]] = x.scanUncertain(resolver, v)
 
-  def scanUncertain(xs: ParVector[WithInspector[_]], resolver: Any => Any, v: Any): Option[ParVector[WithInspector[_]]] = traverse(xs.map(_.scanUncertain(resolver, v))).map(_.flatten)
+  def scanUncertain(xs: Vector[WithInspector[_]], resolver: Any => Any, v: Any): Option[Vector[WithInspector[_]]] = traverse(xs.map(_.scanUncertain(resolver, v))).map(_.flatten)
 }
 
 trait AtomInspector[T] extends Inspector[T] {

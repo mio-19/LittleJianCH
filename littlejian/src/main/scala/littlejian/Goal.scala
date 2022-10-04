@@ -1,7 +1,6 @@
 package littlejian
 
 import scala.annotation.targetName
-import scala.collection.parallel.immutable.ParVector
 
 sealed trait Goal
 
@@ -114,21 +113,21 @@ object GoalConj {
 sealed trait GoalControlImpure extends GoalControl
 
 // conda
-final case class GoalDisjA(xs: ParVector[(Goal, Goal)]) extends GoalControlImpure {
+final case class GoalDisjA(xs: Vector[(Goal, Goal)]) extends GoalControlImpure {
   override def toString: String = s"conda(${xs.map({ case (test, goal) => s"(${test}, ${goal})" }) mkString (", ")})"
 }
 
 object GoalDisjA {
-  def apply(xs: Seq[(Goal, Goal)]) = new GoalDisjA(ParVector(xs *))
+  def apply(xs: Seq[(Goal, Goal)]) = new GoalDisjA(Vector(xs *))
 }
 
 // condu
-final case class GoalDisjU(xs: ParVector[(Goal, Goal)]) extends GoalControlImpure {
+final case class GoalDisjU(xs: Vector[(Goal, Goal)]) extends GoalControlImpure {
   override def toString: String = s"condu(${xs.map({ case (test, goal) => s"(${test}, ${goal})" }) mkString (", ")})"
 }
 
 object GoalDisjU {
-  def apply(xs: Seq[(Goal, Goal)]) = new GoalDisjU(ParVector(xs *))
+  def apply(xs: Seq[(Goal, Goal)]) = new GoalDisjU(Vector(xs *))
 }
 
 object Goal {

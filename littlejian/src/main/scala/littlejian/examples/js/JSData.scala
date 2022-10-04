@@ -1,5 +1,6 @@
 package littlejian.examples.js
 
-import littlejian.data.Nat
+import littlejian.data._
 
-type JSData = Unit | Nat 
+type JSData0[JSData] = Unit | Nat | String | Boolean | LList[JSData]
+type JSData = Fix0[JSData0]

@@ -7,7 +7,10 @@ import collection.parallel.CollectionConverters.*
 import scala.annotation.tailrec
 
 implicit object BFSimpDebug extends Searcher {
-  override def run(state: State, goal: Goal): Stream[State] = ???
+  override def run(state: State, goal: Goal): Stream[State] =
+    prettyPrintContext.defaultWith(new PrettyPrintContext(Subst.empty)) {
+      exec(Vector(Request(state, goal)))
+    }
 
   def runInternal(state: State, goal: Goal): Option[Vector[State | Request] /*must have at least one state */ ] = {
     val next = exec(state, goal)
@@ -49,16 +52,17 @@ implicit object BFSimpDebug extends Searcher {
     def apply(base: State, goal: Goal) = new Request(base, Vector(goal))
   }
 
-  def exec(candidates: Vector[Request]): Stream[State] = {
-    prettyPrintContext.defaultWith(new PrettyPrintContext(Subst.empty)) {
-      println(s"\n\n---- Running ----:${candidates.map(_.toString).mkString("\n-- Or --\n")}\n\n")
-      val next = candidates.flatMap(_.Exec)
-      val (result0, rest0) = next.partition(_.isInstanceOf[State])
-      val result = result0.asInstanceOf[Vector[State]]
-      val rest = rest0.asInstanceOf[Vector[Request]]
-      if (result.isEmpty) exec(rest)
-      else Stream.from(result) #::: exec(rest)
-    }
+  private def execNoTail(candidates: Vector[Request]): Stream[State] = exec(candidates)
+
+  @tailrec def exec(candidates: Vector[Request]): Stream[State] = {
+    if(candidates.isEmpty) return Stream.empty
+    println(s"\n\n---- Running ----:${candidates.map(_.toString).mkString("\n-- Or --\n")}\n\n")
+    val next = candidates.flatMap(_.Exec)
+    val (result0, rest0) = next.partition(_.isInstanceOf[State])
+    val result = result0.asInstanceOf[Vector[State]]
+    val rest = rest0.asInstanceOf[Vector[Request]]
+    if (result.isEmpty) exec(rest)
+    else Stream.from(result) #::: execNoTail(rest)
   }
 
   def exec(state: State, goal: Goal): Vector[State | Request] =

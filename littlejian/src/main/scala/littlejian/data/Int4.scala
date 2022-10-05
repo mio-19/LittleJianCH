@@ -92,29 +92,29 @@ abstract class VarOrIntNOps[T <: IntN[T]](self: VarOr[T])(implicit unifier: Unif
 
   def get: GoalWith[T]
 
-  def +(other: VarOr[T]): Rel[T] = for {
+  final inline def +(other: VarOr[T]): Rel[T] = for {
     x <- this.get
     y <- consThis(other).get
     (c, r) <- x.plus(y)
   } yield r
 
-  def unary_! : Rel[T] = for {
+  final inline def unary_! : Rel[T] = for {
     x <- this.get
     r <- !x
   } yield r
 
-  def unary_- : Rel[T] = for {
+  final inline def unary_- : Rel[T] = for {
     x <- this.get
     r <- -x
   } yield r
 
   // Alternative implementation
-  def minus(other: VarOr[T]): Rel[T] = for {
+  final inline def minus(other: VarOr[T]): Rel[T] = for {
     y <- -consThis(other)
     r <- this + y
   } yield r
 
-  def -(other: VarOr[T]): Rel[T] = for {
+  final inline def -(other: VarOr[T]): Rel[T] = for {
     result <- fresh[T]
     _ <- consThis(other) + result === self
   } yield result
@@ -153,14 +153,14 @@ final case class Int8(lo: Int4, hi: Int4) extends Product2[Int4, Int4] with IntN
     (c2, r2) <- hi.plus(that.hi, c)
   } yield (c2, Int8(r, r2))
 
-  override def succ: GoalWith[(VarOr[Boolean], Int8)] = plus(Int8.one)
+  override inline def succ: GoalWith[(VarOr[Boolean], Int8)] = plus(Int8.one)
 
-  override def unary_! : GoalWith[Int8] = for {
+  override inline def unary_! : GoalWith[Int8] = for {
     l <- !lo
     h <- !hi
   } yield Int8(l, h)
 
-  override def bits: Vector[VarOr[Boolean]] = lo.bits ++ hi.bits
+  override inline def bits: Vector[VarOr[Boolean]] = lo.bits ++ hi.bits
 }
 
 object Int8 {
@@ -206,14 +206,14 @@ final case class Int16(lo: Int8, hi: Int8) extends Product2[Int8, Int8] with Int
     (c2, r2) <- hi.plus(that.hi, c)
   } yield (c2, Int16(r, r2))
 
-  override def succ: GoalWith[(VarOr[Boolean], Int16)] = plus(Int16.one)
+  override inline def succ: GoalWith[(VarOr[Boolean], Int16)] = plus(Int16.one)
 
-  override def unary_! : GoalWith[Int16] = for {
+  override inline def unary_! : GoalWith[Int16] = for {
     l <- !lo
     h <- !hi
   } yield Int16(l, h)
 
-  override def bits: Vector[VarOr[Boolean]] = lo.bits ++ hi.bits
+  override inline def bits: Vector[VarOr[Boolean]] = lo.bits ++ hi.bits
 }
 
 implicit class VarOrInt16Ops(self: VarOr[Int16]) extends VarOrIntNOps[Int16](self) {
@@ -254,14 +254,14 @@ final case class Int32(lo: Int16, hi: Int16) extends Product2[Int16, Int16] with
     (c2, r2) <- hi.plus(that.hi, c)
   } yield (c2, Int32(r, r2))
 
-  override def succ: GoalWith[(VarOr[Boolean], Int32)] = plus(Int32.one)
+  override inline def succ: GoalWith[(VarOr[Boolean], Int32)] = plus(Int32.one)
 
-  override def unary_! : GoalWith[Int32] = for {
+  override inline def unary_! : GoalWith[Int32] = for {
     l <- !lo
     h <- !hi
   } yield Int32(l, h)
 
-  override def bits: Vector[VarOr[Boolean]] = lo.bits ++ hi.bits
+  override inline def bits: Vector[VarOr[Boolean]] = lo.bits ++ hi.bits
 }
 
 implicit class VarOrInt32Ops(self: VarOr[Int32]) extends VarOrIntNOps[Int32](self) {

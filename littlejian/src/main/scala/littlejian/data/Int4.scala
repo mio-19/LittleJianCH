@@ -171,7 +171,7 @@ implicit class VarOrInt8Ops(self: VarOr[Int8]) extends VarOrIntNOps[Int8](self) 
     (b0, b1, b2, b3) <- fresh[Boolean, Boolean, Boolean, Boolean]
     (b4, b5, b6, b7) <- fresh[Boolean, Boolean, Boolean, Boolean]
     result = Int8(Int4(b0, b1, b2, b3), Int4(b4, b5, b6, b7))
-    _ <- self == result
+    _ <- self === result
   } yield result
 }
 
@@ -208,7 +208,7 @@ implicit class VarOrInt16Ops(self: VarOr[Int16]) extends VarOrIntNOps[Int16](sel
     (b8, b9, b10, b11) <- fresh[Boolean, Boolean, Boolean, Boolean]
     (b12, b13, b14, b15) <- fresh[Boolean, Boolean, Boolean, Boolean]
     result = Int16(Int8(Int4(b0, b1, b2, b3), Int4(b4, b5, b6, b7)), Int8(Int4(b8, b9, b10, b11), Int4(b12, b13, b14, b15)))
-    _ <- self == result
+    _ <- self === result
   } yield result
 }
 
@@ -260,7 +260,7 @@ implicit class VarOrInt32Ops(self: VarOr[Int32]) extends VarOrIntNOps[Int32](sel
     (b24, b25, b26, b27) <- fresh[Boolean, Boolean, Boolean, Boolean]
     (b28, b29, b30, b31) <- fresh[Boolean, Boolean, Boolean, Boolean]
     result = Int32(Int16(Int8(Int4(b0, b1, b2, b3), Int4(b4, b5, b6, b7)), Int8(Int4(b8, b9, b10, b11), Int4(b12, b13, b14, b15))), Int16(Int8(Int4(b16, b17, b18, b19), Int4(b20, b21, b22, b23)), Int8(Int4(b24, b25, b26, b27), Int4(b28, b29, b30, b31))))
-    _ <- self == result
+    _ <- self === result
   } yield result
 }
 

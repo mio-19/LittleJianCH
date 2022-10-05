@@ -27,7 +27,7 @@ implicit object BFSimpDebug extends Searcher {
   def run1Internal(state: State, goal: Goal): Option[State] = BFSimp.run(state, goal).headOption
 
   final case class Request(state: State, goals: Vector[Goal]) {
-    override def toString: String = {
+    override def toString: String = prettyPrintContext.callWithOrUpdate(new PrettyPrintContext(state.eq.subst), _.setSubst(state.eq.subst)) {
       val c = state.printConstraints
       if (c.nonEmpty) s"${goals.map(_.toString).mkString(" && ")} on ${state.printConstraints}"
       else goals.map(_.toString).mkString(" && ")

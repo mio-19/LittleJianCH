@@ -336,7 +336,7 @@ final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LLi
         case "false" => false
         case _ => throw new UnsupportedOperationException()
       })
-      val n = bits.foldLeft(0)((acc, b) => (acc << 1) | (if (b) 1 else 0))
+      val n = bits.zipWithIndex.map { case (b, i) => if (b) 1 << i else 0 }.sum
       n.toString
     } catch {
       case _: UnsupportedOperationException => s"BinaryNat($rawbits)"

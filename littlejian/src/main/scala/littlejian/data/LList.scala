@@ -38,15 +38,16 @@ object LList {
 }
 
 final case class LEmpty[T]() extends LList[T] {
+  override def toString: String = "LList()"
 }
 
 final case class LCons[T](head: VarOr[T], tail: VarOr[LList[T]]) extends LList[T] {
   override def toString: String = {
     val t = tail.toString
-    if (t.startsWith("LList("))
-      s"LList(${head}, ${t.drop(6)}"
-    else if (t == "LEmpty()")
+    if(t == "LList()")
       s"LList(${head})"
+    else if (t.startsWith("LList("))
+      s"LList(${head}, ${t.drop(6)}"
     else s"LCons(${head}, ${t})"
   }
 }

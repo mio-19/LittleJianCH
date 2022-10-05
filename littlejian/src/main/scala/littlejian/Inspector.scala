@@ -42,6 +42,23 @@ object Inspector {
   def scanUncertain[T](x: WithInspector[T], resolver: Any => Any, v: Any): Option[Seq[WithInspector[_]]] = x.scanUncertain(resolver, v)
 
   def scanUncertain(xs: Vector[WithInspector[_]], resolver: Any => Any, v: Any): Option[Vector[WithInspector[_]]] = traverse(xs.map(_.scanUncertain(resolver, v))).map(_.flatten)
+
+
+  import shapeless3.deriving.*
+
+  given inspectorSum[A] (using inst: K0.CoproductInstances[Inspector, A]): Inspector[A] with
+    def inspect(x: A): Seq[WithInspector[_]] = inst.fold(x)(
+      [t] => (i: Inspector[t], t0: t) => Seq(WithInspector(t0)(i))
+    )
+
+  given inspectorProduct[A] (using inst: K0.ProductInstances[Inspector, A]): Inspector[A] with
+    def inspect(x: A): Seq[WithInspector[_]] = inst.foldLeft(x)(Seq.empty: Seq[WithInspector[_]])(
+      [t] => (acc: Seq[WithInspector[_]], i: Inspector[t], t0: t) =>
+        WithInspector(t0)(i) +: acc
+    )
+
+  inline def derived[A](using gen: K0.Generic[A]): Inspector[A] =
+    gen.derive(inspectorProduct, inspectorSum)
 }
 
 trait AtomInspector[T] extends Inspector[T] {

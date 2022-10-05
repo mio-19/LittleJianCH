@@ -89,6 +89,7 @@ final case class Int4(bit0: VarOr[Boolean], bit1: VarOr[Boolean], bit2: VarOr[Bo
 
 abstract class VarOrIntNOps[T <: IntN[T]](self: VarOr[T], unifier: Unifier[T]) {
   private implicit val v: Unifier[T] = unifier
+
   protected def consThis(x: VarOr[T]): VarOrIntNOps[T]
 
   def get: GoalWith[T]
@@ -172,6 +173,7 @@ object Int8 {
     val hi = Int4.from((x >>> 4) & 15)
     Int8(lo, hi)
   }
+
   def from(x: Int): Int8 = {
     if (x < 0 || x > 255) throw new IllegalArgumentException("x must be in [0, 255]")
     val lo = Int4.from(x & 15)
@@ -324,6 +326,22 @@ final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LLi
     ),
     this.plus(that)
   )
+
+  override def toString: String = {
+    val rawbits = xs.toString
+    try {
+      if (!(rawbits.startsWith("LList(") && rawbits.endsWith(")"))) throw new UnsupportedOperationException()
+      val bits = rawbits.drop(6).dropRight(1).split(", ").toSeq.map({
+        case "true" => true
+        case "false" => false
+        case _ => throw new UnsupportedOperationException()
+      })
+      val n = bits.foldLeft(0)((acc, b) => (acc << 1) | (if (b) 1 else 0))
+      n.toString
+    } catch {
+      case _: UnsupportedOperationException => s"BinaryNat($rawbits)"
+    }
+  }
 }
 
 object BinaryNat {

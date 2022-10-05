@@ -37,9 +37,16 @@ object LList {
   def from[T](xs: Seq[VarOr[T]]): LList[T] = if (xs.isEmpty) LEmpty() else LCons(xs.head, LList.from(xs.tail))
 }
 
-final case class LEmpty[T]() extends LList[T]
+final case class LEmpty[T]() extends LList[T] {
+  override def toString: String = "LList()"
+}
 
-final case class LCons[T](head: VarOr[T], tail: VarOr[LList[T]]) extends LList[T]
+final case class LCons[T](head: VarOr[T], tail: VarOr[LList[T]]) extends LList[T] {
+  override def toString: String = {
+    val t = tail.toString
+    if(t.startsWith("LList(")) s"LList(${head}, ${t.drop(6)}" else s"LCons(${head}, ${t})"
+  }
+}
 
 implicit def U$LList[T](implicit unifier: Unifier[T]): Unifier[LList[T]] = {
   implicit object U extends Unifier[LList[T]] {

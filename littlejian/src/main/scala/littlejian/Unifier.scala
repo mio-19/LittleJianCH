@@ -116,39 +116,21 @@ def equalUnifier[T]: Unifier[T] = new EqualUnifier[T] {}
 
 implicit object U$Symbol extends EqualUnifier[Symbol]
 
-given unifierSymbol: Unifier[Symbol] = U$Symbol
-
 implicit object U$String extends EqualUnifier[String]
-
-given unifierString: Unifier[String] = U$String
 
 implicit object U$Unit extends EqualUnifier[Unit]
 
-given unifierUnit: Unifier[Unit] = U$Unit
-
 implicit object U$Int extends EqualUnifier[Int]
-
-given unifierInt: Unifier[Int] = U$Int
 
 implicit object U$Long extends EqualUnifier[Long]
 
-given unifierLong: Unifier[Long] = U$Long
-
 implicit object U$Float extends EqualUnifier[Float]
-
-given unifierFloat: Unifier[Float] = U$Float
 
 implicit object U$Double extends EqualUnifier[Double]
 
-given unifierDouble: Unifier[Double] = U$Double
-
 implicit object U$Integer extends EqualUnifier[Integer]
 
-given unifierInteger: Unifier[Integer] = U$Integer
-
 implicit object U$Boolean extends EqualUnifier[Boolean]
-
-given unifierBoolean: Unifier[Boolean] = U$Boolean
 
 def U$Product[T, R <: Product1[T]](implicit tr: => Unifier[T]): Unifier[R] = {
   lazy val t = tr

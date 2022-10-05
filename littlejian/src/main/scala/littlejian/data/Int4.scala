@@ -60,7 +60,7 @@ trait IntN[T <: IntN[T]] {
   }
 }
 
-final case class Int4(bit0: VarOr[Boolean], bit1: VarOr[Boolean], bit2: VarOr[Boolean], bit3: VarOr[Boolean]) extends Product4[VarOr[Boolean], VarOr[Boolean], VarOr[Boolean], VarOr[Boolean]] with IntN[Int4] {
+final case class Int4(bit0: VarOr[Boolean], bit1: VarOr[Boolean], bit2: VarOr[Boolean], bit3: VarOr[Boolean]) extends Product4[VarOr[Boolean], VarOr[Boolean], VarOr[Boolean], VarOr[Boolean]] with IntN[Int4] derives Unifier {
   override def plus(that: Int4): GoalWith[(VarOr[Boolean], Int4)] = for {
     (c0, r0) <- add(bit0, that.bit0)
     (c1, r1) <- add(bit1, that.bit1, c0)
@@ -87,7 +87,8 @@ final case class Int4(bit0: VarOr[Boolean], bit1: VarOr[Boolean], bit2: VarOr[Bo
   override def bits: Vector[VarOr[Boolean]] = Vector(bit0, bit1, bit2, bit3)
 }
 
-abstract class VarOrIntNOps[T <: IntN[T]](self: VarOr[T])(implicit unifier: Unifier[T]) {
+abstract class VarOrIntNOps[T <: IntN[T]](self: VarOr[T], unifier: Unifier[T]) {
+  private implicit val v: Unifier[T] = unifier
   protected def consThis(x: VarOr[T]): VarOrIntNOps[T]
 
   def get: GoalWith[T]
@@ -120,15 +121,13 @@ abstract class VarOrIntNOps[T <: IntN[T]](self: VarOr[T])(implicit unifier: Unif
   } yield result
 }
 
-implicit class VarOrInt4Ops(self: VarOr[Int4]) extends VarOrIntNOps[Int4](self) {
+implicit class VarOrInt4Ops(self: VarOr[Int4]) extends VarOrIntNOps[Int4](self, implicitly[Unifier[Int4]]) {
   override protected def consThis(x: VarOr[Int4]): VarOrInt4Ops = VarOrInt4Ops(x)
 
   override def get: GoalWith[Int4] = for {
     x <- self.is[Boolean, Boolean, Boolean, Boolean](Int4(_, _, _, _))
   } yield Int4(x._1, x._2, x._3, x._4)
 }
-
-implicit val U$Int4: Unifier[Int4] = U$Product
 
 object Int4 {
   def zero: Int4 = Int4(false, false, false, false)
@@ -142,7 +141,7 @@ object Int4 {
 }
 
 
-final case class Int8(lo: Int4, hi: Int4) extends Product2[Int4, Int4] with IntN[Int8] {
+final case class Int8(lo: Int4, hi: Int4) extends Product2[Int4, Int4] with IntN[Int8] derives Unifier {
   override def plus(that: Int8): GoalWith[(VarOr[Boolean], Int8)] = for {
     (c, r) <- lo.plus(that.lo)
     (c2, r2) <- hi.plus(that.hi, c)
@@ -181,7 +180,7 @@ object Int8 {
   }
 }
 
-implicit class VarOrInt8Ops(self: VarOr[Int8]) extends VarOrIntNOps[Int8](self) {
+implicit class VarOrInt8Ops(self: VarOr[Int8])(using u: Unifier[Int8]) extends VarOrIntNOps[Int8](self, u) {
   override protected def consThis(x: VarOr[Int8]): VarOrInt8Ops = VarOrInt8Ops(x)
 
   def get: GoalWith[Int8] = for {
@@ -192,10 +191,7 @@ implicit class VarOrInt8Ops(self: VarOr[Int8]) extends VarOrIntNOps[Int8](self) 
   } yield result
 }
 
-
-implicit val U$Int8: Unifier[Int8] = U$Product
-
-final case class Int16(lo: Int8, hi: Int8) extends Product2[Int8, Int8] with IntN[Int16] {
+final case class Int16(lo: Int8, hi: Int8) extends Product2[Int8, Int8] with IntN[Int16] derives Unifier {
   override def plus(that: Int16): GoalWith[(VarOr[Boolean], Int16)] = for {
     (c, r) <- lo.plus(that.lo)
     (c2, r2) <- hi.plus(that.hi, c)
@@ -216,7 +212,7 @@ final case class Int16(lo: Int8, hi: Int8) extends Product2[Int8, Int8] with Int
   override inline def bits: Vector[VarOr[Boolean]] = lo.bits ++ hi.bits
 }
 
-implicit class VarOrInt16Ops(self: VarOr[Int16]) extends VarOrIntNOps[Int16](self) {
+implicit class VarOrInt16Ops(self: VarOr[Int16])(using u: Unifier[Int16]) extends VarOrIntNOps[Int16](self, u) {
   override protected def consThis(x: VarOr[Int16]): VarOrIntNOps[Int16] = VarOrInt16Ops(x)
 
   override def get: GoalWith[Int16] = for {
@@ -228,8 +224,6 @@ implicit class VarOrInt16Ops(self: VarOr[Int16]) extends VarOrIntNOps[Int16](sel
     _ <- self === result
   } yield result
 }
-
-implicit val U$Int16: Unifier[Int16] = U$Product
 
 object Int16 {
   def zero = from(0)
@@ -243,7 +237,7 @@ object Int16 {
   }
 }
 
-final case class Int32(lo: Int16, hi: Int16) extends Product2[Int16, Int16] with IntN[Int32] {
+final case class Int32(lo: Int16, hi: Int16) extends Product2[Int16, Int16] with IntN[Int32] derives Unifier {
   override def plus(that: Int32): GoalWith[(VarOr[Boolean], Int32)] = for {
     (c, r) <- lo.plus(that.lo)
     (c2, r2) <- hi.plus(that.hi, c)
@@ -264,7 +258,7 @@ final case class Int32(lo: Int16, hi: Int16) extends Product2[Int16, Int16] with
   override inline def bits: Vector[VarOr[Boolean]] = lo.bits ++ hi.bits
 }
 
-implicit class VarOrInt32Ops(self: VarOr[Int32]) extends VarOrIntNOps[Int32](self) {
+implicit class VarOrInt32Ops(self: VarOr[Int32])(using u: Unifier[Int32]) extends VarOrIntNOps[Int32](self, u) {
   override protected def consThis(x: VarOr[Int32]): VarOrIntNOps[Int32] = VarOrInt32Ops(x)
 
   override def get: GoalWith[Int32] = for {
@@ -296,7 +290,7 @@ object Int32 {
 
 type BinaryNatVal = LList[Boolean]
 
-final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LList[Boolean]]] {
+final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LList[Boolean]]] derives Unifier {
   def succ: Rel[BinaryNatVal] = conde(
     xs.eqEmpty >> LList(true),
     for {
@@ -347,7 +341,7 @@ object BinaryNat {
     }
 }
 
-implicit class VarOrBinaryNatOps(self: VarOr[BinaryNat]) {
+implicit class VarOrBinaryNatOps(self: VarOr[BinaryNat])(using u: Unifier[BinaryNat]) {
   def succ: Rel[BinaryNat] = for {
     xs <- self.is[BinaryNatVal](BinaryNat(_))
     result <- BinaryNat(xs).succ
@@ -365,14 +359,10 @@ implicit class VarOrBinaryNatOps(self: VarOr[BinaryNat]) {
   } yield result
 }
 
-implicit val U$BinaryNat: Unifier[BinaryNat] = U$Product(U$VarOr(U$LList(U$Boolean)))
-
-final case class BinaryInt(sign: VarOr[Boolean], x: BinaryNat) extends Product2[VarOr[Boolean], BinaryNat]
+final case class BinaryInt(sign: VarOr[Boolean], x: BinaryNat) extends Product2[VarOr[Boolean], BinaryNat] derives Unifier
 
 object BinaryInt {
   def from(n: BinaryNat): BinaryInt = BinaryInt(true, n)
 
   def from(n: Int): BinaryInt = if (n >= 0) from(BinaryNat.from(n)) else BinaryInt(false, BinaryNat.from((-n) - 1))
 }
-
-implicit val U$BinaryInt: Unifier[BinaryInt] = U$Product

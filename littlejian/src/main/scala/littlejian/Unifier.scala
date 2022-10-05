@@ -52,6 +52,7 @@ implicit class InfixUnify[T](self: VarOr[T])(implicit unifier: Unifier[T]) {
 }
 
 implicit def U$VarOr[T](implicit unifier: Unifier[T]): Unifier[VarOr[T]] = (x, y) => unifier.unify(x, y)
+given unifierVarOr[T](using unifier: Unifier[T]): Unifier[VarOr[T]] = U$VarOr[T]
 
 
 import scala.reflect.ClassTag
@@ -115,29 +116,47 @@ def equalUnifier[T]: Unifier[T] = new EqualUnifier[T] {}
 
 implicit object U$Symbol extends EqualUnifier[Symbol]
 
+given unifierSymbol: Unifier[Symbol] = U$Symbol
+
 implicit object U$String extends EqualUnifier[String]
+
+given unifierString: Unifier[String] = U$String
 
 implicit object U$Unit extends EqualUnifier[Unit]
 
+given unifierUnit: Unifier[Unit] = U$Unit
+
 implicit object U$Int extends EqualUnifier[Int]
+
+given unifierInt: Unifier[Int] = U$Int
 
 implicit object U$Long extends EqualUnifier[Long]
 
+given unifierLong: Unifier[Long] = U$Long
+
 implicit object U$Float extends EqualUnifier[Float]
+
+given unifierFloat: Unifier[Float] = U$Float
 
 implicit object U$Double extends EqualUnifier[Double]
 
+given unifierDouble: Unifier[Double] = U$Double
+
 implicit object U$Integer extends EqualUnifier[Integer]
+
+given unifierInteger: Unifier[Integer] = U$Integer
 
 implicit object U$Boolean extends EqualUnifier[Boolean]
 
-implicit def U$Product[T, R <: Product1[T]](implicit tr: => Unifier[T]): Unifier[R] = {
+given unifierBoolean: Unifier[Boolean] = U$Boolean
+
+def U$Product[T, R <: Product1[T]](implicit tr: => Unifier[T]): Unifier[R] = {
   lazy val t = tr
   (x, y) =>
     if (x.getClass != y.getClass) Unifying.failure else t.unify(x._1, y._1)
 }
 
-implicit def U$Product[A, B, R <: Product2[A, B]](implicit ar: => Unifier[A], br: => Unifier[B]): Unifier[R] = {
+def U$Product[A, B, R <: Product2[A, B]](implicit ar: => Unifier[A], br: => Unifier[B]): Unifier[R] = {
   lazy val a = ar
   lazy val b = br
   (x, y) =>
@@ -147,7 +166,7 @@ implicit def U$Product[A, B, R <: Product2[A, B]](implicit ar: => Unifier[A], br
     } yield ()
 }
 
-implicit def U$Product[A, B, C, R <: Product3[A, B, C]](implicit ar: Unifier[A], br: Unifier[B], cr: Unifier[C]): Unifier[R] = {
+def U$Product[A, B, C, R <: Product3[A, B, C]](implicit ar: Unifier[A], br: Unifier[B], cr: Unifier[C]): Unifier[R] = {
   lazy val a = ar
   lazy val b = br
   lazy val c = cr
@@ -158,7 +177,7 @@ implicit def U$Product[A, B, C, R <: Product3[A, B, C]](implicit ar: Unifier[A],
       _ <- c.unify(x._3, y._3)
     } yield ()
 }
-implicit def U$Product[A, B, C, D, R <: Product4[A, B, C, D]](implicit ar: Unifier[A], br: Unifier[B], cr: Unifier[C], dr: Unifier[D]): Unifier[R] = {
+def U$Product[A, B, C, D, R <: Product4[A, B, C, D]](implicit ar: Unifier[A], br: Unifier[B], cr: Unifier[C], dr: Unifier[D]): Unifier[R] = {
   lazy val a = ar
   lazy val b = br
   lazy val c = cr
@@ -171,7 +190,7 @@ implicit def U$Product[A, B, C, D, R <: Product4[A, B, C, D]](implicit ar: Unifi
       _ <- d.unify(x._4, y._4)
     } yield ()
 }
-implicit def U$Product[A, B, C, D, E, R <: Product5[A, B, C, D, E]](implicit ar: Unifier[A], br: Unifier[B], cr: Unifier[C], dr: Unifier[D], er: Unifier[E]): Unifier[R] = {
+def U$Product[A, B, C, D, E, R <: Product5[A, B, C, D, E]](implicit ar: Unifier[A], br: Unifier[B], cr: Unifier[C], dr: Unifier[D], er: Unifier[E]): Unifier[R] = {
   lazy val a = ar
   lazy val b = br
   lazy val c = cr

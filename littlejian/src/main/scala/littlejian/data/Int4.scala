@@ -98,6 +98,11 @@ abstract class VarOrIntNOps[T <: IntN[T]](self: VarOr[T])(implicit unifier: Unif
     (c, r) <- x.plus(y)
   } yield r
 
+  def unary_! : Rel[T] = for {
+    x <- this.get
+    r <- !x
+  } yield r
+
   def unary_- : Rel[T] = for {
     x <- this.get
     r <- -x
@@ -165,7 +170,13 @@ object Int8 {
 
   def from(x: Byte): Int8 = {
     val lo = Int4.from(x & 15)
-    val hi = Int4.from((x >> 4) & 15)
+    val hi = Int4.from((x >>> 4) & 15)
+    Int8(lo, hi)
+  }
+  def from(x: Int): Int8 = {
+    if (x < 0 || x > 255) throw new IllegalArgumentException("x must be in [0, 255]")
+    val lo = Int4.from(x & 15)
+    val hi = Int4.from((x >>> 4) & 15)
     Int8(lo, hi)
   }
 }

@@ -87,7 +87,7 @@ final case class Int4(bit0: VarOr[Boolean], bit1: VarOr[Boolean], bit2: VarOr[Bo
   override def bits: Vector[VarOr[Boolean]] = Vector(bit0, bit1, bit2, bit3)
 }
 
-abstract class VarOrIntNOps[T <: IntN[T]](self: VarOr[T]) {
+abstract class VarOrIntNOps[T <: IntN[T]](self: VarOr[T])(implicit unifier: Unifier[T]) {
   protected def consThis(x: VarOr[T]): VarOrIntNOps[T]
 
   def get: GoalWith[T]
@@ -104,9 +104,9 @@ abstract class VarOrIntNOps[T <: IntN[T]](self: VarOr[T]) {
   } yield r
 
   def -(other: VarOr[T]): Rel[T] = for {
-    y <- -consThis(other)
-    r <- this + y
-  } yield r
+    result <- fresh[T]
+    _ <- consThis(other) + result === self
+  } yield result
 }
 
 implicit class VarOrInt4Ops(self: VarOr[Int4]) extends VarOrIntNOps[Int4](self) {

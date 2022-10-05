@@ -1,6 +1,6 @@
 package littlejian.test
 
-import littlejian.search.BFSimpDebug
+import littlejian.search.BFSimpPar
 import littlejian.*
 import littlejian.data.*
 import littlejian.data.sexp.*

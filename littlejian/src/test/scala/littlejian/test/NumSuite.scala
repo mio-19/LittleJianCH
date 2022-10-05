@@ -10,6 +10,12 @@ import littlejian.unifier.*
 
 class NumSuite extends munit.FunSuite {
   test("numbers") {
+    assertEquals(Set.from(run[Int8] { x =>
+      for {
+        v <- Int8.from(30).get
+        _ <- x === v
+      } yield ()
+    }), Set("30"))
     assertEquals(Set.from(run[Int8] { x => Int8.from(30) + Int8.from(4) === x }), Set("34"))
   }
 }

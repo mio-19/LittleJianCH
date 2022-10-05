@@ -4,7 +4,7 @@ import littlejian.*
 import scala.collection.immutable.HashSet
 
 final case class Walker(f: Any => Any) {
-  @inline def apply[T](x: VarOr[T]): VarOr[T] = f(x).asInstanceOf[VarOr[T]]
+  inline def apply[T](x: VarOr[T]): VarOr[T] = f(x).asInstanceOf[VarOr[T]]
 }
 
 val UseMaybe = "use-maybe"

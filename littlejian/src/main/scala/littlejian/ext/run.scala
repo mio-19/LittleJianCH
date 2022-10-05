@@ -2,10 +2,10 @@ package littlejian.ext
 
 import littlejian._
 
-@inline def run(goal: Goal)(implicit searcher: Searcher): Seq[State] = searcher.run(State.empty, goal)
+inline def run(goal: Goal)(implicit searcher: Searcher): Seq[State] = searcher.run(State.empty, goal)
 
 implicit class StateOps(self: State)(implicit searcher: Searcher) {
-  @inline def execute(goal: Goal): Seq[State] = searcher.run(self, goal)
+  inline def execute(goal: Goal): Seq[State] = searcher.run(self, goal)
 }
 
 def printState(root: Var[_], state: State): String = prettyPrintContext.callWith(new PrettyPrintContext(state.eq.subst)) {

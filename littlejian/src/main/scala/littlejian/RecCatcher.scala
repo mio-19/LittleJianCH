@@ -4,7 +4,7 @@ package littlejian
 final class ToStringRecCatcherCounter {
   var count: Int = 0
 
-  @inline def get: Int = {
+  inline def get: Int = {
     count = count + 1
     count
   }
@@ -14,7 +14,7 @@ final case class ToStringRecCatcherState(counter: ToStringRecCatcherCounter, his
 }
 
 object ToStringRecCatcherState {
-  @inline def empty: ToStringRecCatcherState = ToStringRecCatcherState(new ToStringRecCatcherCounter, scala.collection.immutable.HashSet.empty, new scala.collection.mutable.HashMap())
+  inline def empty: ToStringRecCatcherState = ToStringRecCatcherState(new ToStringRecCatcherCounter, scala.collection.immutable.HashSet.empty, new scala.collection.mutable.HashMap())
 }
 
 object ToStringRecCatcher {

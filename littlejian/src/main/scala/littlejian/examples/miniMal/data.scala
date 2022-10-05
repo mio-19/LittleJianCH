@@ -19,13 +19,17 @@ implicit def toLListData(x: LList[Data]): LListData = x match {
 }
 given U$LListData: Unifier[LListData] = U$LList(U$Data).asInstanceOf[Unifier[LListData]]
 
-type Data = String | Int32 | Boolean | LListData
+type Data = (String | Int32 | Boolean | LListData) | Closure
 
-given U$Data: Unifier[Data] = U$Union[String, Int32, Boolean, LListData]
+final case class Closure(envId: VarOr[EnvVar], params: VarOr[LList[String]], vararg: VarOr[Option[String]], ast: VarOr[Data]) derives Unifier
+
+given U$Data: Unifier[Data] = U$Union(U$Union[String, Int32, Boolean, LListData], implicitly[Unifier[Closure]])
 
 
-final case class EnvVar(id: VarOr[BinaryNat]) derives Unifier
+type EnvVar = BinaryNat
 
 final case class EnvEntry(env: VarOr[EnvVar], id: VarOr[String], value: VarOr[Data]) derives Unifier
 
 final case class WholeEnv(env: VarOr[LList[EnvEntry]]) derives Unifier
+
+def evalo(ast: VarOr[Data], envIn: VarOr[WholeEnv], counterIn: VarOr[EnvVar], counterOut: VarOr[EnvVar], envOut: VarOr[WholeEnv]): Goal = ???

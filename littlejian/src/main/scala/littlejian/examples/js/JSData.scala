@@ -5,6 +5,8 @@ import littlejian.data.*
 
 import scala.language.implicitConversions
 
+val empty: JSData = LList()
+
 type JSData0[JSData] = LList[JSData] | String | Boolean | Int32 | Str
 type JSData = JSData0[JSData0[Any]]
 implicit def jsData0ToJSData[T](x: JSData0[T]): JSData = x.asInstanceOf[JSData]

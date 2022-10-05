@@ -164,9 +164,9 @@ final case class Int8(lo: Int4, hi: Int4) extends Product2[Int4, Int4] with IntN
 }
 
 object Int8 {
-  def zero: Int8 = Int8(Int4.zero, Int4.zero)
+  def zero: Int8 = from(0)
 
-  def one: Int8 = Int8(Int4.one, Int4.one)
+  def one: Int8 = from(1)
 
   def from(x: Byte): Int8 = {
     val lo = Int4.from(x & 15)

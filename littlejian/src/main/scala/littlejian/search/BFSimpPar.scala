@@ -10,7 +10,7 @@ implicit object BFSimpPar extends Searcher {
   val typicalConjUnit = 10
   val typicalDisjUnit = 10
   val goalReduceLevel: Int = 5
-  val initDisjReduceLevel: Int = Runtime.getRuntime.availableProcessors()
+  val initDisjReduceLevel: Int = 10
 
   def collectGoalConj(x: GoalConj): Vector[Goal] = {
     if (x.xs.length > typicalConjUnit) return x.xs

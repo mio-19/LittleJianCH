@@ -55,7 +55,7 @@ trait IntN[T <: IntN[T]] {
       val result: Int = bs0.zipWithIndex.map(x => x._1 << x._2).sum
       result.toString
     } else {
-      super.toString
+      s"${this.getClass.getSimpleName}(${bs.mkString(" , ")})"
     }
   }
 }

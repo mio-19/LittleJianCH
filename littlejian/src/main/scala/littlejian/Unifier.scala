@@ -1,6 +1,6 @@
 package littlejian
 
-import littlejian.utils._
+import littlejian.utils.*
 
 import scala.annotation.{tailrec, targetName}
 import scala.language.implicitConversions
@@ -26,6 +26,8 @@ implicit class UnifyingOps[T](self: Unifying[T]) {
   inline def map[U](f: T => U): Unifying[U] = self.map(f)
 
   inline def flatMap[U](f: T => Unifying[U]): Unifying[U] = self.flatMap(f)
+
+  inline def >>[U](that: Unifying[U]): Unifying[U] = self >> that
 }
 
 trait Unifier[T] {
@@ -183,4 +185,22 @@ implicit def U$Product[A, B, C, D, E, R <: Product5[A, B, C, D, E]](implicit ar:
       _ <- d.unify(x._4, y._4)
       _ <- e.unify(x._5, y._5)
     } yield ()
+}
+
+object Unifier {
+  import shapeless3.deriving.*
+  given unifierSum[A] (using inst: K0.CoproductInstances[Unifier, A]): Unifier[A] with
+    def concreteUnify(x: A, y: A): Unifying[Unit] = inst.fold2(x, y)(Unifying.failure: Unifying[Unit])(
+      [t] => (u: Unifier[t], t0: t, t1: t) => u.unify(t0, t1)
+    )
+
+  given unifierProduct[A] (using inst: K0.ProductInstances[Unifier, A]): Unifier[A] with
+    def concreteUnify(x: A, y: A): Unifying[Unit] = inst.foldLeft2(x, y)(Unifying.success(()))(
+      [t] => (acc: Unifying[Unit], u: Unifier[t], t0: t, t1: t) =>
+        acc >> u.unify(t0, t1)
+    )
+
+  inline def derived[A](using gen: K0.ProductGeneric[A]): Unifier[A] = unifierProduct
+
+  inline def derived[A](using gen: K0.CoproductGeneric[A]): Unifier[A] = unifierSum
 }

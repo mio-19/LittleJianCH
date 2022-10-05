@@ -6,8 +6,12 @@ import littlejian.unifier._
 import scala.language.implicitConversions
 
 trait LList[T] {
-  def ::(elem: VarOr[T]): LList[T] = LCons(elem, this)
+}
 
+implicit class LListOps[T](self: VarOr[LList[T]]) {
+  inline def ::(elem: VarOr[T]): LList[T] = LCons(elem, self)
+
+  inline def +:(elem: VarOr[T]): LList[T] = LCons(elem, self)
 }
 
 implicit class VarOrLListOps[T](self: VarOr[LList[T]])(implicit U$T: Unifier[T]) {

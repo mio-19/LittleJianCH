@@ -1,6 +1,7 @@
 package littlejian.examples.miniMal
 
 import littlejian.*
+import littlejian.ext._
 import littlejian.data.*
 
 import scala.language.implicitConversions
@@ -28,8 +29,13 @@ given U$Data: Unifier[Data] = U$Union(U$Union[String, Int32, Boolean, LListData]
 
 type EnvVar = BinaryNat
 
-final case class EnvEntry(env: VarOr[EnvVar], id: VarOr[String], value: VarOr[Data]) derives Unifier
+final case class EnvEntry(envId: VarOr[EnvVar], id: VarOr[String], value: VarOr[Data]) derives Unifier
 
-final case class WholeEnv(env: VarOr[LList[EnvEntry]]) derives Unifier
+type WholeEnv = LList[EnvEntry]
 
-def evalo(ast: VarOr[Data], envIn: VarOr[WholeEnv], counterIn: VarOr[EnvVar], counterOut: VarOr[EnvVar], envOut: VarOr[WholeEnv]): Goal = ???
+def setEnv(envId: VarOr[EnvVar], id: VarOr[String], value: VarOr[Data], envIn: VarOr[WholeEnv]): WholeEnv = EnvEntry(envId, id, value) +: envIn
+def setEnv(envId: VarOr[EnvVar], id: VarOr[String], value: VarOr[Data], envIn: VarOr[WholeEnv], envOut: VarOr[WholeEnv]): Goal = envOut === setEnv(envId, id, value, envIn)
+
+def evalo(ast: VarOr[Data], envIn: VarOr[WholeEnv], counterIn: VarOr[EnvVar], counterOut: VarOr[EnvVar], envOut: VarOr[WholeEnv]): Goal = conde(
+  ???
+)

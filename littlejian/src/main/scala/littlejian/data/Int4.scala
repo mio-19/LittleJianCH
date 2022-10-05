@@ -60,7 +60,7 @@ trait IntN[T <: IntN[T]] {
   }
 }
 
-final case class Int4(bit0: VarOr[Boolean], bit1: VarOr[Boolean], bit2: VarOr[Boolean], bit3: VarOr[Boolean]) extends Product4[VarOr[Boolean], VarOr[Boolean], VarOr[Boolean], VarOr[Boolean]] with IntN[Int4] derives Unifier {
+final case class Int4(bit0: VarOr[Boolean], bit1: VarOr[Boolean], bit2: VarOr[Boolean], bit3: VarOr[Boolean]) extends IntN[Int4] derives Unifier {
   override def plus(that: Int4): GoalWith[(VarOr[Boolean], Int4)] = for {
     (c0, r0) <- add(bit0, that.bit0)
     (c1, r1) <- add(bit1, that.bit1, c0)
@@ -141,7 +141,7 @@ object Int4 {
 }
 
 
-final case class Int8(lo: Int4, hi: Int4) extends Product2[Int4, Int4] with IntN[Int8] derives Unifier {
+final case class Int8(lo: Int4, hi: Int4) extends IntN[Int8] derives Unifier {
   override def plus(that: Int8): GoalWith[(VarOr[Boolean], Int8)] = for {
     (c, r) <- lo.plus(that.lo)
     (c2, r2) <- hi.plus(that.hi, c)
@@ -191,7 +191,7 @@ implicit class VarOrInt8Ops(self: VarOr[Int8])(using u: Unifier[Int8]) extends V
   } yield result
 }
 
-final case class Int16(lo: Int8, hi: Int8) extends Product2[Int8, Int8] with IntN[Int16] derives Unifier {
+final case class Int16(lo: Int8, hi: Int8) extends IntN[Int16] derives Unifier {
   override def plus(that: Int16): GoalWith[(VarOr[Boolean], Int16)] = for {
     (c, r) <- lo.plus(that.lo)
     (c2, r2) <- hi.plus(that.hi, c)
@@ -237,7 +237,7 @@ object Int16 {
   }
 }
 
-final case class Int32(lo: Int16, hi: Int16) extends Product2[Int16, Int16] with IntN[Int32] derives Unifier {
+final case class Int32(lo: Int16, hi: Int16) extends IntN[Int32] derives Unifier {
   override def plus(that: Int32): GoalWith[(VarOr[Boolean], Int32)] = for {
     (c, r) <- lo.plus(that.lo)
     (c2, r2) <- hi.plus(that.hi, c)

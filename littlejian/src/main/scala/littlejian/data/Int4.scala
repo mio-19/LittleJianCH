@@ -238,7 +238,7 @@ object Int16 {
 
   def from(x: Short): Int16 = {
     val lo = Int8.from((x & 0xff).toByte)
-    val hi = Int8.from(((x >> 8) & 0xff).toByte)
+    val hi = Int8.from(((x >>> 8) & 0xff).toByte)
     Int16(lo, hi)
   }
 }
@@ -288,7 +288,7 @@ object Int32 {
 
   def from(n: Int): Int32 = {
     val lo = Int16.from((n & 0xffff).toShort)
-    val hi = Int16.from(((n >> 16) & 0xffff).toShort)
+    val hi = Int16.from(((n >>> 16) & 0xffff).toShort)
     Int32(lo, hi)
   }
 }

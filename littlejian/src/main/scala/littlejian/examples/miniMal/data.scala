@@ -1,7 +1,9 @@
 package littlejian.examples.miniMal
 
-import littlejian._
-import littlejian.data._
+import littlejian.*
+import littlejian.data.*
+
+import scala.language.implicitConversions
 
 sealed trait LListData extends LList[Data]
 
@@ -9,8 +11,14 @@ final class EmptyList extends LEmpty[Data] with LListData
 
 final class NonEmptyList(head: VarOr[Data], tail: VarOr[LListData]) extends LCons[Data](head, tail) with LListData
 
-type Data = String | Int32 | Boolean | LListData
+implicit def varConv1(x: VarOr[LListData]): VarOr[LList[Data]] = x.asInstanceOf[VarOr[LList[Data]]]
+implicit def varConv2(x: VarOr[LList[Data]]): VarOr[LListData] = x.asInstanceOf[VarOr[LListData]]
+implicit def toLListData(x: LList[Data]): LListData = x match {
+  case LEmpty() => new EmptyList
+  case LCons(head, tail) => new NonEmptyList(head, tail)
+}
 
+type Data = String | Int32 | Boolean | LListData
 
 
 final case class EnvVar(id: VarOr[BinaryNat]) derives Unifier

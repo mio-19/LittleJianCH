@@ -1,7 +1,7 @@
 package littlejian
 
 // using reference equality
-final class Var[-T] private[littlejian] {
+final class Var[T] private[littlejian] {
   override def toString: String =
     ToStringRecCatcher.record(this, (id, x) => s"#$id=$x", id => s"#$id") {
       prettyPrintContext.get match {

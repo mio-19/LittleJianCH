@@ -5,7 +5,7 @@ import littlejian.ext._
 import littlejian.unifier._
 import scala.language.implicitConversions
 
-sealed trait LList[T] {
+trait LList[T] {
   def ::(elem: VarOr[T]): LList[T] = LCons(elem, this)
 
 }
@@ -37,14 +37,14 @@ object LList {
   def from[T](xs: Seq[VarOr[T]]): LList[T] = if (xs.isEmpty) LEmpty() else LCons(xs.head, LList.from(xs.tail))
 }
 
-final case class LEmpty[T]() extends LList[T] {
+case class LEmpty[T]() extends LList[T] {
   override def toString: String = "LList()"
 }
 
-final case class LCons[T](head: VarOr[T], tail: VarOr[LList[T]]) extends LList[T] {
+case class LCons[T](head: VarOr[T], tail: VarOr[LList[T]]) extends LList[T] {
   override def toString: String = {
     val t = tail.toString
-    if(t == "LList()")
+    if (t == "LList()")
       s"LList(${head})"
     else if (t.startsWith("LList("))
       s"LList(${head}, ${t.drop(6)}"
@@ -64,4 +64,15 @@ implicit def U$LList[T](implicit unifier: Unifier[T]): Unifier[LList[T]] = {
     }
   }
   U
+}
+
+trait LListOf[A] {
+  sealed trait LListT extends LList[A]
+  val empty: LListT = new EmptyList
+
+  def cons(head: VarOr[A], tail: VarOr[LList[A]]): LListT = new NonemptyList(head, tail)
+
+  final class EmptyList extends LEmpty[A] with LListT
+
+  final class NonemptyList(head: VarOr[A], tail: VarOr[LList[A]]) extends LCons[A](head, tail) with LListT
 }

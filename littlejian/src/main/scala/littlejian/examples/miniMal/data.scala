@@ -17,10 +17,13 @@ implicit def toLListData(x: LList[Data]): LListData = x match {
   case LEmpty() => new EmptyList
   case LCons(head, tail) => new NonEmptyList(head, tail)
 }
+given U$LListData: Unifier[LListData] = U$LList(U$Data).asInstanceOf[Unifier[LListData]]
 
 type Data = String | Int32 | Boolean | LListData
+
+given U$Data: Unifier[Data] = U$Union[String, Int32, Boolean, LListData]
 
 
 final case class EnvVar(id: VarOr[BinaryNat]) derives Unifier
 
-final case class EnvSet(env: VarOr[EnvVar], id: VarOr[String], value: VarOr[Data])
+final case class EnvSet(env: VarOr[EnvVar], id: VarOr[String], value: VarOr[Data]) derives Unifier

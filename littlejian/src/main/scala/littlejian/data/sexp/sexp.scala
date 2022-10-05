@@ -56,7 +56,7 @@ final class Cons(a: VarOr[SExp], d: VarOr[SExp]) extends Pair[SExp, SExp](a, d) 
 }
 implicit val U$Cons: Unifier[Cons] = implicitly[Unifier[Pair[SExp, SExp]]].asInstanceOf[Unifier[Cons]]
 
-implicit val I$Cons: Inspector[Cons] = I$Pair[SExp, SExp].asInstanceOf[Inspector[Cons]]
+implicit val I$Cons: Inspector[Cons] = implicitly[Inspector[Pair[SExp, SExp]]].asInstanceOf[Inspector[Cons]]
 
 def cons(a: VarOr[SExp], d: VarOr[SExp]): SExp = Cons(a, d)
 def car(x: VarOr[SExp]): VarOr[SExp] = x match {

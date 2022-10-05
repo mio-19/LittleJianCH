@@ -11,9 +11,17 @@ import littlejian.unifier.*
 class NumSuite extends munit.FunSuite {
   test("numbers") {
     assertEquals(Set.from(run[Int8] { x => Int8.from(30) + Int8.from(4) === x }), Set("34"))
+    assertEquals(Set.from(run[Int4] { x => Int4.from(9).minus(Int4.from(1)) === x }), Set("8"))
+    assertEquals(Set.from(run[Int4] { x => Int4.from(9).-(Int4.from(1)) === x }), Set("8"))
     assertEquals(Set.from(run[Int16] { x => Int16.from(30) + Int16.from(4) === x }), Set("34"))
     assertEquals(Set.from(run[Int32] { x => Int32.from(30) + Int32.from(4) === x }), Set("34"))
     assertEquals(Set.from(run[Int16] { x => Int16.from(30) + x === Int16.from(33) }), Set("3"))
+    assertEquals(Set.from(run[Int8] { x => Int8.from(9) - Int8.from(1) === x }), Set("8"))
+    assertEquals(Set.from(run[Int4] {
+      -(Int4.from(1): VarOr[Int4])
+    }), Set("15"))
+    assertEquals(Set.from(run[Int8] { - (Int8.from(1): VarOr[Int8]) }), Set("255"))
+    assertEquals(Set.from(run[Int8] { x => Int8.from(9).minus(Int8.from(1)) === x }), Set("8"))
     assertEquals(Set.from(run[Int8] { x => x + x === x }), Set("0"))
     assertEquals(Set.from(run[Int8] { x => x - x === x }), Set("0"))
     assertEquals(Set.from(run[Int16] { x => x + x === x + Int16.from(1) }), Set("1"))

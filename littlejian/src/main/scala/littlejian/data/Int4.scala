@@ -103,6 +103,12 @@ abstract class VarOrIntNOps[T <: IntN[T]](self: VarOr[T])(implicit unifier: Unif
     r <- -x
   } yield r
 
+  // Alternative implementation
+  def minus(other: VarOr[T]): Rel[T] = for {
+    y <- -consThis(other)
+    r <- this + y
+  } yield r
+
   def -(other: VarOr[T]): Rel[T] = for {
     result <- fresh[T]
     _ <- consThis(other) + result === self

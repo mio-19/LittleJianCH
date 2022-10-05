@@ -6,10 +6,18 @@ import littlejian.ext._
 sealed trait Nat derives Unifier
 
 case object Zero extends Nat derives Unifier {
-  override def toString = "0"
+  override def toString: String = "0"
 }
 
 final case class Succ(prev: VarOr[Nat]) extends Nat derives Unifier {
+  override def toString: String = {
+    val p = prev.toString
+    try {
+      (Integer.parseUnsignedInt(p) + 1).toString
+    } catch {
+      case _: NumberFormatException => s"Succ($p)"
+    }
+  }
 }
 
 object Nat {
@@ -25,7 +33,7 @@ implicit class VarOrNatOps[T](self: VarOr[Nat]) {
     for {
       prev <- self.is[Nat](Succ(_))
       sum <- prev + other
-    } yield sum)
+    } yield Succ(sum))
 
   def -(other: VarOr[Nat]): Rel[Nat] = for {
     result <- fresh[Nat]

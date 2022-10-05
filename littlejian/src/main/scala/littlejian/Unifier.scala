@@ -200,7 +200,6 @@ object Unifier {
         acc >> u.unify(t0, t1)
     )
 
-  inline def derived[A](using gen: K0.ProductGeneric[A]): Unifier[A] = unifierProduct
-
-  inline def derived[A](using gen: K0.CoproductGeneric[A]): Unifier[A] = unifierSum
+  inline def derived[A](using gen: K0.Generic[A]): Unifier[A] =
+    gen.derive(unifierProduct, unifierSum)
 }

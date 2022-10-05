@@ -54,7 +54,7 @@ implicit val I$SExp: Inspector[SExp] = I$Union(I$Cons, I$Unit, I$String)
 
 final class Cons(a: VarOr[SExp], d: VarOr[SExp]) extends Pair[SExp, SExp](a, d) {
 }
-implicit val U$Cons: Unifier[Cons] = U$Pair[SExp, SExp].asInstanceOf[Unifier[Cons]]
+implicit val U$Cons: Unifier[Cons] = implicitly[Unifier[Pair[SExp, SExp]]].asInstanceOf[Unifier[Cons]]
 
 implicit val I$Cons: Inspector[Cons] = I$Pair[SExp, SExp].asInstanceOf[Inspector[Cons]]
 

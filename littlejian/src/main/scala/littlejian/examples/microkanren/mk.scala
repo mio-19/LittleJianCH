@@ -18,7 +18,7 @@ implicit val U$MKVar: Unifier[MKVar] = U$Product
 final class MKPair(a: VarOr[MKData], b: VarOr[MKData]) extends Pair[MKData, MKData](a, b)
 def cons(a: VarOr[MKData], b: VarOr[MKData]): MKPair = new MKPair(a, b)
 
-implicit val U$MKPair: Unifier[MKPair] = U$Pair(U$MKData, U$MKData).asInstanceOf[Unifier[MKPair]]
+implicit val U$MKPair: Unifier[MKPair] = implicitly[Unifier[Pair[MKData, MKData]]].asInstanceOf[Unifier[MKPair]]
 
 sealed trait MKMap
 

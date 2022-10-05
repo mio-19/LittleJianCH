@@ -60,7 +60,13 @@ def envGet(envId: VarOr[EnvVar], id: VarOr[String], env: VarOr[WholeEnv]): Rel[O
     }
   } yield result
 )
-@targetName("envGet2") def envGet(envId: VarOr[EnvId], id: VarOr[String], env: VarOr[WholeEnv]): Rel[Data] = ???
+@targetName("envGet2") def envGet(envId: VarOr[EnvId], id: VarOr[String], env: VarOr[WholeEnv]): Rel[Data] = for {
+  (eid, tail) <- envId.is[EnvVar, EnvId](_ :: _)
+  r <- envGet(eid, id, env)
+  ret <- r.elim {
+    envGet(tail, id, env)
+  }{ v => Rel(v) }
+} yield ret
 
 def evalo(ast: VarOr[Data], envId: VarOr[EnvId], envIn: VarOr[WholeEnv], counterIn: VarOr[EnvVar], counterOut: VarOr[EnvVar], envOut: VarOr[WholeEnv]): Rel[Data] = conde(
   for {

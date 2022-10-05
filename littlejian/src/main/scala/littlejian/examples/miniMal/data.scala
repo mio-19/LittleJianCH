@@ -1,9 +1,10 @@
 package littlejian.examples.miniMal
 
 import littlejian.*
-import littlejian.ext._
+import littlejian.ext.*
 import littlejian.data.*
 
+import scala.annotation.targetName
 import scala.language.implicitConversions
 
 sealed trait LListData extends LList[Data]
@@ -30,6 +31,7 @@ given U$Data: Unifier[Data] = U$Union(U$Union[String, Int32, Boolean, LListData]
 
 
 type EnvVar = BinaryNat
+type EnvId = LList[EnvVar]
 
 final case class EnvEntry(envId: VarOr[EnvVar], id: VarOr[String], value: VarOr[Data]) derives Unifier
 
@@ -37,8 +39,12 @@ type WholeEnv = LList[EnvEntry]
 
 def setEnv(envId: VarOr[EnvVar], id: VarOr[String], value: VarOr[Data], envIn: VarOr[WholeEnv]): WholeEnv = EnvEntry(envId, id, value) +: envIn
 def setEnv(envId: VarOr[EnvVar], id: VarOr[String], value: VarOr[Data], envIn: VarOr[WholeEnv], envOut: VarOr[WholeEnv]): Goal = envOut === setEnv(envId, id, value, envIn)
+@targetName("setEnv2") def setEnv(envId: VarOr[EnvId], id: VarOr[String], value: VarOr[Data], envIn: VarOr[WholeEnv], envOut: VarOr[WholeEnv]): Goal = for {
+  (eid, _) <- envId.is[EnvVar, EnvId](_ :: _)
+  _ <- setEnv(eid, id, value, envIn, envOut)
+} yield ()
 
-def evalo(ast: VarOr[Data], envId: VarOr[EnvVar], envIn: VarOr[WholeEnv], counterIn: VarOr[EnvVar], counterOut: VarOr[EnvVar], envOut: VarOr[WholeEnv]): Rel[Data] = conde(
+def evalo(ast: VarOr[Data], envId: VarOr[EnvId], envIn: VarOr[WholeEnv], counterIn: VarOr[EnvVar], counterOut: VarOr[EnvVar], envOut: VarOr[WholeEnv]): Rel[Data] = conde(
   for {
     (id, a) <- ast.is[Data, Data](LList("def", _, _))
     ids <- id.cast[String]
@@ -50,4 +56,17 @@ def evalo(ast: VarOr[Data], envId: VarOr[EnvVar], envIn: VarOr[WholeEnv], counte
     f <- ast.is[Data](LList("~", _))
     v <- evalo(f, envId, envIn, counterIn, counterOut, envOut)
   } yield Macro(v),
+  for {
+    v <- ast.is[Data](LList("`", _))
+    _ <- counterIn === counterOut && envIn === envOut
+  } yield v,
+  for {
+    (params, body) <- ast.is[Data, Data](LList("fn", _, _))
+  } yield ???,
+  for {
+    (clauses, body) <- ast.is[Data, Data](LList("let", _, _))
+  } yield ???,
+  for {
+    xs <- ast.is[LList[Data]]("do" :: _)
+  } yield ???,
 )

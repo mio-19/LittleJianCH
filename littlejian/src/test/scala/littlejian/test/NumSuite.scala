@@ -31,6 +31,8 @@ class NumSuite extends munit.FunSuite {
     }), Set("255"))
     assertEquals(Set.from(run[Int8] { - (Int8.from(1): VarOr[Int8]) }), Set("255"))
     assertEquals(Set.from(run[Int8] { x => Int8.from(9).minus(Int8.from(1)) === x }), Set("8"))
+    assertEquals(Set.from(run[Int16] { x => Int16.from(9).minus(Int16.from(1)) === x }), Set("8"))
+    assertEquals(Set.from(run[Int16] { x => Int16.from(9).-(Int16.from(1)) === x }), Set("8"))
     assertEquals(Set.from(run[Int8] { x => x + x === x }), Set("0"))
     assertEquals(Set.from(run[Int8] { x => x - x === x }), Set("0"))
     assertEquals(Set.from(run[Int16] { x => x + x === x + Int16.from(1) }), Set("1"))

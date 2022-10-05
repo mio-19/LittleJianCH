@@ -9,7 +9,7 @@ type Rel[T] = GoalWith[VarOr[T]]
 
 object Rel {
   val success: Rel[Unit] = GoalWith(Goal.success, ())
-  def apply[T](x: VarOr[T]): Rel[T] = GoalWith(Goal.success, x)
+  inline def apply[T](x: VarOr[T]): Rel[T] = GoalWith(Goal.success, x)
 }
 
 private def conj2(x: Goal, y: Goal): Goal =

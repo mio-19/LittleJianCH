@@ -12,6 +12,8 @@ implicit class LListOps[T](self: VarOr[LList[T]]) {
   inline def ::(elem: VarOr[T]): LList[T] = LCons(elem, self)
 
   inline def +:(elem: VarOr[T]): LList[T] = LCons(elem, self)
+  
+  def isEmpty(implicit unifier: Unifier[LList[T]]): Goal = self === LList.empty
 }
 
 implicit class VarOrLListOps[T](self: VarOr[LList[T]])(implicit U$T: Unifier[T]) {

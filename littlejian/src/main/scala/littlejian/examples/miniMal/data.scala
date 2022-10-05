@@ -44,6 +44,24 @@ def setEnv(envId: VarOr[EnvVar], id: VarOr[String], value: VarOr[Data], envIn: V
   _ <- setEnv(eid, id, value, envIn, envOut)
 } yield ()
 
+def envGet(envId: VarOr[EnvVar], id: VarOr[String], env: VarOr[WholeEnv]): Rel[Option[VarOr[Data]]] = conde(
+  env.isEmpty >> None,
+  for {
+    (head, tail) <- env.is[EnvEntry, WholeEnv](_ :: _)
+    (eid0, id0, val0) <- head.is[EnvVar, String, Data](EnvEntry(_, _, _))
+    result <- compare(eid0, envId) {
+      compare(id0, id) {
+        Some(val0)
+      } {
+        envGet(envId, id, tail)
+      }
+    } {
+      envGet(envId, id, tail)
+    }
+  } yield result
+)
+@targetName("envGet2") def envGet(envId: VarOr[EnvId], id: VarOr[String], env: VarOr[WholeEnv]): Rel[Data] = ???
+
 def evalo(ast: VarOr[Data], envId: VarOr[EnvId], envIn: VarOr[WholeEnv], counterIn: VarOr[EnvVar], counterOut: VarOr[EnvVar], envOut: VarOr[WholeEnv]): Rel[Data] = conde(
   for {
     (id, a) <- ast.is[Data, Data](LList("def", _, _))

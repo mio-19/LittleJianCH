@@ -26,4 +26,6 @@ given U$Data: Unifier[Data] = U$Union[String, Int32, Boolean, LListData]
 
 final case class EnvVar(id: VarOr[BinaryNat]) derives Unifier
 
-final case class EnvSet(env: VarOr[EnvVar], id: VarOr[String], value: VarOr[Data]) derives Unifier
+final case class EnvEntry(env: VarOr[EnvVar], id: VarOr[String], value: VarOr[Data]) derives Unifier
+
+final case class WholeEnv(env: VarOr[LList[EnvEntry]]) derives Unifier

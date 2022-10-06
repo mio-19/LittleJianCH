@@ -41,6 +41,11 @@ class NumSuite extends munit.FunSuite {
     assertEquals(Set.from(run[BinaryNat] { x => BinaryNat.from(9) - BinaryNat.from(1) === x }), Set("8"))
     assertEquals(Set.from(run[BinaryNat] { x => BinaryNat.from(65598) + BinaryNat.from(768) === x }), Set("66366"))
     assertEquals(Set.from(run[BinaryNat] { BinaryNat.from(9).prev }), Set("8"))
+    if(false){
+      assertEquals(Set.from(run[BinaryNat] {
+        BinaryNat.from(9) * BinaryNat.from(2)
+      }), Set("18"))
+    }
   }
   test("solve") {
     assertEquals(Set.from(run[Int8] { x => x + x === x }), Set("0"))

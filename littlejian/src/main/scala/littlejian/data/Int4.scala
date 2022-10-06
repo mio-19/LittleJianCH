@@ -302,6 +302,12 @@ final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LLi
     } yield LCons(r, rest)
   )
 
+  def prev0: Rel[BinaryNatVal] = for {
+    result <- fresh[BinaryNatVal]
+    a <- BinaryNat(result).succ
+    _ <- a === xs
+  } yield result
+
   def plus(that: VarOr[BinaryNatVal]): Rel[BinaryNatVal] = conde(
     xs.eqEmpty >> that,
     that.eqEmpty >> xs,
@@ -325,6 +331,15 @@ final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LLi
       } yield LCons(r, rest)
     ),
     this.plus(that)
+  )
+
+  def mul(that: VarOr[BinaryNatVal]): Rel[BinaryNatVal] = conde(
+    that.eqEmpty >> BinaryNat.zero.xs,
+    for {
+      that0 <- BinaryNat(that).prev0
+      result0 <- this.mul(that0)
+      result <- BinaryNat(result0).plus(xs)
+    } yield result
   )
 
   override def toString: String = {
@@ -365,10 +380,21 @@ implicit class VarOrBinaryNatOps(self: VarOr[BinaryNat])(using u: Unifier[Binary
     result <- BinaryNat(xs).succ
   } yield BinaryNat(result)
 
+  def prev: Rel[BinaryNat] = for {
+    xs <- self.is[BinaryNatVal](BinaryNat(_))
+    result <- BinaryNat(xs).prev0
+  } yield BinaryNat(result)
+
   def +(other: VarOr[BinaryNat]): Rel[BinaryNat] = for {
     xs <- self.is[BinaryNatVal](BinaryNat(_))
     ys <- other.is[BinaryNatVal](BinaryNat(_))
     result <- BinaryNat(xs).plus(ys)
+  } yield BinaryNat(result)
+
+  def *(other: VarOr[BinaryNat]): Rel[BinaryNat] = for {
+    xs <- self.is[BinaryNatVal](BinaryNat(_))
+    ys <- other.is[BinaryNatVal](BinaryNat(_))
+    result <- BinaryNat(xs).mul(ys)
   } yield BinaryNat(result)
 
   def -(other: VarOr[BinaryNat]): Rel[BinaryNat] = for {

@@ -9,7 +9,7 @@ import littlejian.unifier._
 
 type MKData = (Unit | String | MKPair) | (MKVar | MKGoal | MKThunk | MKMap) | (MKRec | MKReg)
 
-implicit val U$MKData: Unifier[MKData] = U$Union(U$Union[Unit, String, MKPair], U$Union[MKVar, MKGoal, MKThunk, MKMap], U$Union[MKRec, MKReg])
+implicit val U$MKData: Unifier[MKData] = U$Union[Unit, String, MKPair, MKVar, MKGoal, MKThunk, MKMap, MKRec, MKReg]
 
 final case class MKVar(id: VarOr[Nat]) extends Product1[VarOr[Nat]]
 

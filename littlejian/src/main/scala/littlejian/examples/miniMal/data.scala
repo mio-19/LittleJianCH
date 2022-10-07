@@ -27,7 +27,7 @@ final case class Closure(envId: VarOr[EnvVar], params: VarOr[LList[String]], var
 
 final case class Macro(f: VarOr[Data]) derives Unifier
 
-given U$Data: Unifier[Data] = U$Union(U$Union[String, Int32, Boolean, LListData], U$Union[Closure, Macro], U$Unit)
+given U$Data: Unifier[Data] = U$Union[String, Int32, Boolean, LEmpty[Data], LCons[Data], Closure, Macro, Unit].asInstanceOf[Unifier[Data]]
 
 
 type EnvVar = BinaryNat

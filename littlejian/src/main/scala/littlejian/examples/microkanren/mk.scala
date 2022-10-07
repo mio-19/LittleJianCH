@@ -16,6 +16,7 @@ final case class MKVar(id: VarOr[Nat]) extends Product1[VarOr[Nat]]
 implicit val U$MKVar: Unifier[MKVar] = U$Product
 
 final class MKPair(a: VarOr[MKData], b: VarOr[MKData]) extends Pair[MKData, MKData](a, b)
+
 def cons(a: VarOr[MKData], b: VarOr[MKData]): MKPair = new MKPair(a, b)
 
 implicit val U$MKPair: Unifier[MKPair] = implicitly[Unifier[Pair[MKData, MKData]]].asInstanceOf[Unifier[MKPair]]
@@ -49,29 +50,17 @@ final case class MKThunk(kind: VarOr[MKThunkKind], xs: VarOr[List[VarOr[MKData]]
 
 implicit val U$MKThunk: Unifier[MKThunk] = U$Product(U$VarOr(U$MKThunkKind), U$VarOr(U$List(U$VarOr(U$MKData))))
 
-type MKGoal = (MKGoalEq | MKGoalCallFresh) | (MKGoalConj | MKGoalDisj) | MKGoalTop
-implicit val U$MKGoal: Unifier[MKGoal] = U$Union(U$Union[MKGoalEq, MKGoalCallFresh], U$Union[MKGoalConj, MKGoalDisj], U$MKGoalTop)
+sealed trait MKGoal derives Unifier
 
-final case class MKGoalEq(u: VarOr[MKData], v: VarOr[MKData], env: VarOr[MKMap]) extends Product3[VarOr[MKData], VarOr[MKData], VarOr[MKMap]]
+final case class MKGoalEq(u: VarOr[MKData], v: VarOr[MKData], env: VarOr[MKMap]) extends MKGoal derives Unifier
 
-implicit val U$MKGoalEq: Unifier[MKGoalEq] = U$Product
+final case class MKGoalCallFresh(f: VarOr[MKData], env: VarOr[MKMap]) extends MKGoal derives Unifier
 
-final case class MKGoalCallFresh(f: VarOr[MKData], env: VarOr[MKMap]) extends Product2[VarOr[MKData], VarOr[MKMap]]
+final case class MKGoalConj(g1: VarOr[MKData], g2: VarOr[MKData], env: VarOr[MKMap]) extends MKGoal derives Unifier
 
-implicit val U$MKGoalCallFresh: Unifier[MKGoalCallFresh] = U$Product
+final case class MKGoalDisj(g1: VarOr[MKData], g2: VarOr[MKData], env: VarOr[MKMap]) extends MKGoal derives Unifier
 
-final case class MKGoalConj(g1: VarOr[MKData], g2: VarOr[MKData], env: VarOr[MKMap]) extends Product3[VarOr[MKData], VarOr[MKData], VarOr[MKMap]]
-
-implicit val U$MKGoalConj: Unifier[MKGoalConj] = U$Product
-
-final case class MKGoalDisj(g1: VarOr[MKData], g2: VarOr[MKData], env: VarOr[MKMap]) extends Product3[VarOr[MKData], VarOr[MKData], VarOr[MKMap]]
-
-implicit val U$MKGoalDisj: Unifier[MKGoalDisj] = U$Product
-
-final case class MKGoalTop(rand: VarOr[MKData], env: VarOr[MKMap]) extends Product2[VarOr[MKData], VarOr[MKMap]]
-
-implicit val U$MKGoalTop: Unifier[MKGoalTop] = U$Product
-
+final case class MKGoalTop(rand: VarOr[MKData], env: VarOr[MKMap]) extends MKGoal derives Unifier
 
 final case class MKRec(x: VarOr[MKData], exp: VarOr[MKData]) extends Product2[VarOr[MKData], VarOr[MKData]]
 

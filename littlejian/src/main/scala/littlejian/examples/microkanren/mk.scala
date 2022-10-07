@@ -62,13 +62,9 @@ final case class MKGoalDisj(g1: VarOr[MKData], g2: VarOr[MKData], env: VarOr[MKM
 
 final case class MKGoalTop(rand: VarOr[MKData], env: VarOr[MKMap]) extends MKGoal derives Unifier
 
-final case class MKRec(x: VarOr[MKData], exp: VarOr[MKData]) extends Product2[VarOr[MKData], VarOr[MKData]]
+final case class MKRec(x: VarOr[MKData], exp: VarOr[MKData]) derives Unifier
 
-implicit val U$MKRec: Unifier[MKRec] = U$Product
-
-final case class MKReg(x: VarOr[MKData]) extends Product1[VarOr[MKData]]
-
-implicit val U$MKReg: Unifier[MKReg] = U$Product
+final case class MKReg(x: VarOr[MKData]) derives Unifier
 
 def list(xs: VarOr[MKData]*): VarOr[MKData] = xs.foldRight[VarOr[MKData]](())(cons)
 

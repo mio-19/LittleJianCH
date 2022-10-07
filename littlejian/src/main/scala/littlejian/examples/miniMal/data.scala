@@ -21,7 +21,7 @@ implicit def toLListData(x: LList[Data]): LListData = x match {
 }
 given U$LListData: Unifier[LListData] = U$LList(U$Data).asInstanceOf[Unifier[LListData]]
 
-type Data = (String | Int32 | Boolean | LListData) | (Closure | Macro) | Unit
+type Data = (String | Int32 | Boolean) | LListData | (Closure | Macro) | Unit
 
 final case class Closure(envId: VarOr[EnvVar], params: VarOr[LList[String]], vararg: VarOr[Option[String]], ast: VarOr[Data]) derives Unifier
 
@@ -43,6 +43,10 @@ def setEnv(envId: VarOr[EnvVar], id: VarOr[String], value: VarOr[Data], envIn: V
   (eid, _) <- envId.is[EnvVar, EnvId](_ :: _)
   _ <- setEnv(eid, id, value, envIn, envOut)
 } yield ()
+@targetName("setEnv2") def setEnv(envId: VarOr[EnvId], id: VarOr[String], value: VarOr[Data], envIn: VarOr[WholeEnv]): Rel[WholeEnv] = for {
+  (eid, _) <- envId.is[EnvVar, EnvId](_ :: _)
+  envOut <- setEnv(eid, id, value, envIn)
+} yield envOut
 
 def envGet(envId: VarOr[EnvVar], id: VarOr[String], env: VarOr[WholeEnv]): Rel[Option[VarOr[Data]]] = conde(
   env.isEmpty >> None,

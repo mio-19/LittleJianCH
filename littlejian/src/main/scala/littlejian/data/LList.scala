@@ -14,6 +14,10 @@ implicit class LListOps[T](self: VarOr[LList[T]]) {
   inline def +:(elem: VarOr[T]): LList[T] = LCons(elem, self)
   
   def isEmpty(implicit unifier: Unifier[LList[T]]): Goal = self === LList.empty
+
+  def head(implicit unifier: Unifier[LList[T]]): Rel[T] = for {
+    (x, ignored) <- self.is[T, LList[T]](LCons(_, _))
+  } yield x
 }
 
 implicit class VarOrLListOps[T](self: VarOr[LList[T]])(implicit U$T: Unifier[T]) {
@@ -47,7 +51,9 @@ case class LEmpty[T]() extends LList[T] {
   override def toString: String = "LList()"
 }
 
-case class LCons[T](head: VarOr[T], tail: VarOr[LList[T]]) extends LList[T] {
+def U$LEmpty[T]: Unifier[LEmpty[T]] = new EqualUnifier[LEmpty[T]] {}
+
+case class LCons[T](head: VarOr[T], tail: VarOr[LList[T]]) extends LList[T] with Product2[VarOr[T],VarOr[LList[T]]] {
   override def toString: String = {
     val t = tail.toString
     if (t == "LList()")
@@ -57,6 +63,8 @@ case class LCons[T](head: VarOr[T], tail: VarOr[LList[T]]) extends LList[T] {
     else s"LCons(${head}, ${t})"
   }
 }
+
+def U$LCons[T](implicit U$T: Unifier[T], U$LListT: Unifier[LList[T]]): Unifier[LCons[T]] = U$Product
 
 implicit def U$LList[T](implicit unifier: Unifier[T]): Unifier[LList[T]] = {
   implicit object U extends Unifier[LList[T]] {

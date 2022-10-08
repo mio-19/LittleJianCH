@@ -25,7 +25,7 @@ type Data = (String | Int32 | Boolean) | LListData | (Closure | Macro) | Unit
 
 final case class Params(params: VarOr[LList[String]], vararg: VarOr[Option[VarOr[String]]]) derives Unifier
 
-final case class Closure(envId: VarOr[EnvVar], params: VarOr[Params], ast: VarOr[Data]) derives Unifier
+final case class Closure(env: VarOr[WholeEnv], envId: VarOr[EnvId], params: VarOr[Params], ast: VarOr[Data]) derives Unifier
 
 final case class Macro(f: VarOr[Data]) derives Unifier
 

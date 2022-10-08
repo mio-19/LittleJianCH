@@ -57,7 +57,10 @@ def evalo(ast: VarOr[Data], envId: VarOr[EnvId], envIn: VarOr[WholeEnv], counter
   } yield v,
   for {
     (params, body) <- ast.is[Data, Data](LList("fn", _, _))
-  } yield ???,
+    params <- parseParams(params)
+    closureEnvId <- freshEnv(envId, counterIn, counterOut)
+    _ <- envIn == envOut
+  } yield Closure(envIn, closureEnvId, params, body),
   for {
     (clauses, body) <- ast.is[Data, Data](LList("let", _, _))
     counter0 <- fresh[EnvVar]

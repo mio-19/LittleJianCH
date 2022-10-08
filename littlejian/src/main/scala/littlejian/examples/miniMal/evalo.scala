@@ -102,4 +102,8 @@ def evalo(ast: VarOr[Data], envId: VarOr[EnvId], envIn: VarOr[WholeEnv], counter
       evalo(ifFalse, envId, env0, counter0, counterOut, envOut)
     }
   } yield v,
+  for {
+    (x, args) <- ast.is[Data, LList[Data]](_ :: _)
+    _ <- notKeywordo(x)
+  } yield ???
 )

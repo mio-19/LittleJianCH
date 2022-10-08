@@ -298,7 +298,7 @@ final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LLi
     for {
       (xh, xt) <- xs.is[Boolean, LList[Boolean]](LCons(_, _))
       (c, r) <- add(xh, true)
-      rest <- c.switch(BinaryNat(xt).succ, xt)
+      rest <- c.elim{BinaryNat(xt).succ} {xt}
     } yield LCons(r, rest)
   )
 
@@ -319,7 +319,7 @@ final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LLi
     } yield LCons(r, rest)
   )
 
-  def plus(that: VarOr[BinaryNatVal], c: VarOr[Boolean]): Rel[BinaryNatVal] = c.switch(
+  def plus(that: VarOr[BinaryNatVal], c: VarOr[Boolean]): Rel[BinaryNatVal] = c.elim{
     conde(
       xs.eqEmpty >> BinaryNat(that).succ,
       that.eqEmpty >> this.succ,
@@ -329,9 +329,10 @@ final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LLi
         (c, r) <- add(xh, yh, true)
         rest <- BinaryNat(xt).plus(yt, c)
       } yield LCons(r, rest)
-    ),
+    )
+  } {
     this.plus(that)
-  )
+  }
 
   def mul(that: VarOr[BinaryNatVal]): Rel[BinaryNatVal] = conde(
     that.eqEmpty >> BinaryNat.zero.xs,

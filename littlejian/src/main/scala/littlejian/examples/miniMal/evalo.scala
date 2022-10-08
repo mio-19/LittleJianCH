@@ -48,6 +48,8 @@ def runDo(ast: VarOr[LList[Data]], envId: VarOr[EnvId], envIn: VarOr[WholeEnv], 
   }
 } yield result
 
+def notKeywordo(x: VarOr[Data]): Goal = x =/= "def" && x =/= "~" && x =/= "`" && x =/= "fn" && x =/= "let" && x =/= "do" && x =/= "if"
+
 def evalo(ast: VarOr[Data], envId: VarOr[EnvId], envIn: VarOr[WholeEnv], counterIn: VarOr[EnvVar], counterOut: VarOr[EnvVar], envOut: VarOr[WholeEnv]): Rel[Data] = conde(
   for {
     id <- ast.cast[String]
@@ -88,4 +90,16 @@ def evalo(ast: VarOr[Data], envId: VarOr[EnvId], envIn: VarOr[WholeEnv], counter
     xs <- ast.is[LList[Data]]("do" :: _)
     result <- runDo(xs, envId, envIn, counterIn, counterOut, envOut)
   } yield result,
+  for {
+    (cond, ifTrue, ifFalse) <- ast.is[Data, Data, Data](LList("if", _, _, _))
+    counter0 <- fresh[EnvVar]
+    env0 <- fresh[WholeEnv]
+    cond <- evalo(cond, envId, envIn, counterIn, counter0, env0)
+    cond <- cond.cast[Boolean]
+    v <- cond.elim {
+      evalo(ifTrue, envId, env0, counter0, counterOut, envOut)
+    } {
+      evalo(ifFalse, envId, env0, counter0, counterOut, envOut)
+    }
+  } yield v,
 )

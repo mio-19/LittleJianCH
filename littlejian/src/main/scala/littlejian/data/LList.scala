@@ -14,6 +14,15 @@ implicit class LListOps[T](self: VarOr[LList[T]]) {
   inline def +:(elem: VarOr[T]): LList[T] = LCons(elem, self)
   
   def isEmpty(implicit unifier: Unifier[LList[T]]): Goal = self === LList.empty
+  
+  def elim[U](ifEmpty: Rel[U])(ifNonEmpty: (VarOr[T], VarOr[LList[T]]) => Rel[U])(implicit t: Unifier[LList[T]], u: Unifier[U]): Rel[U] =
+    conde(
+      (self === LList.empty) >> ifEmpty,
+      for {
+        (x, xs) <- self.is[T, LList[T]](LCons(_, _))
+        result <- ifNonEmpty(x, xs)
+      } yield result
+    )
 
   def head(implicit unifier: Unifier[LList[T]]): Rel[T] = for {
     (x, ignored) <- self.is[T, LList[T]](LCons(_, _))

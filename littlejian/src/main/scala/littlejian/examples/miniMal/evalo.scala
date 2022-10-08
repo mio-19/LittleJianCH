@@ -34,6 +34,20 @@ def parseParams(xs: VarOr[Data]/* | VarOr[LList[Data]]*/): Rel[Params] = conde(
   } yield Params(x :: xs0, vararg)
 )
 
+def runDo(ast: VarOr[LList[Data]], envId: VarOr[EnvId], envIn: VarOr[WholeEnv], counterIn: VarOr[EnvVar], counterOut: VarOr[EnvVar], envOut: VarOr[WholeEnv]): Rel[Data] = for {
+  (head, tail) <- ast.is[Data, LList[Data]](_ :: _)
+  result <- tail.elim {
+    evalo(head, envId, envIn, counterIn, counterOut, envOut)
+  } {
+    (_, _) => for {
+      counter0 <- fresh[EnvVar]
+      env0 <- fresh[WholeEnv]
+      _ <- runDo(tail, envId, envIn, counterIn, counter0, env0)
+      result <- evalo(head, envId, env0, counter0, counterOut, envOut)
+    } yield result
+  }
+} yield result
+
 def evalo(ast: VarOr[Data], envId: VarOr[EnvId], envIn: VarOr[WholeEnv], counterIn: VarOr[EnvVar], counterOut: VarOr[EnvVar], envOut: VarOr[WholeEnv]): Rel[Data] = conde(
   for {
     id <- ast.cast[String]
@@ -72,5 +86,6 @@ def evalo(ast: VarOr[Data], envId: VarOr[EnvId], envIn: VarOr[WholeEnv], counter
   } yield v,
   for {
     xs <- ast.is[LList[Data]]("do" :: _)
-  } yield ???,
+    result <- runDo(xs, envId, envIn, counterIn, counterOut, envOut)
+  } yield result,
 )

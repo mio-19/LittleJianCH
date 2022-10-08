@@ -23,7 +23,9 @@ given U$LListData: Unifier[LListData] = U$LList(U$Data).asInstanceOf[Unifier[LLi
 
 type Data = (String | Int32 | Boolean) | LListData | (Closure | Macro) | Unit
 
-final case class Closure(envId: VarOr[EnvVar], params: VarOr[LList[String]], vararg: VarOr[Option[String]], ast: VarOr[Data]) derives Unifier
+final case class Params(params: VarOr[LList[String]], vararg: VarOr[Option[VarOr[String]]]) derives Unifier
+
+final case class Closure(envId: VarOr[EnvVar], params: VarOr[Params], ast: VarOr[Data]) derives Unifier
 
 final case class Macro(f: VarOr[Data]) derives Unifier
 

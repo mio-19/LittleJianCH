@@ -4,7 +4,7 @@ import littlejian.data._
 import littlejian._
 import littlejian.ext._
 
-def resolveLet(clauses: VarOr[Data], blockEnvId: VarOr[EnvId], envIn: VarOr[WholeEnv], counterIn: VarOr[EnvVar], counterOut: VarOr[EnvVar], envOut: VarOr[WholeEnv]): Goal = conde(
+def resolveLet(clauses: VarOr[Data]/* | VarOr[LList[Data]]*/, blockEnvId: VarOr[EnvId], envIn: VarOr[WholeEnv], counterIn: VarOr[EnvVar], counterOut: VarOr[EnvVar], envOut: VarOr[WholeEnv]): Goal = conde(
   (clauses === LList.empty) && (envIn === envOut),
   for {
     (id, v, tail) <- clauses.is[Data, Data, LList[Data]]((id: VarOr[Data], v: VarOr[Data], tail: VarOr[LList[Data]]) => id :: (v :: tail))
@@ -20,6 +20,19 @@ def resolveLet(clauses: VarOr[Data], blockEnvId: VarOr[EnvId], envIn: VarOr[Whol
 def freshEnv(envId: VarOr[EnvId], counterIn: VarOr[EnvVar], counterOut: VarOr[EnvVar]): Rel[EnvId] = for {
   _ <- counterIn.succ === counterOut
 } yield (counterIn :: envId)
+
+def parseParams(xs: VarOr[Data]/* | VarOr[LList[Data]]*/): Rel[Params] = conde(
+  (xs === LList.empty) >> Rel(Params(LList.empty, None)),
+  for {
+    x <- xs.cast[String]
+  } yield Params(LList.empty, Some(x)),
+  for {
+    (x, xs) <- xs.is[Data, LList[Data]](_ :: _)
+    x <- x.cast[String]
+    params <- parseParams(xs.asInstanceOf[VarOr[Data]])
+    (xs0, vararg) <- params.is(Params(_, _))
+  } yield Params(x :: xs0, vararg)
+)
 
 def evalo(ast: VarOr[Data], envId: VarOr[EnvId], envIn: VarOr[WholeEnv], counterIn: VarOr[EnvVar], counterOut: VarOr[EnvVar], envOut: VarOr[WholeEnv]): Rel[Data] = conde(
   for {

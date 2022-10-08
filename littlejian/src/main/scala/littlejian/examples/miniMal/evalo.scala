@@ -17,6 +17,10 @@ def resolveLet(clauses: VarOr[Data], blockEnvId: VarOr[EnvId], envIn: VarOr[Whol
   } yield ()
 )
 
+def freshEnv(envId: VarOr[EnvId], counterIn: VarOr[EnvVar], counterOut: VarOr[EnvVar]): Rel[EnvId] = for {
+  _ <- counterIn.succ === counterOut
+} yield (counterIn :: envId)
+
 def evalo(ast: VarOr[Data], envId: VarOr[EnvId], envIn: VarOr[WholeEnv], counterIn: VarOr[EnvVar], counterOut: VarOr[EnvVar], envOut: VarOr[WholeEnv]): Rel[Data] = conde(
   for {
     id <- ast.cast[String]
@@ -43,7 +47,13 @@ def evalo(ast: VarOr[Data], envId: VarOr[EnvId], envIn: VarOr[WholeEnv], counter
   } yield ???,
   for {
     (clauses, body) <- ast.is[Data, Data](LList("let", _, _))
-  } yield ???,
+    counter0 <- fresh[EnvVar]
+    blockEnvId <- freshEnv(envId, counterIn, counter0)
+    counter1 <- fresh[EnvVar]
+    env0 <- fresh[WholeEnv]
+    _ <- resolveLet(clauses, blockEnvId, envIn, counter0, counter1, env0)
+    v <- evalo(body, blockEnvId, env0, counter1, counterOut, envOut)
+  } yield v,
   for {
     xs <- ast.is[LList[Data]]("do" :: _)
   } yield ???,

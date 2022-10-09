@@ -3,7 +3,7 @@ package littlejian
 final case class EqState(subst: Subst) {
   override def toString: String = {
     prettyPrintContext.updateWith(_.disableSubst) {
-      subst.map((v, entry) => s"${v}: ${entry._2}").mkString(", ")
+      subst.map((v, entry) => s"${v}: ${entry}").mkString(", ")
     }
   }
 }

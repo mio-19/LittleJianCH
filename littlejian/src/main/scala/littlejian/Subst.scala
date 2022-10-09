@@ -5,9 +5,11 @@ import littlejian.utils._
 import scala.annotation.tailrec
 import scala.collection.immutable.HashMap
 
-type Subst = Map[Var[_], (Unifier[_] /* for =/= usages */ , _ /*VarOr[_]*/ )]
+// Subst is for ===
+type Subst = Map[Var[_], _ /*VarOr[_]*/]
 
-type SubstPatch = Vector[(Var[_], Unifier[_], _)]
+// Unifier is for =/=
+type SubstPatch = Vector[(Var[_], Unifier[_], _)] // Unifier is for =/= usages
 
 object SubstPatch {
   val empty: SubstPatch = Vector.empty
@@ -17,22 +19,22 @@ implicit final class SubstOps(self: Subst) {
   @tailrec
   def walk[T](x: VarOr[T]): VarOr[T] = x match {
     case v: Var[_] => self.get(v) match {
-      case Some((_, v)) => walk(v.asInstanceOf[VarOr[T]])
+      case Some(v) => walk(v.asInstanceOf[VarOr[T]])
       case None => x
     }
     case _ => x
   }
 
   def getOption[T](x: Var[T]): Option[VarOr[T]] = self.get(x) match {
-    case Some((_, v)) => Some(walk(v.asInstanceOf[VarOr[T]]))
+    case Some(v) => Some(walk(v.asInstanceOf[VarOr[T]]))
     case None => None
   }
 
   def addEntry[T](v: Var[T], x: VarOr[T])(implicit unifier: Unifier[T]): Subst =
-    if (self.contains(v)) throw new IllegalArgumentException("duplicate add") else self.updated(v, (unifier, x))
+    if (self.contains(v)) throw new IllegalArgumentException("duplicate add") else self.updated(v, x)
 
   def addEntryUnchecked(v: Var[_], x: Any)(unifier: Unifier[_]): Subst =
-    if (self.contains(v)) throw new IllegalArgumentException("duplicate add") else self.updated(v, (unifier, x))
+    if (self.contains(v)) throw new IllegalArgumentException("duplicate add") else self.updated(v, x)
 }
 
 object Subst {

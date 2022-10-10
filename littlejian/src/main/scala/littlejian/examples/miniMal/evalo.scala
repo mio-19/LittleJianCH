@@ -50,6 +50,11 @@ def runDo(ast: VarOr[LList[Data]], envId: VarOr[EnvId], envIn: VarOr[WholeEnv], 
 
 def notKeywordo(x: VarOr[Data]): Goal = x =/= "def" && x =/= "~" && x =/= "`" && x =/= "fn" && x =/= "let" && x =/= "do" && x =/= "if"
 
+def buildEnvo(envId: VarOr[EnvId], params: VarOr[Params], args: VarOr[LList[Data]], envIn: VarOr[WholeEnv], envOut: VarOr[WholeEnv]): Goal = ???
+
+def applyo(closure: Closure, args: VarOr[LList[Data]], envIn: VarOr[WholeEnv], counterIn: VarOr[EnvVar], counterOut: VarOr[EnvVar], envOut: VarOr[WholeEnv]): Rel[Data] = ???
+def applyo(closure: VarOr[Data], args: VarOr[LList[Data]], envIn: VarOr[WholeEnv], counterIn: VarOr[EnvVar], counterOut: VarOr[EnvVar], envOut: VarOr[WholeEnv]): Rel[Data] = ???
+
 def evalo(ast: VarOr[Data], envId: VarOr[EnvId], envIn: VarOr[WholeEnv], counterIn: VarOr[EnvVar], counterOut: VarOr[EnvVar], envOut: VarOr[WholeEnv]): Rel[Data] = conde(
   for {
     id <- ast.cast[String]
@@ -104,6 +109,12 @@ def evalo(ast: VarOr[Data], envId: VarOr[EnvId], envIn: VarOr[WholeEnv], counter
   } yield v,
   for {
     (x, args) <- ast.is[Data, LList[Data]](_ :: _)
+    (counter0, env0) <- fresh[EnvVar, WholeEnv]
     _ <- notKeywordo(x)
+    f <- evalo(x, envId, envIn, counterIn, counter0, env0)
+    /*result <- conde(for {
+      f <- f.is[Data](Macro(_))
+    } yield ???, for {
+    } yield ???)*/
   } yield ???
 )

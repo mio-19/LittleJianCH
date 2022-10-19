@@ -27,10 +27,10 @@ implicit class LListOps[T](self: VarOr[LList[T]]) {
     (x, ignored) <- self.is[T, LList[T]](LCons(_, _))
   } yield x
   
-  def getStrings: Vector[String] | String = {
+  def getStrings: (String, Vector[String]) | String = {
     val result = this.toString
     if (result.startsWith("LList(") && result.endsWith(")")) {
-      result.drop(6).dropRight(1).split(", ").toVector
+      (result, result.drop(6).dropRight(1).split(", ").toVector)
     } else {
       result
     }

@@ -345,7 +345,7 @@ final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LLi
 
   override def toString: String = xs.getStrings match {
     case s: String => s"BinaryNat($s)"
-    case xs: Vector[String] => try {
+    case (s, xs) => try {
       val bits = xs.map({
         case "true" => true
         case "false" => false
@@ -354,7 +354,7 @@ final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LLi
       val n = bits.zipWithIndex.map { case (b, i) => if (b) 1 << i else 0 }.sum
       n.toString
     } catch {
-      case _: UnsupportedOperationException => s"BinaryNat(${xs.toString})"
+      case _: UnsupportedOperationException => s"BinaryNat($s)"
     }
   }
 }

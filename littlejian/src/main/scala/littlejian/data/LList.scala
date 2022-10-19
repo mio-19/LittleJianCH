@@ -5,16 +5,15 @@ import littlejian.ext._
 import littlejian.unifier._
 import scala.language.implicitConversions
 
-trait LList[T] {
-}
+trait LList[T]
 
 implicit class LListOps[T](self: VarOr[LList[T]]) {
   inline def ::(elem: VarOr[T]): LList[T] = LCons(elem, self)
 
   inline def +:(elem: VarOr[T]): LList[T] = LCons(elem, self)
-  
+
   def isEmpty(implicit unifier: Unifier[LList[T]]): Goal = self === LList.empty
-  
+
   def elim[U](ifEmpty: Rel[U])(ifNonEmpty: (VarOr[T], VarOr[LList[T]]) => Rel[U])(implicit t: Unifier[LList[T]], u: Unifier[U]): Rel[U] =
     conde(
       (self === LList.empty) >> ifEmpty,
@@ -27,6 +26,15 @@ implicit class LListOps[T](self: VarOr[LList[T]]) {
   def head(implicit unifier: Unifier[LList[T]]): Rel[T] = for {
     (x, ignored) <- self.is[T, LList[T]](LCons(_, _))
   } yield x
+  
+  def getStrings: Vector[String] | String = {
+    val result = this.toString
+    if (result.startsWith("LList(") && result.endsWith(")")) {
+      result.drop(6).dropRight(1).split(", ").toVector
+    } else {
+      result
+    }
+  }
 }
 
 implicit class VarOrLListOps[T](self: VarOr[LList[T]])(implicit U$T: Unifier[T]) {
@@ -62,7 +70,7 @@ case class LEmpty[T]() extends LList[T] {
 
 def U$LEmpty[T]: Unifier[LEmpty[T]] = new EqualUnifier[LEmpty[T]] {}
 
-case class LCons[T](head: VarOr[T], tail: VarOr[LList[T]]) extends LList[T] with Product2[VarOr[T],VarOr[LList[T]]] {
+case class LCons[T](head: VarOr[T], tail: VarOr[LList[T]]) extends LList[T] with Product2[VarOr[T], VarOr[LList[T]]] {
   override def toString: String = {
     val t = tail.toString
     if (t == "LList()")
@@ -91,6 +99,7 @@ implicit def U$LList[T](implicit unifier: Unifier[T]): Unifier[LList[T]] = {
 
 trait LListOf[A] {
   sealed trait LListT extends LList[A]
+
   val empty: LListT = new EmptyList
 
   def cons(head: VarOr[A], tail: VarOr[LList[A]]): LListT = new NonemptyList(head, tail)

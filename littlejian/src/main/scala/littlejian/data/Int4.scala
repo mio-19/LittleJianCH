@@ -343,11 +343,10 @@ final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LLi
     } yield result
   )
 
-  override def toString: String = {
-    val rawbits = xs.toString
-    try {
-      if (!(rawbits.startsWith("LList(") && rawbits.endsWith(")"))) throw new UnsupportedOperationException()
-      val bits = rawbits.drop(6).dropRight(1).split(", ").toSeq.map({
+  override def toString: String = xs.getStrings match {
+    case s: String => s"BinaryNat($s)"
+    case xs: Vector[String] => try {
+      val bits = xs.map({
         case "true" => true
         case "false" => false
         case _ => throw new UnsupportedOperationException()
@@ -355,7 +354,7 @@ final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LLi
       val n = bits.zipWithIndex.map { case (b, i) => if (b) 1 << i else 0 }.sum
       n.toString
     } catch {
-      case _: UnsupportedOperationException => s"BinaryNat($rawbits)"
+      case _: UnsupportedOperationException => s"BinaryNat(${xs.toString})"
     }
   }
 }

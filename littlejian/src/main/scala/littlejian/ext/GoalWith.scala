@@ -54,3 +54,5 @@ inline implicit def goalWithUnitToGoal(goal: GoalWith[Unit]): Goal = goal.goal
 inline implicit def toGoalWithUnitToGoal[T](goal: T => GoalWith[Unit]): T => Goal = x => goal(x).goal
 
 inline implicit def goalToRelUnit(goal: Goal): Rel[Unit] = GoalWith(goal, ())
+
+inline implicit def relUnitToGoal(x: Rel[Unit]): Goal = x.goal

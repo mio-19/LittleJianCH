@@ -432,6 +432,13 @@ final case class FixedNat(xs: VarOr[LList[Boolean]]) {
       tail0 <- tail.is[LList[Boolean]](FixedNat(_))
     } yield FixedNat(false :: tail0))(Rel(FixedNat(true :: xs)))
   }
+
+  def isZero: Goal = xs.elim(()) { (x, xs) =>
+    for {
+      _ <- x === false
+      _ <- FixedNat(xs).isZero
+    } yield ()
+  }
 }
 
 implicit class FixedNatOps(self: VarOr[FixedNat]) {
@@ -445,6 +452,13 @@ implicit class FixedNatOps(self: VarOr[FixedNat]) {
     ys <- other.is[LList[Boolean]](FixedNat(_))
     result <- xs.append(ys)
   } yield FixedNat(result)
+
+  def succ: Rel[FixedNat] = for {
+    xs <- self.is[LList[Boolean]](FixedNat(_))
+    result <- FixedNat(xs).succ
+  } yield result
+
+  def elim[U](whenZero: Rel[U])(whenSucc: VarOr[FixedNat] => Rel[U]): Rel[U] = ???
 }
 
 object FixedNat {

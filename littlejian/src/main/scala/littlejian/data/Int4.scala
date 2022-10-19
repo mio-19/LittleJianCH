@@ -488,6 +488,12 @@ implicit class FixedNatOps(self: VarOr[FixedNat]) {
     result0 <- self + other0
     result <- result0.succ
   } yield result)
+
+  // TODO: optimize me
+  def -(other: VarOr[FixedNat]): Rel[FixedNat] = other.elim(self)(other0 => for {
+    result0 <- self - other0
+    result <- result0.prev
+  } yield result)
 }
 
 object FixedNat {

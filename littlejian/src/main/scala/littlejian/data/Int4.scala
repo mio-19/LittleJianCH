@@ -5,6 +5,8 @@ import littlejian.ext.*
 
 import scala.language.implicitConversions
 
+// in this package, Int*.toString is unsigned, BinaryInt.toString is signed
+
 def add(x: VarOr[Boolean], y: VarOr[Boolean]): GoalWith[(VarOr[Boolean], VarOr[Boolean])] = for {
   c <- fresh[Boolean]
   r <- fresh[Boolean]

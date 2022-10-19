@@ -3,7 +3,6 @@ package littlejian.data
 import littlejian._
 
 final case class Chr(chr: Int16) extends Product1[Int16] {
-  def toInt16: Int16 = chr
   override def toString: String = {
     val i = chr.toString
     try {

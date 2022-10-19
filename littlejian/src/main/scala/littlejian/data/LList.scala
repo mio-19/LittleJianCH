@@ -26,7 +26,7 @@ implicit class LListOps[T](self: VarOr[LList[T]]) {
   def head(implicit unifier: Unifier[LList[T]]): Rel[T] = for {
     (x, ignored) <- self.is[T, LList[T]](LCons(_, _))
   } yield x
-  
+
   def getStrings: (String, Vector[String]) | String = {
     val result = this.toString
     if (result.startsWith("LList(") && result.endsWith(")")) {
@@ -43,17 +43,11 @@ implicit class VarOrLListOps[T](self: VarOr[LList[T]])(implicit U$T: Unifier[T])
 
   def eqEmpty: Goal = self === LList.empty[T]
 
-  @deprecated
-  def toSeq: Rel[Seq[VarOr[T]]] = conde(
+  def append(other: VarOr[LList[T]]): Rel[LList[T]] = self.elim(other) { (x, xs) =>
     for {
-      _ <- self === LEmpty[T]()
-    } yield Seq.empty,
-    for {
-      (head, tail) <- self.is[T, LList[T]](LCons(_, _))
-      tailSeq <- tail.toSeq
-      result <- tailSeq.forceApply[Seq[VarOr[T]]](head +: _)
-    } yield result
-  )
+      result <- xs.append(other)
+    } yield x :: result
+  }
 }
 
 object LList {

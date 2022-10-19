@@ -143,7 +143,7 @@ object Int4 {
   }
 }
 
-
+// aka Byte
 final case class Int8(lo: Int4, hi: Int4) extends IntN[Int8] derives Unifier {
   override def plus(that: Int8): GoalWith[(VarOr[Boolean], Int8)] = for {
     (c, r) <- lo.plus(that.lo)
@@ -443,7 +443,7 @@ object FixedNat {
       tail <- create(size - 1)
     } yield FixedNat(LCons(head, tail.xs))
 
-  def create(bits: Int, value: Int): FixedNat = {
+  def from(bits: Int, value: Int): FixedNat = {
     val xs = (0 until bits).map(i => (value & (1 << i)) != 0).toVector
     FixedNat(LList(xs *))
   }

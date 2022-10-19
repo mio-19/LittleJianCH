@@ -432,6 +432,12 @@ implicit class FixedNatOps(self: VarOr[FixedNat]) {
     f <- FixedNat.create(n)
     _ <- f === self
   } yield ()
+
+  def append(other: VarOr[FixedNat]): Rel[FixedNat] = for {
+    xs <- self.is[LList[Boolean]](FixedNat(_))
+    ys <- other.is[LList[Boolean]](FixedNat(_))
+    result <- xs.append(ys)
+  } yield FixedNat(result)
 }
 
 object FixedNat {

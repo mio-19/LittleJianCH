@@ -300,7 +300,11 @@ final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LLi
     for {
       (xh, xt) <- xs.is[Boolean, LList[Boolean]](LCons(_, _))
       (c, r) <- add(xh, true)
-      rest <- c.elim{BinaryNat(xt).succ} {xt}
+      rest <- c.elim {
+        BinaryNat(xt).succ
+      } {
+        xt
+      }
     } yield LCons(r, rest)
   )
 
@@ -321,7 +325,7 @@ final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LLi
     } yield LCons(r, rest)
   )
 
-  def plus(that: VarOr[BinaryNatVal], c: VarOr[Boolean]): Rel[BinaryNatVal] = c.elim{
+  def plus(that: VarOr[BinaryNatVal], c: VarOr[Boolean]): Rel[BinaryNatVal] = c.elim {
     conde(
       xs.eqEmpty >> BinaryNat(that).succ,
       that.eqEmpty >> this.succ,
@@ -420,5 +424,27 @@ final case class FixedNat(xs: VarOr[LList[Boolean]]) {
   override def toString: String = xs.getStrings match {
     case s: String => s"FixedNat($s)"
     case (s, xs) => bitsToNat(xs, s"FixedNat($s)")
+  }
+}
+
+implicit class FixedNatOps(self: VarOr[FixedNat]) {
+  def assumeLen(n: Int): Goal = for {
+    f <- FixedNat.create(n)
+    _ <- f === self
+  } yield ()
+}
+
+object FixedNat {
+  def create(size: Int): GoalWith[FixedNat] =
+    if (size < 0) throw new IllegalArgumentException("size must be non-negative")
+    else if (size == 0) GoalWith(FixedNat(LList()))
+    else for {
+      head <- fresh[Boolean]
+      tail <- create(size - 1)
+    } yield FixedNat(LCons(head, tail.xs))
+
+  def create(bits: Int, value: Int): FixedNat = {
+    val xs = (0 until bits).map(i => (value & (1 << i)) != 0).toVector
+    FixedNat(LList(xs *))
   }
 }

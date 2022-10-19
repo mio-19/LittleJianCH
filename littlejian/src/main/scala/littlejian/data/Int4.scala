@@ -425,6 +425,13 @@ final case class FixedNat(xs: VarOr[LList[Boolean]]) {
     case s: String => s"FixedNat($s)"
     case (s, xs) => bitsToNat(xs, s"FixedNat($s)")
   }
+
+  def succ: Rel[FixedNat] = xs.elim[FixedNat](FixedNat(LList())) { (x, xs) =>
+    x.elim(for {
+      tail <- FixedNat(xs).succ
+      tail0 <- tail.is[LList[Boolean]](FixedNat(_))
+    } yield FixedNat(false :: tail0))(Rel(FixedNat(true :: xs)))
+  }
 }
 
 implicit class FixedNatOps(self: VarOr[FixedNat]) {

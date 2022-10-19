@@ -433,6 +433,13 @@ final case class FixedNat(xs: VarOr[LList[Boolean]]) {
     } yield FixedNat(false :: tail0))(Rel(FixedNat(true :: xs)))
   }
 
+  def prev: Rel[FixedNat] = xs.elim(Rel.failure[FixedNat]) { (x, xs) =>
+    x.elim(Rel(FixedNat(false :: xs)))(for {
+      tail <- FixedNat(xs).prev
+      tail0 <- tail.is[LList[Boolean]](FixedNat(_))
+    } yield FixedNat(true :: tail0))
+  }
+
   def isZero: Goal = xs.elim(()) { (x, xs) =>
     for {
       _ <- x === false
@@ -458,6 +465,11 @@ implicit class FixedNatOps(self: VarOr[FixedNat]) {
     result <- FixedNat(xs).succ
   } yield result
 
+  def prev: Rel[FixedNat] = for {
+    xs <- self.is[LList[Boolean]](FixedNat(_))
+    result <- FixedNat(xs).prev
+  } yield result
+
   def isZero: Goal = for {
     xs <- self.is[LList[Boolean]](FixedNat(_))
     result <- FixedNat(xs).isZero
@@ -466,8 +478,7 @@ implicit class FixedNatOps(self: VarOr[FixedNat]) {
   def elim[U](whenZero: Rel[U])(whenSucc: VarOr[FixedNat] => Rel[U])(implicit u: Unifier[U]): Rel[U] = conde(
     self.isZero >> whenZero,
     for {
-      prev <- fresh[FixedNat]
-      _ <- self === prev.succ
+      prev <- self.prev
       result <- whenSucc(prev)
     } yield result
   )

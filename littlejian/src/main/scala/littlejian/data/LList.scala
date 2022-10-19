@@ -28,7 +28,7 @@ implicit class LListOps[T](self: VarOr[LList[T]]) {
   } yield x
 
   def getStrings: (String, Vector[String]) | String = {
-    val result = this.toString
+    val result = self.toString
     if (result.startsWith("LList(") && result.endsWith(")")) {
       (result, result.drop(6).dropRight(1).split(", ").toVector)
     } else {

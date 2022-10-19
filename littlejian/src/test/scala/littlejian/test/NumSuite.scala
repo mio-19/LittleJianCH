@@ -29,29 +29,38 @@ class NumSuite extends munit.FunSuite {
     assertEquals(Set.from(run[Int8] {
       Int8.from(254) + Int8.from(1)
     }), Set("255"))
-    assertEquals(Set.from(run[Int8] { - (Int8.from(1): VarOr[Int8]) }), Set("255"))
+    assertEquals(Set.from(run[Int8] {
+      -(Int8.from(1): VarOr[Int8])
+    }), Set("255"))
     assertEquals(Set.from(run[Int8] { x => Int8.from(9).minus(Int8.from(1)) === x }), Set("8"))
     assertEquals(Set.from(run[Int16] { x => Int16.from(9).minus(Int16.from(1)) === x }), Set("8"))
     assertEquals(Set.from(run[Int16] { x => Int16.from(9).-(Int16.from(1)) === x }), Set("8"))
     assertEquals(Set.from(run[Int32] { x => Int32.from(65598).-(Int32.from(97)) === x }), Set("65501"))
-    assertEquals(Set.from(run[Nat] { x => Nat.from(9) + Nat.from(1) === x}), Set("10"))
+    assertEquals(Set.from(run[Nat] { x => Nat.from(9) + Nat.from(1) === x }), Set("10"))
     assertEquals(Set.from(run[Nat] { x => Nat.from(9) - Nat.from(1) === x }), Set("8"))
     assertEquals(Set.from(run[Nat] { x => Nat.from(9) * Nat.from(16) === x }), Set("144"))
     assertEquals(Set.from(run[BinaryNat] { x => BinaryNat.from(9) + BinaryNat.from(1) === x }), Set("10"))
     assertEquals(Set.from(run[BinaryNat] { x => BinaryNat.from(9) - BinaryNat.from(1) === x }), Set("8"))
     assertEquals(Set.from(run[BinaryNat] { x => BinaryNat.from(65598) + BinaryNat.from(768) === x }), Set("66366"))
-    assertEquals(Set.from(run[BinaryNat] { BinaryNat.from(9).prev }), Set("8"))
-    if(false){
+    assertEquals(Set.from(run[BinaryNat] {
+      BinaryNat.from(9).prev
+    }), Set("8"))
+    if (false) {
       assertEquals(Set.from(run[BinaryNat] {
         BinaryNat.from(9) * BinaryNat.from(2)
       }), Set("18"))
     }
   }
+  test("FixedNat") {
+    assertEquals(Set.from(run[FixedNat] {
+      FixedNat.from(8, 9) + FixedNat.from(8, 1)
+    }), Set("10"))
+  }
   test("solve") {
     assertEquals(Set.from(run[Int8] { x => x + x === x }), Set("0"))
     assertEquals(Set.from(run[Int8] { x => x - x === x }), Set("0"))
   }
-  test("solveSlow"){
+  test("solveSlow") {
     assertEquals(Set.from(run[Int16] { x => x + x === x + Int16.from(1) }), Set("1"))
   }
 }

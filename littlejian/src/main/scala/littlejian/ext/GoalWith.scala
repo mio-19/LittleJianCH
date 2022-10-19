@@ -9,6 +9,12 @@ type Rel[T] = GoalWith[VarOr[T]]
 
 object Rel {
   val success: Rel[Unit] = GoalWith(Goal.success, ())
+
+  def failure[T]: Rel[T] = for {
+    v <- fresh[T]
+    _ <- Goal.failure
+  } yield v
+
   inline def apply[T](x: VarOr[T]): Rel[T] = GoalWith(Goal.success, x)
 }
 
@@ -34,6 +40,7 @@ final case class GoalWith[T](provider: (T => Goal) => Goal) {
 
 object GoalWith {
   inline def apply[T](provider: (T => Goal) => Goal): GoalWith[T] = new GoalWith[T](provider)
+
   inline def apply[T](goal: Goal, value: T): GoalWith[T] = new GoalWith(k => conj2(goal, k(value)))
 
   inline def apply[T](value: T): GoalWith[T] = new GoalWith(_ (value))

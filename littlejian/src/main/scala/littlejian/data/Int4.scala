@@ -141,6 +141,11 @@ object Int4 {
     if (x < 0 || x > 15) throw new IllegalArgumentException("x must be in [0, 15]")
     Int4((x & 1) == 1, (x & 2) == 2, (x & 4) == 4, (x & 8) == 8)
   }
+
+  def from(xs: Vector[VarOr[Boolean]]): Int4 = xs match {
+    case Vector(b1, b2, b3, b4) => Int4(b1, b2, b3, b4)
+    case _ => throw new IllegalArgumentException("xs must have 4 elements")
+  }
 }
 
 // aka Byte
@@ -182,6 +187,10 @@ object Int8 {
     val hi = Int4.from((x >>> 4) & 15)
     Int8(lo, hi)
   }
+
+  def from(xs: Vector[VarOr[Boolean]]): Int8 =
+    if (xs.length != 8) throw new IllegalArgumentException("xs must have length 8")
+    else Int8(Int4.from(xs.take(4)), Int4.from(xs.drop(4)))
 }
 
 implicit class VarOrInt8Ops(self: VarOr[Int8])(using u: Unifier[Int8]) extends VarOrIntNOps[Int8](self, u) {
@@ -234,11 +243,16 @@ object Int16 {
 
   def one = from(1)
 
-  def from(x: Short): Int16 = {
+  def from(x: Int): Int16 = {
+    if (x < 0 || x > 65535) throw new IllegalArgumentException("x must be in [0, 65535]")
     val lo = Int8.from((x & 0xff).toByte)
     val hi = Int8.from(((x >>> 8) & 0xff).toByte)
     Int16(lo, hi)
   }
+
+  def from(xs: Vector[VarOr[Boolean]]): Int16 =
+    if (xs.length != 16) throw new IllegalArgumentException("xs must have length 16")
+    else Int16(Int8.from(xs.take(8)), Int8.from(xs.drop(8)))
 }
 
 final case class Int32(lo: Int16, hi: Int16) extends IntN[Int32] derives Unifier {
@@ -289,6 +303,10 @@ object Int32 {
     val hi = Int16.from(((n >>> 16) & 0xffff).toShort)
     Int32(lo, hi)
   }
+
+  def from(xs: Vector[VarOr[Boolean]]): Int32 =
+    if (xs.length != 32) throw new IllegalArgumentException("xs must have length 32")
+    else Int32(Int16.from(xs.take(16)), Int16.from(xs.drop(16)))
 }
 
 
@@ -494,18 +512,29 @@ implicit class FixedNatOps(self: VarOr[FixedNat]) {
     result0 <- self - other0
     result <- result0.prev
   } yield result)
-  
-  def to32: Rel[Int32] = ???
+
+  def toLen(x: Int): GoalWith[Vector[VarOr[Boolean]]] = for {
+    xs <- FixedNat.createAux(x)
+    _ <- self === FixedNat(LList(xs *))
+  } yield xs
+
+  def to32: Rel[Int32] = for {
+    xs <- toLen(32)
+  } yield Int32.from(xs)
 }
 
 object FixedNat {
-  def create(size: Int): GoalWith[FixedNat] =
+  private[littlejian] def createAux(size: Int): GoalWith[Vector[VarOr[Boolean]]] =
     if (size < 0) throw new IllegalArgumentException("size must be non-negative")
-    else if (size == 0) GoalWith(FixedNat(LList()))
+    else if (size == 0) GoalWith(Vector())
     else for {
       head <- fresh[Boolean]
-      tail <- create(size - 1)
-    } yield FixedNat(LCons(head, tail.xs))
+      tail <- createAux(size - 1)
+    } yield head +: tail
+
+  def create(size: Int): GoalWith[FixedNat] = for {
+    xs <- createAux(size)
+  } yield FixedNat(LList(xs *))
 
   def from(bits: Int, value: Int): FixedNat = {
     val xs = (0 until bits).map(i => (value & (1 << i)) != 0).toVector

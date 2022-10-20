@@ -494,6 +494,8 @@ implicit class FixedNatOps(self: VarOr[FixedNat]) {
     result0 <- self - other0
     result <- result0.prev
   } yield result)
+  
+  def to32: Rel[Int32] = ???
 }
 
 object FixedNat {

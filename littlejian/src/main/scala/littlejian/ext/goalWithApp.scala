@@ -4,6 +4,13 @@ import littlejian._
 
 import scala.language.implicitConversions
 
+implicit class GoalWithAppReversed1[A, R](a: GoalWith[A]) {
+  @inline def app(fn: A => GoalWith[R]): GoalWith[R] = for {
+    x <- a
+    r <- fn(x)
+  } yield r
+}
+
 implicit class GoalWithApp1[A, R](fn: A => GoalWith[R]) {
   @inline def app(a: GoalWith[A]): GoalWith[R] = for {
     x <- a

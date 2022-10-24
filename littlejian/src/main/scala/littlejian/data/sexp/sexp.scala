@@ -48,15 +48,15 @@ object SExp {
   }
 }
 
-implicit val U$SExp: Unifier[SExp] = U$Union[Cons, Unit, String]
+implicit val U$SExp: Unify[SExp] = U$Union[Cons, Unit, String]
 
-implicit val I$SExp: Inspector[SExp] = I$Union(I$Cons, I$Unit, I$String)
+implicit val I$SExp: Inspect[SExp] = I$Union(I$Cons, I$Unit, I$String)
 
 final class Cons(a: VarOr[SExp], d: VarOr[SExp]) extends Pair[SExp, SExp](a, d) {
 }
-implicit val U$Cons: Unifier[Cons] = implicitly[Unifier[Pair[SExp, SExp]]].asInstanceOf[Unifier[Cons]]
+implicit val U$Cons: Unify[Cons] = implicitly[Unify[Pair[SExp, SExp]]].asInstanceOf[Unify[Cons]]
 
-implicit val I$Cons: Inspector[Cons] = implicitly[Inspector[Pair[SExp, SExp]]].asInstanceOf[Inspector[Cons]]
+implicit val I$Cons: Inspect[Cons] = implicitly[Inspect[Pair[SExp, SExp]]].asInstanceOf[Inspect[Cons]]
 
 def cons(a: VarOr[SExp], d: VarOr[SExp]): SExp = Cons(a, d)
 def car(x: VarOr[SExp]): VarOr[SExp] = x match {

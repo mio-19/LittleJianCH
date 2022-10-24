@@ -22,7 +22,7 @@ implicit class VarOrBooleanOps(x: VarOr[Boolean]) {
     begin(x === false, y)
   )
   
-  def elim[T](whenTrue: Rel[T])(whenFalse: Rel[T])(implicit unifier: Unifier[T]): Rel[T] = conde(
+  def elim[T](whenTrue: Rel[T])(whenFalse: Rel[T])(implicit unifier: Unify[T]): Rel[T] = conde(
     begin(x === true, whenTrue),
     begin(x === false, whenFalse)
   )
@@ -94,47 +94,47 @@ inline def fresh[T, U, V](f: (VarOr[T], VarOr[U], VarOr[V]) => Goal): Goal = cal
 
 
 implicit class EqOps[T](x: VarOr[T]) {
-  inline def ===(y: VarOr[T])(implicit unifier: Unifier[T]): Goal = GoalEq(x, y)
+  inline def ===(y: VarOr[T])(implicit unifier: Unify[T]): Goal = GoalEq(x, y)
 
-  inline def =/=(y: VarOr[T])(implicit unifier: Unifier[T]): Goal = GoalNotEq(x, y)
+  inline def =/=(y: VarOr[T])(implicit unifier: Unify[T]): Goal = GoalNotEq(x, y)
 
-  inline def ===(y: Rel[T])(implicit unifier: Unifier[T]): Goal = for {
+  inline def ===(y: Rel[T])(implicit unifier: Unify[T]): Goal = for {
     y0 <- y
     _ <- x === y0
   } yield ()
 
-  inline def =/=(y: Rel[T])(implicit unifier: Unifier[T]): Goal = for {
+  inline def =/=(y: Rel[T])(implicit unifier: Unify[T]): Goal = for {
     y0 <- y
     _ <- x =/= y0
   } yield ()
 }
 
 implicit class EqRelOps[T](x: Rel[T]) {
-  inline def ===(y: Rel[T])(implicit unifier: Unifier[T]): Goal = for {
+  inline def ===(y: Rel[T])(implicit unifier: Unify[T]): Goal = for {
     x0 <- x
     y0 <- y
     _ <- x0 === y0
   } yield ()
-  inline def =/=(y: Rel[T])(implicit unifier: Unifier[T]): Goal = for {
+  inline def =/=(y: Rel[T])(implicit unifier: Unify[T]): Goal = for {
     x0 <- x
     y0 <- y
     _ <- x0 =/= y0
   } yield ()
-  inline def ===(y: VarOr[T])(implicit unifier: Unifier[T]): Goal = for {
+  inline def ===(y: VarOr[T])(implicit unifier: Unify[T]): Goal = for {
     x0 <- x
     _ <- x0 === y
   } yield ()
-  inline def =/=(y: VarOr[T])(implicit unifier: Unifier[T]): Goal = for {
+  inline def =/=(y: VarOr[T])(implicit unifier: Unify[T]): Goal = for {
     x0 <- x
     _ <- x0 =/= y
   } yield ()
 }
 
-inline def compare[T](x: VarOr[T], y: VarOr[T])(equals: => Goal)(notEquals: => Goal)(implicit unifier: Unifier[T]): Goal = conde(
+inline def compare[T](x: VarOr[T], y: VarOr[T])(equals: => Goal)(notEquals: => Goal)(implicit unifier: Unify[T]): Goal = conde(
   begin(x === y, equals), begin(x =/= y, notEquals)
 )
 
-inline def compare[T, U](x: VarOr[T], y: VarOr[T])(equals: => Rel[U])(notEquals: => Rel[U])(implicit t: Unifier[T], u: Unifier[U]): Rel[U] = conde(
+inline def compare[T, U](x: VarOr[T], y: VarOr[T])(equals: => Rel[U])(notEquals: => Rel[U])(implicit t: Unify[T], u: Unify[U]): Rel[U] = conde(
   begin(x === y, equals), begin(x =/= y, notEquals)
 )
 
@@ -143,11 +143,11 @@ implicit class VarOrPredOps[T](x: VarOr[T]) {
 
   inline def isNotType[T](implicit t: ClassTag[T]): Goal = GoalPredNotType(t, x)
 
-  inline def absent(absent: Any)(implicit inspector: Inspector[T]): Goal = GoalAbsent(WithInspector(x)(inspector), absent)
+  inline def absent(absent: Any)(implicit inspector: Inspect[T]): Goal = GoalAbsent(WithInspector(x)(inspector), absent)
 }
 
 implicit class VarOrCast[T](x: VarOr[T]) {
-  def cast[U](implicit u: ClassTag[U], unifier: Unifier[U]): Rel[U] = for {
+  def cast[U](implicit u: ClassTag[U], unifier: Unify[U]): Rel[U] = for {
     result <- fresh[U]
     _ <- x.isType[U]
     _ <- try {
@@ -160,7 +160,7 @@ implicit class VarOrCast[T](x: VarOr[T]) {
 
 implicit class VarOrForceApply[T](x: VarOr[T]) {
   @deprecated
-  def forceApply[U](f: T => U)(implicit unifier: Unifier[U]): Rel[U] = for {
+  def forceApply[U](f: T => U)(implicit unifier: Unify[U]): Rel[U] = for {
     result <- fresh[U]
     _ <- GoalReadSubst { subst =>
       subst.walk(x) match {
@@ -178,7 +178,7 @@ inline def begin(xs: => Goal*): Goal = GoalDelay(GoalConj(xs))
 inline def conda(xs: => (Goal, Goal)*): Goal = GoalDelay(GoalDisjA(xs))
 inline def condu(xs: => (Goal, Goal)*): Goal = GoalDelay(GoalDisjU(xs))
 
-@inline def conde[T](xs: => Rel[T]*)(implicit unifier: Unifier[T]): Rel[T] = {
+@inline def conde[T](xs: => Rel[T]*)(implicit unifier: Unify[T]): Rel[T] = {
   (result: VarOr[T]) => GoalDelay(GoalDisj(xs.map(_ (result))))
 }
 

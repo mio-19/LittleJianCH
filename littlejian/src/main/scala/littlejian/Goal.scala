@@ -8,7 +8,7 @@ sealed trait GoalBasic extends Goal {
   def execute(state: State): Option[State]
 }
 
-final case class GoalEq[T](x: VarOr[T], y: VarOr[T])(implicit unifier: Unifier[T]) extends GoalBasic {
+final case class GoalEq[T](x: VarOr[T], y: VarOr[T])(implicit unifier: Unify[T]) extends GoalBasic {
   override def execute(state: State): Option[State] = unifier.unify(x, y).getSubstWithPatch(state.eq.subst) match {
     case Some(subst, patch) => state.setEq(EqState(subst), Set.from(patch.map(_._1)))
     case None => None
@@ -17,7 +17,7 @@ final case class GoalEq[T](x: VarOr[T], y: VarOr[T])(implicit unifier: Unifier[T
   override def toString: String = s"${x} === ${y}"
 }
 
-final case class GoalNotEq[T](x: VarOr[T], y: VarOr[T])(implicit unifier: Unifier[T]) extends GoalBasic {
+final case class GoalNotEq[T](x: VarOr[T], y: VarOr[T])(implicit unifier: Unify[T]) extends GoalBasic {
   override def execute(state: State): Option[State] =
     for {
       notEq <- NotEqState.insert(state.eq, new NotEqRequest(x, y, unifier), state.notEq)

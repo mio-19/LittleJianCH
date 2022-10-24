@@ -30,8 +30,8 @@ implicit class UnifyingOps[T](self: Unifying[T]) {
   inline def >>[U](that: Unifying[U]): Unifying[U] = self >> that
 }
 
-trait Unifier[T] {
-  final implicit val thisUnifier: Unifier[T] = this
+trait Unify[T] {
+  final implicit val thisUnifier: Unify[T] = this
 
   final def unify(self: VarOr[T], other: VarOr[T]): Unifying[Unit] = for {
     self <- Subst.walk(self)
@@ -47,23 +47,23 @@ trait Unifier[T] {
   def concreteUnify(self: T, other: T): Unifying[Unit]
 }
 
-implicit class InfixUnify[T](self: VarOr[T])(implicit unifier: Unifier[T]) {
+implicit class InfixUnify[T](self: VarOr[T])(implicit unifier: Unify[T]) {
   def unify(other: VarOr[T]): Unifying[Unit] = unifier.unify(self, other)
 }
 
-object Unifier {
+object Unify {
   import shapeless3.deriving.*
-  given unifierSum[A] (using inst: K0.CoproductInstances[Unifier, A]): Unifier[A] with
+  given unifySum[A] (using inst: K0.CoproductInstances[Unify, A]): Unify[A] with
     def concreteUnify(x: A, y: A): Unifying[Unit] = inst.fold2(x, y)(Unifying.failure: Unifying[Unit])(
-      [t] => (u: Unifier[t], t0: t, t1: t) => u.unify(t0, t1)
+      [t] => (u: Unify[t], t0: t, t1: t) => u.unify(t0, t1)
     )
 
-  given unifierProduct[A] (using inst: K0.ProductInstances[Unifier, A]): Unifier[A] with
+  given unifyProduct[A] (using inst: K0.ProductInstances[Unify, A]): Unify[A] with
     def concreteUnify(x: A, y: A): Unifying[Unit] = inst.foldLeft2(x, y)(Unifying.success(()))(
-      [t] => (acc: Unifying[Unit], u: Unifier[t], t0: t, t1: t) =>
+      [t] => (acc: Unifying[Unit], u: Unify[t], t0: t, t1: t) =>
         acc >> u.unify(t0, t1)
     )
 
-  inline def derived[A](using gen: K0.Generic[A]): Unifier[A] =
-    gen.derive(unifierProduct, unifierSum)
+  inline def derived[A](using gen: K0.Generic[A]): Unify[A] =
+    gen.derive(unifyProduct, unifySum)
 }

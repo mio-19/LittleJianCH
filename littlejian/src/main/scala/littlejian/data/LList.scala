@@ -12,9 +12,9 @@ implicit class LListOps[T](self: VarOr[LList[T]]) {
 
   inline def +:(elem: VarOr[T]): LList[T] = LCons(elem, self)
 
-  def isEmpty(implicit unifier: Unifier[LList[T]]): Goal = self === LList.empty
+  def isEmpty(implicit unifier: Unify[LList[T]]): Goal = self === LList.empty
 
-  def elim[U](ifEmpty: Rel[U])(ifNonEmpty: (VarOr[T], VarOr[LList[T]]) => Rel[U])(implicit t: Unifier[LList[T]], u: Unifier[U]): Rel[U] =
+  def elim[U](ifEmpty: Rel[U])(ifNonEmpty: (VarOr[T], VarOr[LList[T]]) => Rel[U])(implicit t: Unify[LList[T]], u: Unify[U]): Rel[U] =
     conde(
       (self === LList.empty) >> ifEmpty,
       for {
@@ -23,7 +23,7 @@ implicit class LListOps[T](self: VarOr[LList[T]]) {
       } yield result
     )
 
-  def head(implicit unifier: Unifier[LList[T]]): Rel[T] = for {
+  def head(implicit unifier: Unify[LList[T]]): Rel[T] = for {
     (x, ignored) <- self.is[T, LList[T]](LCons(_, _))
   } yield x
 
@@ -37,9 +37,9 @@ implicit class LListOps[T](self: VarOr[LList[T]]) {
   }
 }
 
-implicit class VarOrLListOps[T](self: VarOr[LList[T]])(implicit U$T: Unifier[T]) {
-  implicit val U$LListT: Unifier[LList[T]] = U$LList(U$T)
-  implicit val U$SeqT: Unifier[Seq[VarOr[T]]] = U$Seq(U$VarOr(U$T))
+implicit class VarOrLListOps[T](self: VarOr[LList[T]])(implicit U$T: Unify[T]) {
+  implicit val U$LListT: Unify[LList[T]] = U$LList(U$T)
+  implicit val U$SeqT: Unify[Seq[VarOr[T]]] = U$Seq(U$VarOr(U$T))
 
   def eqEmpty: Goal = self === LList.empty[T]
 
@@ -62,7 +62,7 @@ case class LEmpty[T]() extends LList[T] {
   override def toString: String = "LList()"
 }
 
-def U$LEmpty[T]: Unifier[LEmpty[T]] = new EqualUnifier[LEmpty[T]] {}
+def U$LEmpty[T]: Unify[LEmpty[T]] = new EqualUnify[LEmpty[T]] {}
 
 case class LCons[T](head: VarOr[T], tail: VarOr[LList[T]]) extends LList[T] with Product2[VarOr[T], VarOr[LList[T]]] {
   override def toString: String = {
@@ -75,10 +75,10 @@ case class LCons[T](head: VarOr[T], tail: VarOr[LList[T]]) extends LList[T] with
   }
 }
 
-def U$LCons[T](implicit U$T: Unifier[T], U$LListT: Unifier[LList[T]]): Unifier[LCons[T]] = U$Product
+def U$LCons[T](implicit U$T: Unify[T], U$LListT: Unify[LList[T]]): Unify[LCons[T]] = U$Product
 
-implicit def U$LList[T](implicit unifier: Unifier[T]): Unifier[LList[T]] = {
-  implicit object U extends Unifier[LList[T]] {
+implicit def U$LList[T](implicit unifier: Unify[T]): Unify[LList[T]] = {
+  implicit object U extends Unify[LList[T]] {
     override def concreteUnify(self: LList[T], other: LList[T]): Unifying[Unit] = (self, other) match {
       case (LEmpty(), LEmpty()) => Unifying.success(())
       case (LCons(x, xs), LCons(y, ys)) => for {

@@ -19,23 +19,23 @@ implicit def toLListData(x: LList[Data]): LListData = x match {
   case LEmpty() => new EmptyList
   case LCons(head, tail) => new NonEmptyList(head, tail)
 }
-given U$LListData: Unifier[LListData] = U$LList(U$Data).asInstanceOf[Unifier[LListData]]
+given U$LListData: Unify[LListData] = U$LList(U$Data).asInstanceOf[Unify[LListData]]
 
 type Data = (String | Int32 | Boolean) | LListData | (Closure | Macro) | Unit
 
-final case class Params(params: VarOr[LList[String]], vararg: VarOr[Option[VarOr[String]]]) derives Unifier
+final case class Params(params: VarOr[LList[String]], vararg: VarOr[Option[VarOr[String]]]) derives Unify
 
-final case class Closure(env: VarOr[WholeEnv], envId: VarOr[EnvId], params: VarOr[Params], ast: VarOr[Data]) derives Unifier
+final case class Closure(env: VarOr[WholeEnv], envId: VarOr[EnvId], params: VarOr[Params], ast: VarOr[Data]) derives Unify
 
-final case class Macro(f: VarOr[Data]) derives Unifier
+final case class Macro(f: VarOr[Data]) derives Unify
 
-given U$Data: Unifier[Data] = U$Union[String, Int32, Boolean, LEmpty[Data], LCons[Data], Closure, Macro, Unit].asInstanceOf[Unifier[Data]]
+given U$Data: Unify[Data] = U$Union[String, Int32, Boolean, LEmpty[Data], LCons[Data], Closure, Macro, Unit].asInstanceOf[Unify[Data]]
 
 
 type EnvVar = BinaryNat
 type EnvId = LList[EnvVar]
 
-final case class EnvEntry(envId: VarOr[EnvVar], id: VarOr[String], value: VarOr[Data]) derives Unifier
+final case class EnvEntry(envId: VarOr[EnvVar], id: VarOr[String], value: VarOr[Data]) derives Unify
 
 type WholeEnv = LList[EnvEntry]
 

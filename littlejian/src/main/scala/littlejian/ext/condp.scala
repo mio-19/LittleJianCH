@@ -22,6 +22,6 @@ def condp(keys: Seq[Walker => Seq[String]]*)(clauses: => (String, Goal)*): Goal 
   GoalDisj(clauses.filter({ case (id, _) => ids.contains(id) }).map(_._2))
 })
 
-def condp[T](keys: Seq[Walker => Seq[String]]*)(clauses: => (String, Rel[T])*)(implicit unifier: Unifier[T]): Rel[T] = {
+def condp[T](keys: Seq[Walker => Seq[String]]*)(clauses: => (String, Rel[T])*)(implicit unifier: Unify[T]): Rel[T] = {
   (result: VarOr[T]) => GoalDelay(condp(keys *)(clauses.map{case (id, rel) => (id, rel(result))} *))
 }

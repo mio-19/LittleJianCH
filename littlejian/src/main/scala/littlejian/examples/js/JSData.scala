@@ -14,4 +14,4 @@ implicit def jsDataToJSData0[T](x: JSData): JSData0[T] = x.asInstanceOf[JSData0[
 implicit def UDataToJsData0[T,U[_]](x: U[JSData]): U[JSData0[T]] = x.asInstanceOf[U[JSData0[T]]]
 implicit def UJSData0ToJSData[T,U[_]](x: U[JSData0[T]]): U[JSData] = x.asInstanceOf[U[JSData]]
 
-implicit val U$JSData: Unifier[JSData] = U$Union(U$LList(U$JSData), U$String, U$Boolean).asInstanceOf[Unifier[JSData]]
+implicit val U$JSData: Unify[JSData] = U$Union(U$LList(U$JSData), U$String, U$Boolean).asInstanceOf[Unify[JSData]]

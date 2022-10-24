@@ -4,8 +4,8 @@ import littlejian._
 
 import scala.language.implicitConversions
 
-implicit def U$List[T](implicit unifier: Unifier[T]): Unifier[List[T]] = {
-  implicit object U extends Unifier[List[T]] {
+implicit def U$List[T](implicit unifier: Unify[T]): Unify[List[T]] = {
+  implicit object U extends Unify[List[T]] {
     override def concreteUnify(self: List[T], other: List[T]): Unifying[Unit] = (self, other) match {
       case (x :: xs, y :: ys) => for {
         _ <- x.unify(y)
@@ -17,8 +17,8 @@ implicit def U$List[T](implicit unifier: Unifier[T]): Unifier[List[T]] = {
   }
   U
 }
-implicit def U$Seq[T](implicit unify: Unifier[T]): Unifier[Seq[T]] = {
-  implicit object U extends Unifier[Seq[T]] {
+implicit def U$Seq[T](implicit unify: Unify[T]): Unify[Seq[T]] = {
+  implicit object U extends Unify[Seq[T]] {
     override def concreteUnify(self: Seq[T], other: Seq[T]): Unifying[Unit] =
       if(self.isEmpty && other.isEmpty) Unifying.success(())
       else if(self.nonEmpty && other.nonEmpty) for {

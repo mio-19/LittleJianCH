@@ -58,7 +58,7 @@ class TopSuite extends munit.FunSuite {
       assertEquals(Set.from(run {
         conde(1, 2, 3, 4): Rel[Int]
       }), Set("1", "2", "3", "4"))
-      implicit val U$IntStr: Unifier[Integer | String] = U$Union(U$Integer, U$String)
+      implicit val U$IntStr: Unify[Integer | String] = U$Union(U$Integer, U$String)
       assertEquals(Set.from(run[Integer | String] { x =>
         x.isType[Integer] && x === (1: Integer)
       }), Set("1"))

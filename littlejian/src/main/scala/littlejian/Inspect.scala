@@ -8,7 +8,7 @@ import scala.collection.immutable.HashSet
 
 private val scanRecHistory = new Parameter[HashSet[Any]]
 
-final case class WithInspector[T](x: VarOr[T])(implicit inspector: Inspector[T]) {
+final case class WithInspector[T](x: VarOr[T])(implicit inspector: Inspect[T]) {
   // None: contains
   // Some(Seq()): not contains
   // Some(Seq(...)): uncertain
@@ -26,7 +26,7 @@ final case class WithInspector[T](x: VarOr[T])(implicit inspector: Inspector[T])
 }
 
 // for GoalAbsent usages
-trait Inspector[T] {
+trait Inspect[T] {
   def inspect(x: T): Seq[WithInspector[_]]
 
   // None: contains
@@ -35,7 +35,7 @@ trait Inspector[T] {
   inline final def scanUncertain(x: T, resolver: Any => Any, v: Any): Option[Seq[WithInspector[_]]] = WithInspector(x)(this).scanUncertain(resolver, v)
 }
 
-object Inspector {
+object Inspect {
   // None: contains
   // Some(Seq()): not contains
   // Some(Seq(...)): uncertain
@@ -46,46 +46,46 @@ object Inspector {
 
   import shapeless3.deriving.*
 
-  given inspectorSum[A] (using inst: K0.CoproductInstances[Inspector, A]): Inspector[A] with
+  given inspectSum[A] (using inst: K0.CoproductInstances[Inspect, A]): Inspect[A] with
     def inspect(x: A): Seq[WithInspector[_]] = inst.fold(x)(
-      [t] => (i: Inspector[t], t0: t) => Seq(WithInspector(t0)(i))
+      [t] => (i: Inspect[t], t0: t) => Seq(WithInspector(t0)(i))
     )
 
-  given inspectorProduct[A] (using inst: K0.ProductInstances[Inspector, A]): Inspector[A] with
+  given inspectProduct[A] (using inst: K0.ProductInstances[Inspect, A]): Inspect[A] with
     def inspect(x: A): Seq[WithInspector[_]] = inst.foldLeft(x)(Seq.empty: Seq[WithInspector[_]])(
-      [t] => (acc: Seq[WithInspector[_]], i: Inspector[t], t0: t) =>
+      [t] => (acc: Seq[WithInspector[_]], i: Inspect[t], t0: t) =>
         WithInspector(t0)(i) +: acc
     )
 
-  inline def derived[A](using gen: K0.Generic[A]): Inspector[A] =
-    gen.derive(inspectorProduct, inspectorSum)
+  inline def derived[A](using gen: K0.Generic[A]): Inspect[A] =
+    gen.derive(inspectProduct, inspectSum)
 }
 
-trait AtomInspector[T] extends Inspector[T] {
+trait AtomInspect[T] extends Inspect[T] {
   override def inspect(x: T): Seq[WithInspector[_]] = Seq.empty
 }
 
-implicit object I$Var extends AtomInspector[Var[_]]
+implicit object I$Var extends AtomInspect[Var[_]]
 
-implicit object I$String extends AtomInspector[String]
+implicit object I$String extends AtomInspect[String]
 
-implicit object I$Boolean extends AtomInspector[Boolean]
+implicit object I$Boolean extends AtomInspect[Boolean]
 
-implicit object I$Int extends AtomInspector[Int]
+implicit object I$Int extends AtomInspect[Int]
 
-implicit object I$Long extends AtomInspector[Long]
+implicit object I$Long extends AtomInspect[Long]
 
-implicit object I$Integer extends AtomInspector[Integer]
+implicit object I$Integer extends AtomInspect[Integer]
 
-implicit object I$Unit extends AtomInspector[Unit]
+implicit object I$Unit extends AtomInspect[Unit]
 
-implicit def I$VarOr[T](implicit inspector: Inspector[T]): Inspector[VarOr[T]] = {
+implicit def I$VarOr[T](implicit inspector: Inspect[T]): Inspect[VarOr[T]] = {
   case v: Var[_] => I$Var.inspect(v)
   case t: T => inspector.inspect(t)
 }
 
-@targetName("I$Union_") implicit def I$Union[T, U](implicit tr: => Inspector[T], ur: => Inspector[U], tev: ClassTag[T], uev: ClassTag[U]): Inspector[T | U] = I$Union(tr, ur, tev, uev)
-implicit def I$Union[T, U](tr: => Inspector[T], ur: => Inspector[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Inspector[T | U] = {
+@targetName("I$Union_") implicit def I$Union[T, U](implicit tr: => Inspect[T], ur: => Inspect[U], tev: ClassTag[T], uev: ClassTag[U]): Inspect[T | U] = I$Union(tr, ur, tev, uev)
+implicit def I$Union[T, U](tr: => Inspect[T], ur: => Inspect[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Inspect[T | U] = {
   lazy val t = tr
   lazy val u = ur
   val tc = tev.runtimeClass
@@ -97,8 +97,8 @@ implicit def I$Union[T, U](tr: => Inspector[T], ur: => Inspector[U])(implicit te
   }
 }
 
-@targetName("I$Union_") implicit def I$Union[T, U, V](implicit tr: => Inspector[T], ur: => Inspector[U], vr: => Inspector[V], tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V]): Inspector[T | U | V] = I$Union(tr, ur, vr, tev, uev, vev)
-implicit def I$Union[T, U, V](tr: => Inspector[T], ur: => Inspector[U], vr: => Inspector[V])(implicit tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V]): Inspector[T | U | V] = {
+@targetName("I$Union_") implicit def I$Union[T, U, V](implicit tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V], tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V]): Inspect[T | U | V] = I$Union(tr, ur, vr, tev, uev, vev)
+implicit def I$Union[T, U, V](tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V])(implicit tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V]): Inspect[T | U | V] = {
   lazy val t = tr
   lazy val u = ur
   lazy val v = vr
@@ -113,22 +113,22 @@ implicit def I$Union[T, U, V](tr: => Inspector[T], ur: => Inspector[U], vr: => I
   }
 }
 
-implicit def I$Product[T, R <: Product1[T]](implicit tr: => Inspector[T]): Inspector[R] = {
+implicit def I$Product[T, R <: Product1[T]](implicit tr: => Inspect[T]): Inspect[R] = {
   lazy val t = tr
   (x) => Seq(WithInspector(x._1)(t))
 }
-implicit def I$Product[T, U, R <: Product2[T, U]](implicit tr: => Inspector[T], ur: => Inspector[U]): Inspector[R] = {
+implicit def I$Product[T, U, R <: Product2[T, U]](implicit tr: => Inspect[T], ur: => Inspect[U]): Inspect[R] = {
   lazy val t = tr
   lazy val u = ur
   (x) => Seq(WithInspector(x._1)(t), WithInspector(x._2)(u))
 }
-implicit def I$Product[T, U, V, R <: Product3[T, U, V]](implicit tr: => Inspector[T], ur: => Inspector[U], vr: => Inspector[V]): Inspector[R] = {
+implicit def I$Product[T, U, V, R <: Product3[T, U, V]](implicit tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V]): Inspect[R] = {
   lazy val t = tr
   lazy val u = ur
   lazy val v = vr
   (x) => Seq(WithInspector(x._1)(t), WithInspector(x._2)(u), WithInspector(x._3)(v))
 }
-implicit def I$Produce[A, B, C, D, R <: Product4[A, B, C, D]](implicit ar: => Inspector[A], br: => Inspector[B], cr: => Inspector[C], dr: => Inspector[D]): Inspector[R] = {
+implicit def I$Produce[A, B, C, D, R <: Product4[A, B, C, D]](implicit ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C], dr: => Inspect[D]): Inspect[R] = {
   lazy val a = ar
   lazy val b = br
   lazy val c = cr

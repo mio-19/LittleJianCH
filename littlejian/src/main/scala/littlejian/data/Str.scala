@@ -23,4 +23,4 @@ object Str {
   def from(xs: String): Str = Str(LList.from(xs.toList.map(Chr.from)))
 }
 
-implicit val U$Str: Unifier[Str] = U$Product(U$LList(U$Chr))
+implicit val U$Str: Unify[Str] = U$Product(U$LList(U$Chr))

@@ -21,4 +21,4 @@ object Chr {
   def from(c: Char): Chr = Chr(Int16.from(c.toShort))
 }
 
-implicit val U$Chr: Unifier[Chr] = U$Product
+implicit val U$Chr: Unify[Chr] = U$Product

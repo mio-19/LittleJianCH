@@ -3,13 +3,13 @@ package littlejian.data
 import littlejian._
 import littlejian.ext._
 
-sealed trait Nat derives Unifier
+sealed trait Nat derives Unify
 
-case object Zero extends Nat derives Unifier {
+case object Zero extends Nat derives Unify {
   override def toString: String = "0"
 }
 
-final case class Succ(prev: VarOr[Nat]) extends Nat derives Unifier {
+final case class Succ(prev: VarOr[Nat]) extends Nat derives Unify {
   override def toString: String = {
     val p = prev.toString
     try {

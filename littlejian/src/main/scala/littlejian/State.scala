@@ -12,14 +12,14 @@ object EqState {
   val empty: EqState = EqState(Subst.empty)
 }
 
-sealed class NotEqRequest[T](val x: VarOr[T], val y: VarOr[T], val unifier: Unifier[T]) {
+sealed class NotEqRequest[T](val x: VarOr[T], val y: VarOr[T], val unifier: Unify[T]) {
   def relatedOnEq(v: Set[Var[_]]): Boolean = true
 }
 
-private def NotEqRequestUnchecked[T, U](x: T, y: U, unifier: Unifier[_]): NotEqRequest[_] =
-  new NotEqRequest[T | U](x, y, unifier.asInstanceOf[Unifier[T | U]])
+private def NotEqRequestUnchecked[T, U](x: T, y: U, unifier: Unify[_]): NotEqRequest[_] =
+  new NotEqRequest[T | U](x, y, unifier.asInstanceOf[Unify[T | U]])
 
-final case class NotEqElem[T](override val x: Var[T], override val y: VarOr[T], override val unifier: Unifier[T]) extends NotEqRequest[T](x, y, unifier) {
+final case class NotEqElem[T](override val x: Var[T], override val y: VarOr[T], override val unifier: Unify[T]) extends NotEqRequest[T](x, y, unifier) {
   override def relatedOnEq(v: Set[Var[_]]): Boolean = {
     val vs: Set[Any] = v.asInstanceOf[Set[Any]]
     vs.contains(x) || vs.contains(y)
@@ -29,8 +29,8 @@ final case class NotEqElem[T](override val x: Var[T], override val y: VarOr[T], 
 }
 
 object NotEqElem {
-  def unchecked(x: Var[_], y: Any, unifier: Unifier[_]): NotEqElem[_] =
-    NotEqElem(x.asInstanceOf[Var[Any]], y.asInstanceOf[VarOr[Any]], unifier.asInstanceOf[Unifier[Any]])
+  def unchecked(x: Var[_], y: Any, unifier: Unify[_]): NotEqElem[_] =
+    NotEqElem(x.asInstanceOf[Var[Any]], y.asInstanceOf[VarOr[Any]], unifier.asInstanceOf[Unify[Any]])
 }
 
 final case class NotEqState(clauses: Vector /*conj*/ [Vector[NotEqElem[_]] /*disj not eq*/ ]) {
@@ -119,7 +119,7 @@ object PredNotTypeState {
 }
 
 final case class AbsentState(absents: Vector /*conj*/ [(Any, Vector /*disj*/ [WithInspector[_]])]) {
-  def insert(eq: EqState, goal: GoalAbsent[_]): Option[AbsentState] = Inspector.scanUncertain(goal.x, eq.subst.walk, goal.absent) match {
+  def insert(eq: EqState, goal: GoalAbsent[_]): Option[AbsentState] = Inspect.scanUncertain(goal.x, eq.subst.walk, goal.absent) match {
     case None => None
     case Some(xs) => if (xs.isEmpty) Some(this) else Some(AbsentState((goal.absent, Vector.from(xs)) +: absents))
   }
@@ -138,7 +138,7 @@ object AbsentState {
     if (absents.isEmpty) Some(AbsentState.empty) // optimize
     else {
       traverse(absents.map({ case (v, xs) => for {
-        ys <- Inspector.scanUncertain(xs, eq.subst.walk, v)
+        ys <- Inspect.scanUncertain(xs, eq.subst.walk, v)
       } yield (v, ys)
       })).map(
         next => AbsentState(next.filter({ case (_, xs) => xs.nonEmpty }))

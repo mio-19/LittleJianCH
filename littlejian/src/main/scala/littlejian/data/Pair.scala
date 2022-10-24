@@ -2,7 +2,7 @@ package littlejian.data
 
 import littlejian._
 
-case class Pair[T, U](x: VarOr[T], y: VarOr[U]) extends Product2[VarOr[T], VarOr[U]] derives Unifier, Inspector {
+case class Pair[T, U](x: VarOr[T], y: VarOr[U]) extends Product2[VarOr[T], VarOr[U]] derives Unify, Inspect {
   private def tailToString: String = y match {
     case y: Pair[_, _] => s"$x ${y.tailToString}"
     case v: Var[_] => prettyPrintContext.get match {

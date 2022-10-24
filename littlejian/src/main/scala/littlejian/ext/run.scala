@@ -17,12 +17,12 @@ def printState(root: Var[_], state: State): String = prettyPrintContext.callWith
 // useful for maybe infinite spaces
 def displaySpace(root: Var[_], space: Seq[State]): Unit = space.foreach(s => println(printState(root, s)))
 
-def run[T](block: VarOr[T] => Goal)(implicit unifier: Unifier[T], searcher: Searcher): Seq[String] = {
+def run[T](block: VarOr[T] => Goal)(implicit unifier: Unify[T], searcher: Searcher): Seq[String] = {
   val root = new Var[T]()
   run(block(root)).map(printState(root, _))
 }
 
-def runDisplay[T](block: VarOr[T] => Goal)(implicit unifier: Unifier[T], searcher: Searcher): Unit = {
+def runDisplay[T](block: VarOr[T] => Goal)(implicit unifier: Unify[T], searcher: Searcher): Unit = {
   val root = new Var[T]()
   displaySpace(root, run(block(root)))
 }

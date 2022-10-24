@@ -9,7 +9,7 @@ import scala.collection.immutable.HashMap
 type Subst = Map[Var[_], _ /*VarOr[_]*/]
 
 // Unifier is for =/=
-type SubstPatch = Vector[(Var[_], Unifier[_], _)] // Unifier is for =/= usages
+type SubstPatch = Vector[(Var[_], Unify[_], _)] // Unifier is for =/= usages
 
 object SubstPatch {
   val empty: SubstPatch = Vector.empty
@@ -30,10 +30,10 @@ implicit final class SubstOps(self: Subst) {
     case None => None
   }
 
-  def addEntry[T](v: Var[T], x: VarOr[T])(implicit unifier: Unifier[T]): Subst =
+  def addEntry[T](v: Var[T], x: VarOr[T])(implicit unifier: Unify[T]): Subst =
     if (self.contains(v)) throw new IllegalArgumentException("duplicate add") else self.updated(v, x)
 
-  def addEntryUnchecked(v: Var[_], x: Any)(unifier: Unifier[_]): Subst =
+  def addEntryUnchecked(v: Var[_], x: Any)(unifier: Unify[_]): Subst =
     if (self.contains(v)) throw new IllegalArgumentException("duplicate add") else self.updated(v, x)
 }
 
@@ -54,7 +54,7 @@ object Subst {
     case state@(subst, _) => Some((state, subst.walk(x)))
   }
 
-  def addEntry[T](v: Var[T], x: VarOr[T])(implicit unifier: Unifier[T]): Unifying[Unit] = StateOption {
+  def addEntry[T](v: Var[T], x: VarOr[T])(implicit unifier: Unify[T]): Unifying[Unit] = StateOption {
     case (subst, patch) => Some(((subst.addEntry(v, x), (v, unifier, x) +: patch), ()))
   }
 

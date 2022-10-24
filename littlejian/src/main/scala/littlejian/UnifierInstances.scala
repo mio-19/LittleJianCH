@@ -1,15 +1,15 @@
 package littlejian
 
-implicit def U$VarOr[T](implicit unifier: Unifier[T]): Unifier[VarOr[T]] = (x, y) => unifier.unify(x, y)
-given unifierVarOr[T](using unifier: Unifier[T]): Unifier[VarOr[T]] = U$VarOr[T]
+implicit def U$VarOr[T](implicit unifier: Unify[T]): Unify[VarOr[T]] = (x, y) => unifier.unify(x, y)
+given unifierVarOr[T](using unifier: Unify[T]): Unify[VarOr[T]] = U$VarOr[T]
 
 
 import scala.annotation.targetName
 import scala.reflect.ClassTag
 
-@targetName("U$Union_") def U$Union[T, U](implicit tr: => Unifier[T], ur: => Unifier[U], tev: ClassTag[T], uev: ClassTag[U]): Unifier[T | U] = U$Union(tr, ur)(tev, uev)
+@targetName("U$Union_") def U$Union[T, U](implicit tr: => Unify[T], ur: => Unify[U], tev: ClassTag[T], uev: ClassTag[U]): Unify[T | U] = U$Union(tr, ur)(tev, uev)
 
-def U$Union[T, U](tr: => Unifier[T], ur: => Unifier[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Unifier[T | U] = {
+def U$Union[T, U](tr: => Unify[T], ur: => Unify[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Unify[T | U] = {
   lazy val t = tr
   lazy val u = ur
   val tc = tev.runtimeClass
@@ -22,8 +22,8 @@ def U$Union[T, U](tr: => Unifier[T], ur: => Unifier[U])(implicit tev: ClassTag[T
   }
 }
 
-@targetName("U$Union_") def U$Union[T, U, V](implicit tr: => Unifier[T], ur: => Unifier[U], vr: => Unifier[V], tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V]): Unifier[T | U | V] = U$Union(tr, ur, vr)(tev, uev, vev)
-def U$Union[T, U, V](tr: => Unifier[T], ur: => Unifier[U], vr: => Unifier[V])(implicit tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V]): Unifier[T | U | V] = {
+@targetName("U$Union_") def U$Union[T, U, V](implicit tr: => Unify[T], ur: => Unify[U], vr: => Unify[V], tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V]): Unify[T | U | V] = U$Union(tr, ur, vr)(tev, uev, vev)
+def U$Union[T, U, V](tr: => Unify[T], ur: => Unify[U], vr: => Unify[V])(implicit tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V]): Unify[T | U | V] = {
   lazy val t = tr
   lazy val u = ur
   lazy val v = vr
@@ -38,8 +38,8 @@ def U$Union[T, U, V](tr: => Unifier[T], ur: => Unifier[U], vr: => Unifier[V])(im
     else Unifying.failure
   }
 }
-@targetName("U$Union_") def U$Union[T, U, V, W](implicit tr: => Unifier[T], ur: => Unifier[U], vr: => Unifier[V], wr: => Unifier[W], tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W]): Unifier[T | U | V | W] = U$Union(tr, ur, vr, wr)(tev, uev, vev, wev)
-def U$Union[T, U, V, W](tr: => Unifier[T], ur: => Unifier[U], vr: => Unifier[V], wr: => Unifier[W])(implicit tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W]): Unifier[T | U | V | W] = {
+@targetName("U$Union_") def U$Union[T, U, V, W](implicit tr: => Unify[T], ur: => Unify[U], vr: => Unify[V], wr: => Unify[W], tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W]): Unify[T | U | V | W] = U$Union(tr, ur, vr, wr)(tev, uev, vev, wev)
+def U$Union[T, U, V, W](tr: => Unify[T], ur: => Unify[U], vr: => Unify[V], wr: => Unify[W])(implicit tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W]): Unify[T | U | V | W] = {
   lazy val t = tr
   lazy val u = ur
   lazy val v = vr
@@ -57,8 +57,8 @@ def U$Union[T, U, V, W](tr: => Unifier[T], ur: => Unifier[U], vr: => Unifier[V],
     else Unifying.failure
   }
 }
-@targetName("U$Union_") def U$Union[A, B, C, D, E](implicit ar: => Unifier[A], br: => Unifier[B], cr: => Unifier[C], dr: => Unifier[D], er: => Unifier[E], aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E]): Unifier[A | B | C | D | E] = U$Union(ar, br, cr, dr, er)(aev, bev, cev, dev, eev)
-def U$Union[A, B, C, D, E](ar: => Unifier[A], br: => Unifier[B], cr: => Unifier[C], dr: => Unifier[D], er: => Unifier[E])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E]): Unifier[A | B | C | D | E] = {
+@targetName("U$Union_") def U$Union[A, B, C, D, E](implicit ar: => Unify[A], br: => Unify[B], cr: => Unify[C], dr: => Unify[D], er: => Unify[E], aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E]): Unify[A | B | C | D | E] = U$Union(ar, br, cr, dr, er)(aev, bev, cev, dev, eev)
+def U$Union[A, B, C, D, E](ar: => Unify[A], br: => Unify[B], cr: => Unify[C], dr: => Unify[D], er: => Unify[E])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E]): Unify[A | B | C | D | E] = {
   lazy val a = ar
   lazy val b = br
   lazy val c = cr
@@ -79,8 +79,8 @@ def U$Union[A, B, C, D, E](ar: => Unifier[A], br: => Unifier[B], cr: => Unifier[
     else Unifying.failure
   }
 }
-@targetName("U$Union_") def U$Union[A, B, C, D, E, F](implicit ar: => Unifier[A], br: => Unifier[B], cr: => Unifier[C], dr: => Unifier[D], er: => Unifier[E], fr: => Unifier[F], aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F]): Unifier[A | B | C | D | E | F] = U$Union(ar, br, cr, dr, er, fr)(aev, bev, cev, dev, eev, fev)
-def U$Union[A, B, C, D, E, F](ar: => Unifier[A], br: => Unifier[B], cr: => Unifier[C], dr: => Unifier[D], er: => Unifier[E], fr: => Unifier[F])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F]): Unifier[A | B | C | D | E | F] = {
+@targetName("U$Union_") def U$Union[A, B, C, D, E, F](implicit ar: => Unify[A], br: => Unify[B], cr: => Unify[C], dr: => Unify[D], er: => Unify[E], fr: => Unify[F], aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F]): Unify[A | B | C | D | E | F] = U$Union(ar, br, cr, dr, er, fr)(aev, bev, cev, dev, eev, fev)
+def U$Union[A, B, C, D, E, F](ar: => Unify[A], br: => Unify[B], cr: => Unify[C], dr: => Unify[D], er: => Unify[E], fr: => Unify[F])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F]): Unify[A | B | C | D | E | F] = {
   lazy val a = ar
   lazy val b = br
   lazy val c = cr
@@ -104,8 +104,8 @@ def U$Union[A, B, C, D, E, F](ar: => Unifier[A], br: => Unifier[B], cr: => Unifi
     else Unifying.failure
   }
 }
-@targetName("U$Union_") def U$Union[A, B, C, D, E, F, G](implicit ar: => Unifier[A], br: => Unifier[B], cr: => Unifier[C], dr: => Unifier[D], er: => Unifier[E], fr: => Unifier[F], gr: => Unifier[G], aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F], gev: ClassTag[G]): Unifier[A | B | C | D | E | F | G] = U$Union(ar, br, cr, dr, er, fr, gr)(aev, bev, cev, dev, eev, fev, gev)
-def U$Union[A, B, C, D, E, F, G](ar: => Unifier[A], br: => Unifier[B], cr: => Unifier[C], dr: => Unifier[D], er: => Unifier[E], fr: => Unifier[F], gr: => Unifier[G])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F], gev: ClassTag[G]): Unifier[A | B | C | D | E | F | G] = {
+@targetName("U$Union_") def U$Union[A, B, C, D, E, F, G](implicit ar: => Unify[A], br: => Unify[B], cr: => Unify[C], dr: => Unify[D], er: => Unify[E], fr: => Unify[F], gr: => Unify[G], aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F], gev: ClassTag[G]): Unify[A | B | C | D | E | F | G] = U$Union(ar, br, cr, dr, er, fr, gr)(aev, bev, cev, dev, eev, fev, gev)
+def U$Union[A, B, C, D, E, F, G](ar: => Unify[A], br: => Unify[B], cr: => Unify[C], dr: => Unify[D], er: => Unify[E], fr: => Unify[F], gr: => Unify[G])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F], gev: ClassTag[G]): Unify[A | B | C | D | E | F | G] = {
   lazy val a = ar
   lazy val b = br
   lazy val c = cr
@@ -132,8 +132,8 @@ def U$Union[A, B, C, D, E, F, G](ar: => Unifier[A], br: => Unifier[B], cr: => Un
     else Unifying.failure
   }
 }
-@targetName("U$Union_") def U$Union[A, B, C, D, E, F, G, H](implicit ar: => Unifier[A], br: => Unifier[B], cr: => Unifier[C], dr: => Unifier[D], er: => Unifier[E], fr: => Unifier[F], gr: => Unifier[G], hr: => Unifier[H], aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F], gev: ClassTag[G], hev: ClassTag[H]): Unifier[A | B | C | D | E | F | G | H] = U$Union(ar, br, cr, dr, er, fr, gr, hr)(aev, bev, cev, dev, eev, fev, gev, hev)
-def U$Union[A, B, C, D, E, F, G, H](ar: => Unifier[A], br: => Unifier[B], cr: => Unifier[C], dr: => Unifier[D], er: => Unifier[E], fr: => Unifier[F], gr: => Unifier[G], hr: => Unifier[H])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F], gev: ClassTag[G], hev: ClassTag[H]): Unifier[A | B | C | D | E | F | G | H] = {
+@targetName("U$Union_") def U$Union[A, B, C, D, E, F, G, H](implicit ar: => Unify[A], br: => Unify[B], cr: => Unify[C], dr: => Unify[D], er: => Unify[E], fr: => Unify[F], gr: => Unify[G], hr: => Unify[H], aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F], gev: ClassTag[G], hev: ClassTag[H]): Unify[A | B | C | D | E | F | G | H] = U$Union(ar, br, cr, dr, er, fr, gr, hr)(aev, bev, cev, dev, eev, fev, gev, hev)
+def U$Union[A, B, C, D, E, F, G, H](ar: => Unify[A], br: => Unify[B], cr: => Unify[C], dr: => Unify[D], er: => Unify[E], fr: => Unify[F], gr: => Unify[G], hr: => Unify[H])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F], gev: ClassTag[G], hev: ClassTag[H]): Unify[A | B | C | D | E | F | G | H] = {
   lazy val a = ar
   lazy val b = br
   lazy val c = cr
@@ -163,8 +163,8 @@ def U$Union[A, B, C, D, E, F, G, H](ar: => Unifier[A], br: => Unifier[B], cr: =>
     else Unifying.failure
   }
 }
-@targetName("U$Union_") def U$Union[A, B, C, D, E, F, G, H, I](implicit ar: => Unifier[A], br: => Unifier[B], cr: => Unifier[C], dr: => Unifier[D], er: => Unifier[E], fr: => Unifier[F], gr: => Unifier[G], hr: => Unifier[H], ir: => Unifier[I], aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F], gev: ClassTag[G], hev: ClassTag[H], iev: ClassTag[I]): Unifier[A | B | C | D | E | F | G | H | I] = U$Union(ar, br, cr, dr, er, fr, gr, hr, ir)(aev, bev, cev, dev, eev, fev, gev, hev, iev)
-def U$Union[A, B, C, D, E, F, G, H, I](ar: => Unifier[A], br: => Unifier[B], cr: => Unifier[C], dr: => Unifier[D], er: => Unifier[E], fr: => Unifier[F], gr: => Unifier[G], hr: => Unifier[H], ir: => Unifier[I])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F], gev: ClassTag[G], hev: ClassTag[H], iev: ClassTag[I]): Unifier[A | B | C | D | E | F | G | H | I] = {
+@targetName("U$Union_") def U$Union[A, B, C, D, E, F, G, H, I](implicit ar: => Unify[A], br: => Unify[B], cr: => Unify[C], dr: => Unify[D], er: => Unify[E], fr: => Unify[F], gr: => Unify[G], hr: => Unify[H], ir: => Unify[I], aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F], gev: ClassTag[G], hev: ClassTag[H], iev: ClassTag[I]): Unify[A | B | C | D | E | F | G | H | I] = U$Union(ar, br, cr, dr, er, fr, gr, hr, ir)(aev, bev, cev, dev, eev, fev, gev, hev, iev)
+def U$Union[A, B, C, D, E, F, G, H, I](ar: => Unify[A], br: => Unify[B], cr: => Unify[C], dr: => Unify[D], er: => Unify[E], fr: => Unify[F], gr: => Unify[G], hr: => Unify[H], ir: => Unify[I])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F], gev: ClassTag[G], hev: ClassTag[H], iev: ClassTag[I]): Unify[A | B | C | D | E | F | G | H | I] = {
   lazy val a = ar
   lazy val b = br
   lazy val c = cr
@@ -198,37 +198,37 @@ def U$Union[A, B, C, D, E, F, G, H, I](ar: => Unifier[A], br: => Unifier[B], cr:
   }
 }
 
-trait EqualUnifier[T] extends Unifier[T] {
+trait EqualUnify[T] extends Unify[T] {
   override def concreteUnify(self: T, other: T): Unifying[Unit] = Unifying.guard(self == other)
 }
 
-def equalUnifier[T]: Unifier[T] = new EqualUnifier[T] {}
+def equalUnifier[T]: Unify[T] = new EqualUnify[T] {}
 
-implicit object U$Symbol extends EqualUnifier[Symbol]
+implicit object U$Symbol extends EqualUnify[Symbol]
 
-implicit object U$String extends EqualUnifier[String]
+implicit object U$String extends EqualUnify[String]
 
-implicit object U$Unit extends EqualUnifier[Unit]
+implicit object U$Unit extends EqualUnify[Unit]
 
-implicit object U$Int extends EqualUnifier[Int]
+implicit object U$Int extends EqualUnify[Int]
 
-implicit object U$Long extends EqualUnifier[Long]
+implicit object U$Long extends EqualUnify[Long]
 
-implicit object U$Float extends EqualUnifier[Float]
+implicit object U$Float extends EqualUnify[Float]
 
-implicit object U$Double extends EqualUnifier[Double]
+implicit object U$Double extends EqualUnify[Double]
 
-implicit object U$Integer extends EqualUnifier[Integer]
+implicit object U$Integer extends EqualUnify[Integer]
 
-implicit object U$Boolean extends EqualUnifier[Boolean]
+implicit object U$Boolean extends EqualUnify[Boolean]
 
-def U$Product[T, R <: Product1[T]](implicit tr: => Unifier[T]): Unifier[R] = {
+def U$Product[T, R <: Product1[T]](implicit tr: => Unify[T]): Unify[R] = {
   lazy val t = tr
   (x, y) =>
     if (x.getClass != y.getClass) Unifying.failure else t.unify(x._1, y._1)
 }
 
-def U$Product[A, B, R <: Product2[A, B]](implicit ar: => Unifier[A], br: => Unifier[B]): Unifier[R] = {
+def U$Product[A, B, R <: Product2[A, B]](implicit ar: => Unify[A], br: => Unify[B]): Unify[R] = {
   lazy val a = ar
   lazy val b = br
   (x, y) =>
@@ -238,7 +238,7 @@ def U$Product[A, B, R <: Product2[A, B]](implicit ar: => Unifier[A], br: => Unif
     } yield ()
 }
 
-def U$Product[A, B, C, R <: Product3[A, B, C]](implicit ar: Unifier[A], br: Unifier[B], cr: Unifier[C]): Unifier[R] = {
+def U$Product[A, B, C, R <: Product3[A, B, C]](implicit ar: Unify[A], br: Unify[B], cr: Unify[C]): Unify[R] = {
   lazy val a = ar
   lazy val b = br
   lazy val c = cr
@@ -249,7 +249,7 @@ def U$Product[A, B, C, R <: Product3[A, B, C]](implicit ar: Unifier[A], br: Unif
       _ <- c.unify(x._3, y._3)
     } yield ()
 }
-def U$Product[A, B, C, D, R <: Product4[A, B, C, D]](implicit ar: Unifier[A], br: Unifier[B], cr: Unifier[C], dr: Unifier[D]): Unifier[R] = {
+def U$Product[A, B, C, D, R <: Product4[A, B, C, D]](implicit ar: Unify[A], br: Unify[B], cr: Unify[C], dr: Unify[D]): Unify[R] = {
   lazy val a = ar
   lazy val b = br
   lazy val c = cr
@@ -262,7 +262,7 @@ def U$Product[A, B, C, D, R <: Product4[A, B, C, D]](implicit ar: Unifier[A], br
       _ <- d.unify(x._4, y._4)
     } yield ()
 }
-def U$Product[A, B, C, D, E, R <: Product5[A, B, C, D, E]](implicit ar: Unifier[A], br: Unifier[B], cr: Unifier[C], dr: Unifier[D], er: Unifier[E]): Unifier[R] = {
+def U$Product[A, B, C, D, E, R <: Product5[A, B, C, D, E]](implicit ar: Unify[A], br: Unify[B], cr: Unify[C], dr: Unify[D], er: Unify[E]): Unify[R] = {
   lazy val a = ar
   lazy val b = br
   lazy val c = cr

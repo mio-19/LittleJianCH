@@ -50,7 +50,7 @@ object GoalWith {
   @targetName("apply2") def apply[T](fn: VarOr[T] => Goal): GoalWith[VarOr[T]] = new GoalWith(k => callWithFresh[T] { v => conj2(fn(v), k(v)) })
 }
 
-@inline implicit def rel2lam[T](x: Rel[T])(implicit unifier: Unifier[T]): VarOr[T] => Goal = arg => x.provider(k => k === arg)
+@inline implicit def rel2lam[T](x: Rel[T])(implicit unifier: Unify[T]): VarOr[T] => Goal = arg => x.provider(k => k === arg)
 
 @inline implicit def packGoalWith[T](x: T): GoalWith[T] = GoalWith(x)
 
@@ -61,5 +61,3 @@ inline implicit def goalWithUnitToGoal(goal: GoalWith[Unit]): Goal = goal.goal
 inline implicit def toGoalWithUnitToGoal[T](goal: T => GoalWith[Unit]): T => Goal = x => goal(x).goal
 
 inline implicit def goalToRelUnit(goal: Goal): Rel[Unit] = GoalWith(goal, ())
-
-inline implicit def relUnitToGoal(x: Rel[Unit]): Goal = x.goal

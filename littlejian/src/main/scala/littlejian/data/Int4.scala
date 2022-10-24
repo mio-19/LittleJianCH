@@ -497,17 +497,17 @@ implicit class FixedNatOps(self: VarOr[FixedNat]) {
 
   def succ: Rel[FixedNat] = for {
     xs <- self.is[LList[Boolean]](FixedNat(_))
-    result <- FixedNat(xs).succ
+    result <- FixedNatDynamic(xs).succ
   } yield result
 
   def prev: Rel[FixedNat] = for {
     xs <- self.is[LList[Boolean]](FixedNat(_))
-    result <- FixedNat(xs).prev
+    result <- FixedNatDynamic(xs).prev
   } yield result
 
   def isZero: Goal = for {
     xs <- self.is[LList[Boolean]](FixedNat(_))
-    _ <- FixedNat(xs).isZero
+    _ <- FixedNatDynamic(xs).isZero
   } yield ()
 
   def elim[U](whenZero: Rel[U])(whenSucc: VarOr[FixedNat] => Rel[U])(implicit u: Unify[U]): Rel[U] = conde(

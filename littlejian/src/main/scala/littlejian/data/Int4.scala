@@ -481,10 +481,13 @@ final case class FixedNatDynamic(list: VarOr[LList[Boolean]]) extends FixedNat {
 }
 
 implicit class FixedNatOps(self: VarOr[FixedNat]) {
-  def assumeLen(n: Int): Goal = for {
-    f <- FixedNat.create(n)
-    _ <- f === self
-  } yield ()
+  def assumeLen(n: Int): Goal = self match {
+    case FixedNatStatic(xs) => Goal.guard(xs.length == n)
+    case _ => for {
+      f <- FixedNat.create(n)
+      _ <- f === self
+    } yield ()
+  }
 
   def append(other: VarOr[FixedNat]): Rel[FixedNat] = for {
     xs <- self.is[LList[Boolean]](FixedNat(_))
@@ -527,10 +530,13 @@ implicit class FixedNatOps(self: VarOr[FixedNat]) {
     result <- result0.prev
   } yield result)
 
-  def toLen(x: Int): GoalWith[Vector[VarOr[Boolean]]] = for {
-    xs <- FixedNat.createAux(x)
-    _ <- self === FixedNatStatic(xs)
-  } yield xs
+  def toLen(x: Int): GoalWith[Vector[VarOr[Boolean]]] = self match {
+    case FixedNatStatic(xs) => Goal.guard(xs.length == x) >> GoalWith(xs)
+    case _ => for {
+      xs <- FixedNat.createAux(x)
+      _ <- self === FixedNatStatic(xs)
+    } yield xs
+  }
 
   def to32: Rel[Int32] = for {
     xs <- toLen(32)

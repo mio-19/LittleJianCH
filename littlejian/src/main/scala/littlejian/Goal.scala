@@ -138,6 +138,7 @@ object GoalDisjU {
 object Goal {
   val success: Goal = GoalConj(Vector())
   val failure: Goal = GoalDisj(Vector())
+  def guard(x: Boolean): Goal = if (x) success else failure
 }
 
 // TODO: GoalFresh: capture fresh operators for the implementation of constructive negation

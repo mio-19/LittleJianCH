@@ -39,6 +39,8 @@ final case class GoalWith[T](provider: (T => Goal) => Goal) {
 }
 
 object GoalWith {
+  val success: GoalWith[Unit] = GoalWith(Goal.success, ())
+
   inline def apply[T](provider: (T => Goal) => Goal): GoalWith[T] = new GoalWith[T](provider)
 
   inline def apply[T](goal: Goal, value: T): GoalWith[T] = new GoalWith(k => conj2(goal, k(value)))

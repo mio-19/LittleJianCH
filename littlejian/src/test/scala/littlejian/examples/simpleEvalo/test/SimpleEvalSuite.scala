@@ -5,7 +5,6 @@ import littlejian.data.*
 import littlejian.data.sexp.*
 import littlejian.examples.simpleEvalo.evalExpo
 import littlejian.ext.*
-import littlejian.unifier.*
 import littlejian.search.BFSimp
 
 class SimpleEvalSuite extends munit.FunSuite {

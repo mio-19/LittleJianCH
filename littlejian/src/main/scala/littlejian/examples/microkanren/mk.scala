@@ -3,7 +3,6 @@ package littlejian.examples.microkanren
 import littlejian._
 import littlejian.data._
 import littlejian.ext._
-import littlejian.unifier._
 
 // https://github.com/jasonhemann/micro-in-mini/blob/master/micro-in-mini.rkt
 

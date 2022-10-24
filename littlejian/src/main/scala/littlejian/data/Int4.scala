@@ -438,27 +438,41 @@ object BinaryInt {
 }
 
 // nat with fixed size
-final case class FixedNat(xs: VarOr[LList[Boolean]]) {
-  override def toString: String = xs.getStrings match {
+sealed trait FixedNat {
+  def list: VarOr[LList[Boolean]]
+}
+
+given Unify[FixedNat] with
+  def concreteUnify(x: FixedNat, y: FixedNat): Unifying[Unit] = (x, y) match {
+    case (FixedNatStatic(xs), FixedNatStatic(ys)) => xs.unify(ys)
+    case _ => x.list.unify(y.list)
+  }
+
+final case class FixedNatStatic(xs: Vector[VarOr[Boolean]]) extends FixedNat {
+  def list: VarOr[LList[Boolean]] = LList(xs *)
+}
+
+final case class FixedNatDynamic(list: VarOr[LList[Boolean]]) extends FixedNat {
+  override def toString: String = list.getStrings match {
     case s: String => s"FixedNat($s)"
     case (s, xs) => bitsToNat(xs, s"FixedNat($s)")
   }
 
-  def succ: Rel[FixedNat] = xs.elim[FixedNat](FixedNat(LList())) { (x, xs) =>
+  def succ: Rel[FixedNat] = list.elim[FixedNat](FixedNat(LList())) { (x, xs) =>
     x.elim(for {
       tail <- FixedNat(xs).succ
       tail0 <- tail.is[LList[Boolean]](FixedNat(_))
     } yield FixedNat(false :: tail0))(Rel(FixedNat(true :: xs)))
   }
 
-  def prev: Rel[FixedNat] = xs.elim(Rel.failure[FixedNat]) { (x, xs) =>
+  def prev: Rel[FixedNat] = list.elim(Rel.failure[FixedNat]) { (x, xs) =>
     x.elim(Rel(FixedNat(false :: xs)))(for {
       tail <- FixedNat(xs).prev
       tail0 <- tail.is[LList[Boolean]](FixedNat(_))
     } yield FixedNat(true :: tail0))
   }
 
-  def isZero: Goal = (xs.elim(()) { (x, xs) =>
+  def isZero: Goal = (list.elim(()) { (x, xs) =>
     for {
       _ <- x === false
       _ <- FixedNat(xs).isZero
@@ -515,7 +529,7 @@ implicit class FixedNatOps(self: VarOr[FixedNat]) {
 
   def toLen(x: Int): GoalWith[Vector[VarOr[Boolean]]] = for {
     xs <- FixedNat.createAux(x)
-    _ <- self === FixedNat(LList(xs *))
+    _ <- self === FixedNatStatic(xs)
   } yield xs
 
   def to32: Rel[Int32] = for {
@@ -524,6 +538,8 @@ implicit class FixedNatOps(self: VarOr[FixedNat]) {
 }
 
 object FixedNat {
+  def apply(list: VarOr[LList[Boolean]]): FixedNat = FixedNatDynamic(list)
+
   private[littlejian] def createAux(size: Int): GoalWith[Vector[VarOr[Boolean]]] =
     if (size < 0) throw new IllegalArgumentException("size must be non-negative")
     else if (size == 0) GoalWith(Vector())
@@ -534,10 +550,10 @@ object FixedNat {
 
   def create(size: Int): GoalWith[FixedNat] = for {
     xs <- createAux(size)
-  } yield FixedNat(LList(xs *))
+  } yield FixedNatStatic(xs)
 
   def from(bits: Int, value: Int): FixedNat = {
     val xs = (0 until bits).map(i => (value & (1 << i)) != 0).toVector
-    FixedNat(LList(xs *))
+    FixedNatStatic(xs)
   }
 }

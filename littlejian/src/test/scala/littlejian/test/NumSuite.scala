@@ -5,7 +5,6 @@ import littlejian.*
 import littlejian.data.*
 import littlejian.data.sexp.*
 import littlejian.ext.*
-import littlejian.unifier.*
 
 
 class NumSuite extends munit.FunSuite {

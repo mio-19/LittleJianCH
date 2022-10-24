@@ -3,7 +3,6 @@ package littlejian.examples.microkanren
 import littlejian._
 import littlejian.data._
 import littlejian.ext._
-import littlejian.unifier._
 
 type MKData = (Unit | String | MKPair) | (MKVar | MKGoal | MKThunk | MKMap) | (MKRec | MKReg)
 

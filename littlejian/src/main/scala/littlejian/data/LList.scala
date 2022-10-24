@@ -2,7 +2,6 @@ package littlejian.data
 
 import littlejian._
 import littlejian.ext._
-import littlejian.unifier._
 import scala.language.implicitConversions
 
 trait LList[T]

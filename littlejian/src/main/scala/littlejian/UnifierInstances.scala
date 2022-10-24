@@ -277,3 +277,32 @@ def U$Product[A, B, C, D, E, R <: Product5[A, B, C, D, E]](implicit ar: Unify[A]
       _ <- e.unify(x._5, y._5)
     } yield ()
 }
+
+implicit def U$Seq[T](implicit unify: Unify[T]): Unify[Seq[T]] = {
+  implicit object U extends Unify[Seq[T]] {
+    override def concreteUnify(self: Seq[T], other: Seq[T]): Unifying[Unit] =
+      if(self.isEmpty && other.isEmpty) Unifying.success(())
+      else if(self.nonEmpty && other.nonEmpty) for {
+        _ <- self.head.unify(other.head)
+        _ <- self.tail.unify(other.tail)
+      } yield ()
+      else Unifying.failure
+  }
+  U
+}
+
+implicit def U$Vector[T](implicit unify: Unify[T]): Unify[Vector[T]] = U$Seq(unify).asInstanceOf[Unify[Vector[T]]]
+implicit def U$List[T](implicit unify: Unify[T]): Unify[List[T]] = U$Seq(unify).asInstanceOf[Unify[List[T]]]
+
+implicit def U$Option[T](implicit unifier: Unify[T]): Unify[Option[T]] = (self: Option[T], other: Option[T]) => (self, other) match {
+  case (Some(x), Some(y)) => x.unify(y)
+  case (None, None) => Unifying.success(())
+  case _ => Unifying.failure
+}
+
+implicit def U$Tuple2[T1, T2](implicit u1: Unify[T1], u2: Unify[T2]): Unify[(T1, T2)] = {
+  case ((x1, x2), (y1, y2)) => for {
+    _ <- x1.unify(y1)
+    _ <- x2.unify(y2)
+  } yield ()
+}

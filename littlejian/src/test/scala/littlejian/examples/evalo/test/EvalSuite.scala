@@ -4,7 +4,6 @@ import littlejian.*
 import littlejian.data.*
 import littlejian.data.sexp.*
 import littlejian.ext.*
-import littlejian.unifier.*
 import littlejian.search.BFSimp
 import littlejian.examples.evalo._
 

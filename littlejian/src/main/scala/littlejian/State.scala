@@ -163,7 +163,7 @@ final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, 
 
   // Update Constraints
   def onEq(updatedVars: Set[Var[_]] = null): IterableOnce[State] = for {
-    num <- num.onEq(eq)
+    (eq, num) <- num.onEq(eq)
     notEq <- notEq.onEq(eq, updatedVars)
     predType <- predType.onEq(eq)
     predNotType <- predNotType.onEq(eq)

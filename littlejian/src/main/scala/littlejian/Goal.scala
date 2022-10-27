@@ -138,12 +138,27 @@ object GoalDisjU {
 object Goal {
   val success: Goal = GoalConj(Vector())
   val failure: Goal = GoalDisj(Vector())
+
   def guard(x: Boolean): Goal = if (x) success else failure
 }
 
 // TODO: GoalFresh: capture fresh operators for the implementation of constructive negation
 @inline def GoalFresh[T](f: Var[T] => Goal): Goal = f(new Var[T])
 
-final case class GoalNumOp(rel: NumOp2, x: VarOr[Num], y: VarOr[Num], result: VarOr[Num]) extends GoalBasic {
+sealed trait GoalNumOp extends GoalBasic {
+  def rel: NumOp2
+
+  def tag: NumTag
+
+  def x: Num | Var[_ <: Num]
+
+  def y: Num | Var[_ <: Num]
+
+  def result: Num | Var[_ <: Num]
+}
+
+final case class GoalNumOpByte(rel: NumOp2, x: VarOr[Byte], y: VarOr[Byte], result: VarOr[Byte]) extends GoalNumOp {
+  override def tag = NumTag.Byte
+
   override def execute(state: State): IterableOnce[State] = ???
 }

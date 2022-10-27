@@ -122,6 +122,9 @@ abstract class VarOrIntNOps[T <: IntN[T]](self: VarOr[T], unifier: Unify[T]) {
     result <- fresh[T]
     _ <- consThis(other) + result === self
   } yield result
+
+  final inline def elim[U](clauses: (VarOr[T], Rel[U])*)(implicit u: Unify[U]): Rel[U] =
+    conde(clauses.map(x => (x._1 === self) >> x._2) *)
 }
 
 implicit class VarOrInt4Ops(self: VarOr[Int4]) extends VarOrIntNOps[Int4](self, implicitly[Unify[Int4]]) {

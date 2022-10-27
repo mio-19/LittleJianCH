@@ -209,6 +209,10 @@ implicit object U$String extends EqualUnify[String]
 
 implicit object U$Unit extends EqualUnify[Unit]
 
+implicit object U$Byte extends EqualUnify[Byte]
+
+implicit object U$Short extends EqualUnify[Short]
+
 implicit object U$Int extends EqualUnify[Int]
 
 implicit object U$Long extends EqualUnify[Long]
@@ -280,8 +284,8 @@ def U$Product[A, B, C, D, E, R <: Product5[A, B, C, D, E]](implicit ar: Unify[A]
 implicit def U$Seq[T](implicit unify: Unify[T]): Unify[Seq[T]] = {
   implicit object U extends Unify[Seq[T]] {
     override def concreteUnify(self: Seq[T], other: Seq[T]): Unifying[Unit] =
-      if(self.isEmpty && other.isEmpty) Unifying.success(())
-      else if(self.nonEmpty && other.nonEmpty) for {
+      if (self.isEmpty && other.isEmpty) Unifying.success(())
+      else if (self.nonEmpty && other.nonEmpty) for {
         _ <- self.head.unify(other.head)
         _ <- self.tail.unify(other.tail)
       } yield ()

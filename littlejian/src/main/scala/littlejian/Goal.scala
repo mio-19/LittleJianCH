@@ -143,3 +143,7 @@ object Goal {
 
 // TODO: GoalFresh: capture fresh operators for the implementation of constructive negation
 @inline def GoalFresh[T](f: Var[T] => Goal): Goal = f(new Var[T])
+
+final case class GoalNumOp(op: NumOp2, x: VarOr[Num], y: VarOr[Num]) extends GoalBasic {
+  override def execute(state: State): Option[State] = ???
+}

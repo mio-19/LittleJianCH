@@ -146,16 +146,16 @@ object AbsentState {
     }
 }
 
-final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, predNotType: PredNotTypeState, absent: AbsentState) {
-  inline def eqUpdated(eq: EqState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
+final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, predNotType: PredNotTypeState, absent: AbsentState, num: NumState) {
+  inline def eqUpdated(eq: EqState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent, num = num)
 
-  inline def notEqUpdated(notEq: NotEqState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
+  inline def notEqUpdated(notEq: NotEqState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent, num = num)
 
-  inline def predTypeUpdated(predType: PredTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
+  inline def predTypeUpdated(predType: PredTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent, num = num)
 
-  inline def predNotTypeUpdated(predNotType: PredNotTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
+  inline def predNotTypeUpdated(predNotType: PredNotTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent, num = num)
 
-  @inline def absentUpdated(absent: AbsentState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
+  @inline def absentUpdated(absent: AbsentState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent, num = num)
 
   inline def predTypeMap(f: PredTypeState => PredTypeState): State = predTypeUpdated(f(predType))
 
@@ -167,7 +167,8 @@ final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, 
     predType <- predType.onEq(eq)
     predNotType <- predNotType.onEq(eq)
     absent <- absent.onEq(eq)
-  } yield State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent)
+    num <- num.onEq(eq)
+  } yield State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent, num = num)
 
   inline def setEq(eq: EqState, updatedVars: Set[Var[_]] = null): Option[State] = this.eqUpdated(eq).onEq(updatedVars)
 
@@ -175,7 +176,8 @@ final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, 
     notEq.print,
     predType.print,
     predNotType.print,
-    absent.print
+    absent.print,
+    num.print
   ).filter(_.nonEmpty).mkString("\n")
 
   override def toString: String = prettyPrintContext.callWithOrUpdate(new PrettyPrintContext(eq.subst), _.setSubst(eq.subst)) {
@@ -184,5 +186,5 @@ final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, 
 }
 
 object State {
-  val empty: State = State(eq = EqState.empty, notEq = NotEqState.empty, predType = PredTypeState.empty, predNotType = PredNotTypeState.empty, absent = AbsentState.empty)
+  val empty: State = State(eq = EqState.empty, notEq = NotEqState.empty, predType = PredTypeState.empty, predNotType = PredNotTypeState.empty, absent = AbsentState.empty, num = NumState.empty)
 }

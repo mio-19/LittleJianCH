@@ -13,6 +13,13 @@ enum Type derives Unify :
   case F64
   case Unknown
 
+enum BlockType derives Unify :
+  case I32
+  case I64
+  case F32
+  case F64
+  case Empty
+
 object Type {
   def from(x: Byte): Type = x match {
     case 0x7F => Type.I32

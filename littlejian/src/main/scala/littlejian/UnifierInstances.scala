@@ -1,7 +1,6 @@
 package littlejian
 
 implicit def U$VarOr[T](implicit unifier: Unify[T]): Unify[VarOr[T]] = (x, y) => unifier.unify(x, y)
-given unifierVarOr[T](using unifier: Unify[T]): Unify[VarOr[T]] = U$VarOr[T]
 
 
 import scala.annotation.targetName

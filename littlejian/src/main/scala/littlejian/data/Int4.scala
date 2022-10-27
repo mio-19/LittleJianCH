@@ -312,6 +312,68 @@ object Int32 {
     else Int32(Int16.from(xs.take(16)), Int16.from(xs.drop(16)))
 }
 
+final case class Int64(lo: Int32, hi: Int32) extends IntN[Int64] derives Unify {
+  override def plus(that: Int64): GoalWith[(VarOr[Boolean], Int64)] = for {
+    (c, r) <- lo.plus(that.lo)
+    (c2, r2) <- hi.plus(that.hi, c)
+  } yield (c2, Int64(r, r2))
+
+  override def plus(that: Int64, carry: VarOr[Boolean]): GoalWith[(VarOr[Boolean], Int64)] = for {
+    (c, r) <- lo.plus(that.lo, carry)
+    (c2, r2) <- hi.plus(that.hi, c)
+  } yield (c2, Int64(r, r2))
+
+  override inline def succ: GoalWith[(VarOr[Boolean], Int64)] = plus(Int64.one)
+
+  override inline def unary_! : GoalWith[Int64] = for {
+    l <- !lo
+    h <- !hi
+  } yield Int64(l, h)
+
+  override inline def bits: Vector[VarOr[Boolean]] = lo.bits ++ hi.bits
+}
+
+implicit class VarOrInt64Ops(self: VarOr[Int64])(using u: Unify[Int64]) extends VarOrIntNOps[Int64](self, u) {
+  override protected def consThis(x: VarOr[Int64]): VarOrIntNOps[Int64] = VarOrInt64Ops(x)
+
+  override def get: GoalWith[Int64] = for {
+    (b0, b1, b2, b3) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b4, b5, b6, b7) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b8, b9, b10, b11) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b12, b13, b14, b15) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b16, b17, b18, b19) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b20, b21, b22, b23) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b24, b25, b26, b27) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b28, b29, b30, b31) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b32, b33, b34, b35) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b36, b37, b38, b39) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b40, b41, b42, b43) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b44, b45, b46, b47) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b48, b49, b50, b51) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b52, b53, b54, b55) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b56, b57, b58, b59) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    (b60, b61, b62, b63) <- fresh[Boolean, Boolean, Boolean, Boolean]
+    result = Int64(Int32(Int16(Int8(Int4(b0, b1, b2, b3), Int4(b4, b5, b6, b7)), Int8(Int4(b8, b9, b10, b11), Int4(b12, b13, b14, b15))), Int16(Int8(Int4(b16, b17, b18, b19), Int4(b20, b21, b22, b23)), Int8(Int4(b24, b25, b26, b27), Int4(b28, b29, b30, b31)))), Int32(Int16(Int8(Int4(b32, b33, b34, b35), Int4(b36, b37, b38, b39)), Int8(Int4(b40, b41, b42, b43), Int4(b44, b45, b46, b47))), Int16(Int8(Int4(b48, b49, b50, b51), Int4(b52, b53, b54, b55)), Int8(Int4(b56, b57, b58, b59), Int4(b60, b61, b62, b63)))))
+    _ <- self === result
+  } yield result
+}
+
+object Int64 {
+  def zero = from(0)
+
+  def one = from(1)
+
+  def from(n: Long): Int64 = {
+    val lo = Int32.from((n & 0xffffffff).toInt)
+    val hi = Int32.from(((n >>> 32) & 0xffffffff).toInt)
+    Int64(lo, hi)
+  }
+
+  def from(xs: Vector[VarOr[Boolean]]): Int64 =
+    if (xs.length != 64) throw new IllegalArgumentException("xs must have length 64")
+    else Int64(Int32.from(xs.take(32)), Int32.from(xs.drop(32)))
+}
+
 
 type BinaryNatVal = LList[Boolean]
 

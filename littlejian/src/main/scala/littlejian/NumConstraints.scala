@@ -10,16 +10,11 @@ enum NumOp2:
   case Div
   case Rem
 
-enum NumRelation:
-  case Add
-  case Mul
-  case Div
-  case Rem
+final case class NumState(clauses: Vector[GoalNumOp]) {
+  def insert(eq: EqState, x: GoalNumOp): IterableOnce[NumState] = Some(NumState(x +: clauses)) // TODO
 
-final case class NumRelationClause(rel: NumRelation, lhs: VarOr[Num], rhs: VarOr[Num], result: VarOr[Num])
+  def onEq(eq: EqState): IterableOnce[NumState] = Some(this) // TODO
 
-final case class NumState(clauses: Vector[NumRelationClause]) {
-  def onEq(eq: EqState): Option[NumState] = Some(this)
   def print: String = "" // TODO
 }
 

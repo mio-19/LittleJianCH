@@ -10,7 +10,7 @@ import scala.util.control.Breaks.{break, breakable}
 // Broken, GoalControlImpure not supported
 implicit object GradualSearcher extends Searcher {
   // TODO: parallel execution
-  private def runBasic(state: State, xs: Vector[GoalBasic]): Option[State] = if (xs.isEmpty) Some(state) else xs.head.execute(state).flatMap(runBasic(_, xs.tail))
+  private def runBasic(state: State, xs: Vector[GoalBasic]): IterableOnce[State] = if (xs.isEmpty) Some(state) else xs.head.execute(state).flatMap(runBasic(_, xs.tail))
 
   private val reduceLevel = 3
 
@@ -59,15 +59,13 @@ implicit object GradualSearcher extends Searcher {
       else (None, {
         if (goals.exists(_.isInstanceOf[GoalControlImpure])) throw new UnsupportedOperationException("GoalControlImpure not supported")
         val (basics, rest) = getGoals(goals).partition(_.isInstanceOf[GoalBasic])
-        runBasic(state, basics.asInstanceOf[Vector[GoalBasic]]) match {
-          case None => Vector.empty
-          case Some(state) => {
+        Vector.from(runBasic(state, basics.asInstanceOf[Vector[GoalBasic]])).flatMap({state => {
             val (reads, rest0) = rest.partition(x => x.isInstanceOf[GoalReadSubst])
             val goals = reads.asInstanceOf[Vector[GoalReadSubst]].map(_ (state.eq.subst)) ++ rest0
             val (disjs, rest1) = goals.partition(x => x.isInstanceOf[GoalDisj])
             expandDisj(disjs.asInstanceOf[Vector[GoalDisj]], World(state, rest1))
           }
-        }
+        })
       })
 
     def exec: SStream[State] = runTask(Vector(this))

@@ -62,6 +62,8 @@ def flatten[T](x: ParVector[SizedStream[T]]): SizedStream[T] =
   if (x.isEmpty) SizedStream.empty
   else x.head.appendFair(flatten(x.tail))
 
+def flatten[T](x: IterableOnce[SizedStream[T]]): SizedStream[T] = flatten(Vector.from(x).par) // TODO: optimize this
+
 implicit object BFSimp extends Searcher {
   override def run(state: State, goal: Goal): Stream[State] = exec(state, goal).toStream
 

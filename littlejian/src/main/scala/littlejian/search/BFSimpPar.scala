@@ -37,7 +37,7 @@ implicit object BFSimpPar extends Searcher {
   }
 
   // TODO: par
-  def runBasic(state: State, xs: Vector[GoalBasic]): Option[State] = if (xs.isEmpty) Some(state) else xs.head.execute(state).flatMap(runBasic(_, xs.tail))
+  def runBasic(state: State, xs: Vector[GoalBasic]): IterableOnce[State] = if (xs.isEmpty) Some(state) else xs.head.execute(state).flatMap(runBasic(_, xs.tail))
 
 
   val threadDisjReduceLevel: Parameter[Int] = new Parameter[Int]
@@ -57,13 +57,11 @@ implicit object BFSimpPar extends Searcher {
         val xs = collectGoalConj(goal)
         if (xs.isEmpty) SizedStream(state) else {
           val (basics, rest) = xs.partition(_.isInstanceOf[GoalBasic])
-          runBasic(state, basics.asInstanceOf[Vector[GoalBasic]]) match {
-            case Some(state) => if (rest.isEmpty) SizedStream(state) else {
+          flatten(runBasic(state, basics.asInstanceOf[Vector[GoalBasic]]).map({ state => if (rest.isEmpty) SizedStream(state) else {
               val tail = GoalConj(rest.tail)
               SizedStream(exec(state, rest.head).appendMapFair(exec(_, tail)))
             }
-            case None => SizedStream.empty
-          }
+          }))
         }
       }
       case GoalReadSubst(f) => exec(state, f(state.eq.subst))

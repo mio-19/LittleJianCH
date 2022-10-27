@@ -9,7 +9,7 @@ import scala.collection.parallel.immutable.ParVector
 // also broken
 implicit object ReducingSearcher extends Searcher {
   // TODO: parallel execution
-  private def runBasics(state: State, xs: Seq[GoalBasic]): Option[State] = if (xs.isEmpty) Some(state) else xs.head.execute(state).flatMap(runBasics(_, xs.tail))
+  private def runBasics(state: State, xs: Seq[GoalBasic]): IterableOnce[State] = if (xs.isEmpty) Some(state) else xs.head.execute(state).flatMap(runBasics(_, xs.tail))
 
   def runSingle(state: State, goal: Goal): Stream[State] = StateWithGoals(state, Vector(goal)).exec.toStream
 
@@ -32,8 +32,8 @@ implicit object ReducingSearcher extends Searcher {
     }
 
   final case class StateWithGoals(state: State, goals: Vector[Goal]) {
-    def reduceNotSplit: Option[(StateWithGoals, Vector[GoalDisj])] =
-      if (goals.isEmpty) Some((this, Vector.empty))
+    def reduceNotSplit: (Vector[StateWithGoals], Vector[GoalDisj]) =
+      if (goals.isEmpty) (Vector(this), Vector.empty)
       else {
         val basics = Seq.newBuilder[GoalBasic]
         val conjs = Seq.newBuilder[GoalConj]
@@ -48,25 +48,15 @@ implicit object ReducingSearcher extends Searcher {
           case goal: GoalDelay => delays += goal
           case goal: GoalControlImpure => throw new UnsupportedOperationException("not implemented")
         }
-        runBasics(state, basics.result()) match {
-          case None => None
-          case Some(state) => {
-            val goals = Vector.newBuilder[Goal]
-            goals ++= conjs.result().flatMap(_.xs)
-            goals ++= readSubsts.result().map(_ (state.eq.subst))
-            goals ++= delays.result().map(_.get)
-            Some((StateWithGoals(state, goals.result()), disjs.result()))
-          }
+        {
+          val goals = Vector.newBuilder[Goal]
+          goals ++= conjs.result().flatMap(_.xs)
+          goals ++= readSubsts.result().map(_ (state.eq.subst))
+          goals ++= delays.result().map(_.get)
+          val result = goals.result()
+          (Vector.from(runBasics(state, basics.result())).map(state => StateWithGoals(state, result)), disjs.result())
         }
       }
-
-    def fullyReduceNotSplit: Option[(State, Vector[GoalDisj])] =
-      if (goals.isEmpty)
-        Some((state, Vector.empty))
-      else for {
-        (x, disjs) <- reduceNotSplit
-        (state, disjs2) <- x.fullyReduceNotSplit
-      } yield (state, disjs ++ disjs2)
 
     def split1(xs: Seq[GoalDisj]): Vector[StateWithGoals] =
       if (xs.isEmpty) Vector(this)
@@ -77,9 +67,8 @@ implicit object ReducingSearcher extends Searcher {
 
     def run: (Option[State], Vector[StateWithGoals]) =
       if (goals.isEmpty) (Some(state), Vector.empty)
-      else this.fullyReduceNotSplit match {
-        case None => (None, Vector.empty)
-        case Some((state, disjs)) => (None, StateWithGoals(state, Vector.empty).split1(disjs))
+      else this.reduceNotSplit match {
+        case (states, disjs) => (None, states.flatMap(_.split1(disjs)))
       }
 
     def exec: SStream[State] = this.run match {

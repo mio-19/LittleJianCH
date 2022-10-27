@@ -5,11 +5,11 @@ import scala.annotation.{tailrec, targetName}
 sealed trait Goal
 
 sealed trait GoalBasic extends Goal {
-  def execute(state: State): Option[State]
+  def execute(state: State): IterableOnce[State]
 }
 
 final case class GoalEq[T](x: VarOr[T], y: VarOr[T])(implicit unifier: Unify[T]) extends GoalBasic {
-  override def execute(state: State): Option[State] = unifier.unify(x, y).getSubstWithPatch(state.eq.subst) match {
+  override def execute(state: State): IterableOnce[State] = unifier.unify(x, y).getSubstWithPatch(state.eq.subst) match {
     case Some(subst, patch) => state.setEq(EqState(subst), Set.from(patch.map(_._1)))
     case None => None
   }
@@ -144,6 +144,6 @@ object Goal {
 // TODO: GoalFresh: capture fresh operators for the implementation of constructive negation
 @inline def GoalFresh[T](f: Var[T] => Goal): Goal = f(new Var[T])
 
-final case class GoalNumOp(op: NumOp2, x: VarOr[Num], y: VarOr[Num]) extends GoalBasic {
-  override def execute(state: State): Option[State] = ???
+final case class GoalNumOp(rel: NumOp2, x: VarOr[Num], y: VarOr[Num], result: VarOr[Num]) extends GoalBasic {
+  override def execute(state: State): IterableOnce[State] = ???
 }

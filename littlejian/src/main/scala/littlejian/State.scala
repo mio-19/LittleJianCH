@@ -162,15 +162,15 @@ final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, 
   inline def predNotTypeMap(f: PredNotTypeState => PredNotTypeState): State = predNotTypeUpdated(f(predNotType))
 
   // Update Constraints
-  def onEq(updatedVars: Set[Var[_]] = null): Option[State] = for {
+  def onEq(updatedVars: Set[Var[_]] = null): IterableOnce[State] = for {
+    num <- num.onEq(eq)
     notEq <- notEq.onEq(eq, updatedVars)
     predType <- predType.onEq(eq)
     predNotType <- predNotType.onEq(eq)
     absent <- absent.onEq(eq)
-    num <- num.onEq(eq)
   } yield State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent, num = num)
 
-  inline def setEq(eq: EqState, updatedVars: Set[Var[_]] = null): Option[State] = this.eqUpdated(eq).onEq(updatedVars)
+  inline def setEq(eq: EqState, updatedVars: Set[Var[_]] = null): IterableOnce[State] = this.eqUpdated(eq).onEq(updatedVars)
 
   def printConstraints: String = Vector(
     notEq.print,

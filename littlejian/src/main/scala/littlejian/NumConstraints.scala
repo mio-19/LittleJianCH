@@ -18,6 +18,36 @@ enum NumOp2:
   case Div
   case Rem
 
+sealed trait GoalNumOp extends GoalBasic {
+  def rel: NumOp2
+
+  def tag: NumTag
+
+  def x: Num | Var[_ <: Num]
+
+  def y: Num | Var[_ <: Num]
+
+  def result: Num | Var[_ <: Num]
+
+  override def execute(state: State): IterableOnce[State] = state.num.insert(state, this)
+}
+
+final case class GoalNumOpByte(rel: NumOp2, x: VarOr[Byte], y: VarOr[Byte], result: VarOr[Byte]) extends GoalNumOp {
+  override def tag = NumTag.Byte
+}
+
+final case class GoalNumOpShort(rel: NumOp2, x: VarOr[Byte], y: VarOr[Byte], result: VarOr[Byte]) extends GoalNumOp {
+  override def tag = NumTag.Short
+}
+
+final case class GoalNumOpInt(rel: NumOp2, x: VarOr[Byte], y: VarOr[Byte], result: VarOr[Byte]) extends GoalNumOp {
+  override def tag = NumTag.Int
+}
+
+final case class GoalNumOpLong(rel: NumOp2, x: VarOr[Byte], y: VarOr[Byte], result: VarOr[Byte]) extends GoalNumOp {
+  override def tag = NumTag.Long
+}
+
 final case class NumState(clauses: Vector[GoalNumOp]) {
   def insert(state: State, x: GoalNumOp): IterableOnce[State] = NumState(x +: clauses).onEq(state.eq) map {
     case (eq, num) => state.eqUpdated(eq).numUpdated(num)

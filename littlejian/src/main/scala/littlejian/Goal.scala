@@ -155,10 +155,22 @@ sealed trait GoalNumOp extends GoalBasic {
   def y: Num | Var[_ <: Num]
 
   def result: Num | Var[_ <: Num]
+
+  override def execute(state: State): IterableOnce[State] = state.num.insert(state, this)
 }
 
 final case class GoalNumOpByte(rel: NumOp2, x: VarOr[Byte], y: VarOr[Byte], result: VarOr[Byte]) extends GoalNumOp {
   override def tag = NumTag.Byte
+}
 
-  override def execute(state: State): IterableOnce[State] = ???
+final case class GoalNumOpShort(rel: NumOp2, x: VarOr[Byte], y: VarOr[Byte], result: VarOr[Byte]) extends GoalNumOp {
+  override def tag = NumTag.Short
+}
+
+final case class GoalNumOpInt(rel: NumOp2, x: VarOr[Byte], y: VarOr[Byte], result: VarOr[Byte]) extends GoalNumOp {
+  override def tag = NumTag.Int
+}
+
+final case class GoalNumOpLong(rel: NumOp2, x: VarOr[Byte], y: VarOr[Byte], result: VarOr[Byte]) extends GoalNumOp {
+  override def tag = NumTag.Long
 }

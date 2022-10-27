@@ -19,7 +19,9 @@ enum NumOp2:
   case Rem
 
 final case class NumState(clauses: Vector[GoalNumOp]) {
-  def insert(eq: EqState, x: GoalNumOp): IterableOnce[NumState] = Some(NumState(x +: clauses))
+  def insert(state: State, x: GoalNumOp): IterableOnce[State] = NumState(x +: clauses).onEq(state.eq) map {
+    case (eq, num) => state.eqUpdated(eq).numUpdated(num)
+  }
 
   def onEq(eq: EqState): IterableOnce[(EqState, NumState)] = Some((eq, this)) // TODO
 

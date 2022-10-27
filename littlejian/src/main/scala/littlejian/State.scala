@@ -157,6 +157,8 @@ final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, 
 
   @inline def absentUpdated(absent: AbsentState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent, num = num)
 
+  inline def numUpdated(num: NumState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent, num = num)
+  
   inline def predTypeMap(f: PredTypeState => PredTypeState): State = predTypeUpdated(f(predType))
 
   inline def predNotTypeMap(f: PredNotTypeState => PredNotTypeState): State = predNotTypeUpdated(f(predNotType))

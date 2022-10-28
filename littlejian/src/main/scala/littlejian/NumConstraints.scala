@@ -29,6 +29,8 @@ sealed trait GoalNumOp extends GoalBasic {
   def result: Num | Var[_ <: Num]
 
   override def execute(state: State): IterableOnce[State] = state.num.insert(state, this)
+
+  def walk(subst: Subst): GoalNumOp
 }
 
 object GoalNumOp {
@@ -37,26 +39,38 @@ object GoalNumOp {
 
 final case class GoalNumOpByte(rel: NumOp2, x: VarOr[Byte], y: VarOr[Byte], result: VarOr[Byte]) extends GoalNumOp {
   override def tag = NumTag.Byte
+
+  override def walk(subst: Subst): GoalNumOpByte = GoalNumOpByte(rel, subst.walk(x), subst.walk(y), subst.walk(result))
 }
 
 final case class GoalNumOpShort(rel: NumOp2, x: VarOr[Short], y: VarOr[Short], result: VarOr[Short]) extends GoalNumOp {
   override def tag = NumTag.Short
+
+  override def walk(subst: Subst): GoalNumOpShort = GoalNumOpShort(rel, subst.walk(x), subst.walk(y), subst.walk(result))
 }
 
 final case class GoalNumOpInt(rel: NumOp2, x: VarOr[Int], y: VarOr[Int], result: VarOr[Int]) extends GoalNumOp {
   override def tag = NumTag.Int
+
+  override def walk(subst: Subst): GoalNumOpInt = GoalNumOpInt(rel, subst.walk(x), subst.walk(y), subst.walk(result))
 }
 
 final case class GoalNumOpLong(rel: NumOp2, x: VarOr[Long], y: VarOr[Long], result: VarOr[Long]) extends GoalNumOp {
   override def tag = NumTag.Long
+
+  override def walk(subst: Subst): GoalNumOpLong = GoalNumOpLong(rel, subst.walk(x), subst.walk(y), subst.walk(result))
 }
 
 final case class GoalNumOpFloat(rel: NumOp2, x: VarOr[Float], y: VarOr[Float], result: VarOr[Float]) extends GoalNumOp {
   override def tag = NumTag.Float
+
+  override def walk(subst: Subst): GoalNumOpFloat = GoalNumOpFloat(rel, subst.walk(x), subst.walk(y), subst.walk(result))
 }
 
 final case class GoalNumOpDouble(rel: NumOp2, x: VarOr[Double], y: VarOr[Double], result: VarOr[Double]) extends GoalNumOp {
   override def tag = NumTag.Double
+
+  override def walk(subst: Subst): GoalNumOpDouble = GoalNumOpDouble(rel, subst.walk(x), subst.walk(y), subst.walk(result))
 }
 
 final case class NumState(clauses: Vector[GoalNumOp]) {
@@ -64,7 +78,16 @@ final case class NumState(clauses: Vector[GoalNumOp]) {
     case (eq, num) => state.eqUpdated(eq).numUpdated(num)
   }
 
-  def onEq(eq: EqState): IterableOnce[(EqState, NumState)] = Some((eq, this)) // TODO
+  def onEq(eq: EqState): IterableOnce[(EqState, NumState)] = onEq(eq.subst) map {
+    case (subst, num) => (EqState(subst), num)
+  }
+
+  def onEq(subst: Subst): Option[(Subst, NumState)] = {
+    val (cl2, rest) = clauses.map(_.walk(subst)).partition(_.is2)
+    Unifying.runAll(cl2.map(_.solve2)).getSubst(subst) map { subst =>
+      (subst, NumState(rest))
+    }
+  }
 
   def print: String = "" // TODO
 }

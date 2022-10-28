@@ -14,6 +14,8 @@ object Unifying {
   inline def failure[T]: Unifying[T] = StateOption.failure
 
   inline def guard(x: Boolean): Unifying[Unit] = StateOption.guard(x)
+
+  inline def runAll(xs: Seq[Unifying[Unit]]): Unifying[Unit] = xs.fold(success(()))(_ >> _)
 }
 
 implicit class UnifyingOps[T](self: Unifying[T]) {

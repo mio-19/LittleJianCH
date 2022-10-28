@@ -95,45 +95,47 @@ sealed trait GoalNumRange extends GoalBasic {
 
   def high: Option[Boundary[_ <: Num | Var[_ <: Num]]]
 
+  def num: Num | Var[_ <: Num]
+
   override def execute(state: State): IterableOnce[State] = ???
 
   def walk(subst: Subst): GoalNumRange
 }
 
-final case class GoalNumRangeByte(low: Option[Boundary[VarOr[Byte]]], high: Option[Boundary[VarOr[Byte]]]) extends GoalNumRange {
+final case class GoalNumRangeByte(num: VarOr[Byte], low: Option[Boundary[VarOr[Byte]]], high: Option[Boundary[VarOr[Byte]]]) extends GoalNumRange {
   override def tag = NumTag.Byte
 
-  override def walk(subst: Subst): GoalNumRangeByte = copy(low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
+  override def walk(subst: Subst): GoalNumRangeByte = GoalNumRangeByte(num = subst.walk(num), low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
 }
 
-final case class GoalNumRangeShort(low: Option[Boundary[VarOr[Short]]], high: Option[Boundary[VarOr[Short]]]) extends GoalNumRange {
+final case class GoalNumRangeShort(num: VarOr[Short], low: Option[Boundary[VarOr[Short]]], high: Option[Boundary[VarOr[Short]]]) extends GoalNumRange {
   override def tag = NumTag.Short
 
-  override def walk(subst: Subst): GoalNumRangeShort = copy(low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
+  override def walk(subst: Subst): GoalNumRangeShort = GoalNumRangeShort(num = subst.walk(num), low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
 }
 
-final case class GoalNumRangeInt(low: Option[Boundary[VarOr[Int]]], high: Option[Boundary[VarOr[Int]]]) extends GoalNumRange {
+final case class GoalNumRangeInt(num: VarOr[Int], low: Option[Boundary[VarOr[Int]]], high: Option[Boundary[VarOr[Int]]]) extends GoalNumRange {
   override def tag = NumTag.Int
 
-  override def walk(subst: Subst): GoalNumRangeInt = copy(low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
+  override def walk(subst: Subst): GoalNumRangeInt = GoalNumRangeInt(num = subst.walk(num), low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
 }
 
-final case class GoalNumRangeLong(low: Option[Boundary[VarOr[Long]]], high: Option[Boundary[VarOr[Long]]]) extends GoalNumRange {
+final case class GoalNumRangeLong(num: VarOr[Long], low: Option[Boundary[VarOr[Long]]], high: Option[Boundary[VarOr[Long]]]) extends GoalNumRange {
   override def tag = NumTag.Long
 
-  override def walk(subst: Subst): GoalNumRangeLong = copy(low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
+  override def walk(subst: Subst): GoalNumRangeLong = GoalNumRangeLong(num = subst.walk(num), low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
 }
 
-final case class GoalNumRangeFloat(low: Option[Boundary[VarOr[Float]]], high: Option[Boundary[VarOr[Float]]]) extends GoalNumRange {
+final case class GoalNumRangeFloat(num: VarOr[Float], low: Option[Boundary[VarOr[Float]]], high: Option[Boundary[VarOr[Float]]]) extends GoalNumRange {
   override def tag = NumTag.Float
 
-  override def walk(subst: Subst): GoalNumRangeFloat = copy(low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
+  override def walk(subst: Subst): GoalNumRangeFloat = GoalNumRangeFloat(num = subst.walk(num), low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
 }
 
-final case class GoalNumRangeDouble(low: Option[Boundary[VarOr[Double]]], high: Option[Boundary[VarOr[Double]]]) extends GoalNumRange {
+final case class GoalNumRangeDouble(num: VarOr[Double], low: Option[Boundary[VarOr[Double]]], high: Option[Boundary[VarOr[Double]]]) extends GoalNumRange {
   override def tag = NumTag.Double
 
-  override def walk(subst: Subst): GoalNumRangeDouble = copy(low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
+  override def walk(subst: Subst): GoalNumRangeDouble = GoalNumRangeDouble(num = subst.walk(num), low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
 }
 
 implicit class GoalNumOpOps(self: GoalNumOp2) {
@@ -209,7 +211,9 @@ implicit class GoalNumOpOps(self: GoalNumOp2) {
 }
 
 implicit class GoalNumRangeOps(self: GoalNumRange) {
-  def check: Vector[Unifying[Option[GoalNumRange]]] = ???
+  def check: Vector[Unifying[Option[GoalNumRange]]] = self match {
+    case _ => ???
+  }
 }
 
 final case class NumState(op2s: Vector[GoalNumOp2], ranges: Vector[GoalNumRange]) {

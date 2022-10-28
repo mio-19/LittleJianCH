@@ -207,25 +207,36 @@ implicit class GoalNumOpOps(self: GoalNumOp2) {
   }
 }
 
-final case class NumState(op2s: Vector[GoalNumOp2]) {
-  def insert(state: State, x: GoalNumOp2): IterableOnce[State] = copy(op2s = x +: op2s).onEq(state.eq) map {
-    case (eq, num) => state.copy(eq = eq, num = num)
-  }
+final case class NumState(op2s: Vector[GoalNumOp2], ranges: Vector[GoalNumRange]) {
+  def insert(state: State, x: GoalNumOp2): IterableOnce[State] = copy(op2s = x +: op2s).onInsert(state)
 
-  def onEq(eq: EqState): IterableOnce[(EqState, NumState)] = NumState.runOp2s(eq.subst, op2s) map {
-    case (subst, op2s) => (EqState(subst), copy(op2s = op2s))
+  def insert(state: State, x: GoalNumRange): IterableOnce[State] = copy(ranges = x +: ranges).onInsert(state)
+
+  def onEq(eq: EqState): IterableOnce[(EqState, NumState)] = for {
+    (subst, ranges) <- NumState.runRanges(eq.subst, ranges)
+    (subst, op2s) <- NumState.runOp2s(subst, op2s)
+  } yield (EqState(subst), NumState(op2s = op2s, ranges = ranges))
+
+  def onInsert(state: State): IterableOnce[State] = this.onEq(state.eq) map {
+    case (eq, num) => state.copy(eq = eq, num = num)
   }
 
   def print: String = op2s.map(_.toString).mkString(" && ")
 }
 
 object NumState {
-  def runOp2s(subst: Subst, op2s: Vector[GoalNumOp2]): Option[(Subst, Vector[GoalNumOp2])] = {
+  def runOp2s(subst: Subst, op2s: Vector[GoalNumOp2]): Option[(Subst, Vector[GoalNumOp2])] = if (op2s.isEmpty) Some(subst, op2s) else // optimize
+  {
     val (cl2, rest) = op2s.map(_.walk(subst)).partition(_.is2)
     Unifying.runAll(cl2.map(_.solve2)).getSubst(subst) map { subst =>
       (subst, rest)
     }
   }
 
-  val empty: NumState = NumState(Vector.empty)
+  def runRanges(subst: Subst, ranges: Vector[GoalNumRange]): Option[(Subst, Vector[GoalNumRange])] = if (ranges.isEmpty) Some(subst, ranges) else // optimize
+  {
+    ???
+  }
+
+  val empty: NumState = NumState(Vector.empty, Vector.empty)
 }

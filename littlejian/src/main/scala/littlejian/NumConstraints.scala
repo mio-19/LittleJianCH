@@ -259,6 +259,8 @@ implicit class GoalNumRangeOps(self: GoalNumRange) {
     // TODO: expand small ranges
     case x => Unifying.success(Some(x))
   }
+
+  def reduce(subst: Subst): Option[(Subst, Option[GoalNumRange])] = ???
 }
 
 final case class NumState(op2s: Vector[GoalNumOp2], ranges: Vector[GoalNumRange]) {

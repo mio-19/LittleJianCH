@@ -82,58 +82,25 @@ final case class GoalNumOp2Double(rel: NumOp2, x: VarOr[Double], y: VarOr[Double
   override def walk(subst: Subst): GoalNumOp2Double = GoalNumOp2Double(rel, subst.walk(x), subst.walk(y), subst.walk(result))
 }
 
+final case class Boundary[T](x: T, eq: Boolean)
+
 sealed trait GoalNumRange extends GoalBasic {
   def tag: NumTag
 
-  def low: Option[_ <: Num | Var[_ <: Num]]
+  def low: Option[Boundary[_ <: Num | Var[_ <: Num]]]
 
-  def lowEq: Boolean
-
-  def high: Option[_ <: Num | Var[_ <: Num]]
-
-  def highEq: Boolean
+  def high: Option[Boundary[_ <: Num | Var[_ <: Num]]]
 
   override def execute(state: State): IterableOnce[State] = ???
 
   def walk(subst: Subst): GoalNumRange
 }
 
-final case class GoalNumRangeByte(low: Option[VarOr[Byte]], lowEq: Boolean, high: Option[VarOr[Byte]], highEq: Boolean) extends GoalNumRange {
+final case class GoalNumRangeByte(low: Option[Boundary[VarOr[Byte]]], high: Option[Boundary[VarOr[Byte]]]) extends GoalNumRange {
   override def tag = NumTag.Byte
 
-  override def walk(subst: Subst): GoalNumRangeByte = copy(low = low.map(subst.walk(_)), high = high.map(subst.walk(_)))
+  override def walk(subst: Subst): GoalNumRangeByte = copy(low = low.map(x=>x.copy(x=subst.walk(x.x))), high = high.map(x=>x.copy(x=subst.walk(x.x))))
 }
-
-final case class GoalNumRangeShort(low: Option[VarOr[Short]], lowEq: Boolean, high: Option[VarOr[Short]], highEq: Boolean) extends GoalNumRange {
-  override def tag = NumTag.Short
-
-  override def walk(subst: Subst): GoalNumRangeShort = copy(low = low.map(subst.walk(_)), high = high.map(subst.walk(_)))
-}
-
-final case class GoalNumRangeInt(low: Option[VarOr[Int]], lowEq: Boolean, high: Option[VarOr[Int]], highEq: Boolean) extends GoalNumRange {
-  override def tag = NumTag.Int
-
-  override def walk(subst: Subst): GoalNumRangeInt = copy(low = low.map(subst.walk(_)), high = high.map(subst.walk(_)))
-}
-
-final case class GoalNumRangeLong(low: Option[VarOr[Long]], lowEq: Boolean, high: Option[VarOr[Long]], highEq: Boolean) extends GoalNumRange {
-  override def tag = NumTag.Long
-
-  override def walk(subst: Subst): GoalNumRangeLong = copy(low = low.map(subst.walk(_)), high = high.map(subst.walk(_)))
-}
-
-final case class GoalNumRangeFloat(low: Option[VarOr[Float]], lowEq: Boolean, high: Option[VarOr[Float]], highEq: Boolean) extends GoalNumRange {
-  override def tag = NumTag.Float
-
-  override def walk(subst: Subst): GoalNumRangeFloat = copy(low = low.map(subst.walk(_)), high = high.map(subst.walk(_)))
-}
-
-final case class GoalNumRangeDouble(low: Option[VarOr[Double]], lowEq: Boolean, high: Option[VarOr[Double]], highEq: Boolean) extends GoalNumRange {
-  override def tag = NumTag.Double
-
-  override def walk(subst: Subst): GoalNumRangeDouble = copy(low = low.map(subst.walk(_)), high = high.map(subst.walk(_)))
-}
-
 
 implicit class GoalNumOpOps(self: GoalNumOp2) {
   def is2: Boolean = {
@@ -205,6 +172,10 @@ implicit class GoalNumOpOps(self: GoalNumOp2) {
     case GoalNumOp2Double(NumOp2.Mul, x: Double, y, rel: Double) => y.unify(rel / x)
     case GoalNumOp2Double(_, _, _, _) => throw new IllegalArgumentException("not a 2-arg goal")
   }
+}
+
+implicit class GoalNumRangeOps(self: GoalNumRange) {
+  def check: Vector[Unifying[Option[GoalNumRange]]] = ???
 }
 
 final case class NumState(op2s: Vector[GoalNumOp2], ranges: Vector[GoalNumRange]) {

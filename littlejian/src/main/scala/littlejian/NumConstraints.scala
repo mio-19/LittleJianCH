@@ -31,6 +31,15 @@ sealed trait GoalNumOp extends GoalBasic {
   override def execute(state: State): IterableOnce[State] = state.num.insert(state, this)
 
   def walk(subst: Subst): GoalNumOp
+
+  override def toString: String = {
+    val relName = rel match {
+      case NumOp2.Add => "+"
+      case NumOp2.Sub => "-"
+      case NumOp2.Mul => "*"
+    }
+    s"$x $relName $y === $result"
+  }
 }
 
 object GoalNumOp {
@@ -89,7 +98,7 @@ final case class NumState(clauses: Vector[GoalNumOp]) {
     }
   }
 
-  def print: String = "" // TODO
+  def print: String = clauses.map(_.toString).mkString(" && ")
 }
 
 implicit class GoalNumOpOps(self: GoalNumOp) {

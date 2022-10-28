@@ -104,9 +104,39 @@ final case class GoalNumRangeByte(low: Option[VarOr[Byte]], lowEq: Boolean, high
   override def walk(subst: Subst): GoalNumRangeByte = copy(low = low.map(subst.walk(_)), high = high.map(subst.walk(_)))
 }
 
+final case class GoalNumRangeShort(low: Option[VarOr[Short]], lowEq: Boolean, high: Option[VarOr[Short]], highEq: Boolean) extends GoalNumRange {
+  override def tag = NumTag.Short
+
+  override def walk(subst: Subst): GoalNumRangeShort = copy(low = low.map(subst.walk(_)), high = high.map(subst.walk(_)))
+}
+
+final case class GoalNumRangeInt(low: Option[VarOr[Int]], lowEq: Boolean, high: Option[VarOr[Int]], highEq: Boolean) extends GoalNumRange {
+  override def tag = NumTag.Int
+
+  override def walk(subst: Subst): GoalNumRangeInt = copy(low = low.map(subst.walk(_)), high = high.map(subst.walk(_)))
+}
+
+final case class GoalNumRangeLong(low: Option[VarOr[Long]], lowEq: Boolean, high: Option[VarOr[Long]], highEq: Boolean) extends GoalNumRange {
+  override def tag = NumTag.Long
+
+  override def walk(subst: Subst): GoalNumRangeLong = copy(low = low.map(subst.walk(_)), high = high.map(subst.walk(_)))
+}
+
+final case class GoalNumRangeFloat(low: Option[VarOr[Float]], lowEq: Boolean, high: Option[VarOr[Float]], highEq: Boolean) extends GoalNumRange {
+  override def tag = NumTag.Float
+
+  override def walk(subst: Subst): GoalNumRangeFloat = copy(low = low.map(subst.walk(_)), high = high.map(subst.walk(_)))
+}
+
+final case class GoalNumRangeDouble(low: Option[VarOr[Double]], lowEq: Boolean, high: Option[VarOr[Double]], highEq: Boolean) extends GoalNumRange {
+  override def tag = NumTag.Double
+
+  override def walk(subst: Subst): GoalNumRangeDouble = copy(low = low.map(subst.walk(_)), high = high.map(subst.walk(_)))
+}
+
 final case class NumState(clauses: Vector[GoalNumOp2]) {
   def insert(state: State, x: GoalNumOp2): IterableOnce[State] = NumState(x +: clauses).onEq(state.eq) map {
-    case (eq, num) => state.eqUpdated(eq).numUpdated(num)
+    case (eq, num) => state.copy(eq = eq, num = num)
   }
 
   def onEq(eq: EqState): IterableOnce[(EqState, NumState)] = onEq(eq.subst) map {

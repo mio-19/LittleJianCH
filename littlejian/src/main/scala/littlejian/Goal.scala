@@ -21,7 +21,7 @@ final case class GoalNotEq[T](x: VarOr[T], y: VarOr[T])(implicit unifier: Unify[
   override def execute(state: State): Option[State] =
     for {
       notEq <- NotEqState.insert(state.eq, new NotEqRequest(x, y, unifier), state.notEq)
-    } yield state.notEqUpdated(notEq)
+    } yield state.copy(notEq = notEq)
 
   override def toString: String = s"${x} =/= ${y}"
 }
@@ -34,7 +34,7 @@ def checkPredTypeTag[T](tag: PredTypeTag, x: Any): Boolean = tag.runtimeClass.is
 
 final case class GoalPredType[T](tag: PredTypeTag, x: VarOr[T]) extends GoalBasic {
   override def execute(state: State): Option[State] = state.eq.subst.walk(x) match {
-    case v: Var[_] => Some(state.predTypeMap(_.insert(v, tag)))
+    case v: Var[_] => Some(state.copy(predType = state.predType.insert(v, tag)))
     case x => if (checkPredTypeTag(tag, x)) Some(state) else None
   }
 
@@ -43,7 +43,7 @@ final case class GoalPredType[T](tag: PredTypeTag, x: VarOr[T]) extends GoalBasi
 
 final case class GoalPredNotType[T](tag: PredTypeTag, x: VarOr[T]) extends GoalBasic {
   override def execute(state: State): Option[State] = state.eq.subst.walk(x) match {
-    case v: Var[_] => Some(state.predNotTypeMap(_.insert(v, tag)))
+    case v: Var[_] => Some(state.copy(predNotType = state.predNotType.insert(v, tag)))
     case x => if (!checkPredTypeTag(tag, x)) Some(state) else None
   }
 
@@ -51,7 +51,7 @@ final case class GoalPredNotType[T](tag: PredTypeTag, x: VarOr[T]) extends GoalB
 }
 
 final case class GoalAbsent[T](x: WithInspector[T], absent: Any) extends GoalBasic {
-  override def execute(state: State): Option[State] = state.absent.insert(state.eq, this).map(state.absentUpdated)
+  override def execute(state: State): Option[State] = state.absent.insert(state.eq, this).map(x=>state.copy(absent = x))
 
   override def toString: String = s"${x.x}.absent(${absent})"
 }

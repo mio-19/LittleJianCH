@@ -235,9 +235,9 @@ implicit class GoalNumRangeOps(self: GoalNumRange) {
     lowOk && highOk
   }
 
-  def guard(x: Boolean): Vector[Unifying[Option[GoalNumRange]]] = Vector(Unifying.guard(x) >> Unifying.success(None))
+  def guard(x: Boolean): Unifying[Option[GoalNumRange]] = Unifying.guard(x) >> Unifying.success(None)
 
-  def check: Vector[Unifying[Option[GoalNumRange]]] = self match {
+  def reduce: Vector[Unifying[Unit]] | Unifying[Option[GoalNumRange]] = self match {
     case GoalNumRangeByte(num: Byte, Some(low@Boundary(_: Byte, _)), Some(high@Boundary(_: Byte, _))) => guard(check(num, Some(low), Some(high)))
     case GoalNumRangeByte(num: Byte, None, Some(high@Boundary(_: Byte, _))) => guard(check(num, None, Some(high)))
     case GoalNumRangeByte(num: Byte, Some(low@Boundary(_: Byte, _)), None) => guard(check(num, Some(low), None))
@@ -257,7 +257,7 @@ implicit class GoalNumRangeOps(self: GoalNumRange) {
     case GoalNumRangeDouble(num: Double, None, Some(high@Boundary(_: Double, _))) => guard(check(num, None, Some(high)))
     case GoalNumRangeDouble(num: Double, Some(low@Boundary(_: Double, _)), None) => guard(check(num, Some(low), None))
     // TODO: expand small ranges
-    case x => Vector(Unifying.success(Some(x)))
+    case x => Unifying.success(Some(x))
   }
 }
 

@@ -82,6 +82,28 @@ final case class GoalNumOp2Double(rel: NumOp2, x: VarOr[Double], y: VarOr[Double
   override def walk(subst: Subst): GoalNumOp2Double = GoalNumOp2Double(rel, subst.walk(x), subst.walk(y), subst.walk(result))
 }
 
+sealed trait GoalNumRange extends GoalBasic {
+  def tag: NumTag
+
+  def low: Option[_ <: Num | Var[_ <: Num]]
+
+  def lowEq: Boolean
+
+  def high: Option[_ <: Num | Var[_ <: Num]]
+
+  def highEq: Boolean
+
+  override def execute(state: State): IterableOnce[State] = ???
+
+  def walk(subst: Subst): GoalNumRange
+}
+
+final case class GoalNumRangeByte(low: Option[VarOr[Byte]], lowEq: Boolean, high: Option[VarOr[Byte]], highEq: Boolean) extends GoalNumRange {
+  override def tag = NumTag.Byte
+
+  override def walk(subst: Subst): GoalNumRangeByte = copy(low = low.map(subst.walk(_)), high = high.map(subst.walk(_)))
+}
+
 final case class NumState(clauses: Vector[GoalNumOp2]) {
   def insert(state: State, x: GoalNumOp2): IterableOnce[State] = NumState(x +: clauses).onEq(state.eq) map {
     case (eq, num) => state.eqUpdated(eq).numUpdated(num)

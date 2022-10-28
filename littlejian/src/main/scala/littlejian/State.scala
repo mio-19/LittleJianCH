@@ -147,18 +147,18 @@ object AbsentState {
 }
 
 final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, predNotType: PredNotTypeState, absent: AbsentState, num: NumState) {
-  inline def eqUpdated(eq: EqState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent, num = num)
+  inline def eqUpdated(eq: EqState): State = copy(eq = eq)
 
-  inline def notEqUpdated(notEq: NotEqState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent, num = num)
+  inline def notEqUpdated(notEq: NotEqState): State = copy(notEq = notEq)
 
-  inline def predTypeUpdated(predType: PredTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent, num = num)
+  inline def predTypeUpdated(predType: PredTypeState): State = copy(predType = predType)
 
-  inline def predNotTypeUpdated(predNotType: PredNotTypeState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent, num = num)
+  inline def predNotTypeUpdated(predNotType: PredNotTypeState): State = copy(predNotType = predNotType)
 
-  @inline def absentUpdated(absent: AbsentState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent, num = num)
+  @inline def absentUpdated(absent: AbsentState): State = copy(absent = absent)
 
-  inline def numUpdated(num: NumState): State = State(eq = eq, notEq = notEq, predType = predType, predNotType = predNotType, absent = absent, num = num)
-  
+  inline def numUpdated(num: NumState): State = copy(num = num)
+
   inline def predTypeMap(f: PredTypeState => PredTypeState): State = predTypeUpdated(f(predType))
 
   inline def predNotTypeMap(f: PredNotTypeState => PredNotTypeState): State = predNotTypeUpdated(f(predNotType))

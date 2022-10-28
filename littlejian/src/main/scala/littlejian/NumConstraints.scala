@@ -106,6 +106,36 @@ final case class GoalNumRangeByte(low: Option[Boundary[VarOr[Byte]]], high: Opti
   override def walk(subst: Subst): GoalNumRangeByte = copy(low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
 }
 
+final case class GoalNumRangeShort(low: Option[Boundary[VarOr[Short]]], high: Option[Boundary[VarOr[Short]]]) extends GoalNumRange {
+  override def tag = NumTag.Short
+
+  override def walk(subst: Subst): GoalNumRangeShort = copy(low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
+}
+
+final case class GoalNumRangeInt(low: Option[Boundary[VarOr[Int]]], high: Option[Boundary[VarOr[Int]]]) extends GoalNumRange {
+  override def tag = NumTag.Int
+
+  override def walk(subst: Subst): GoalNumRangeInt = copy(low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
+}
+
+final case class GoalNumRangeLong(low: Option[Boundary[VarOr[Long]]], high: Option[Boundary[VarOr[Long]]]) extends GoalNumRange {
+  override def tag = NumTag.Long
+
+  override def walk(subst: Subst): GoalNumRangeLong = copy(low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
+}
+
+final case class GoalNumRangeFloat(low: Option[Boundary[VarOr[Float]]], high: Option[Boundary[VarOr[Float]]]) extends GoalNumRange {
+  override def tag = NumTag.Float
+
+  override def walk(subst: Subst): GoalNumRangeFloat = copy(low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
+}
+
+final case class GoalNumRangeDouble(low: Option[Boundary[VarOr[Double]]], high: Option[Boundary[VarOr[Double]]]) extends GoalNumRange {
+  override def tag = NumTag.Double
+
+  override def walk(subst: Subst): GoalNumRangeDouble = copy(low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
+}
+
 implicit class GoalNumOpOps(self: GoalNumOp2) {
   def is2: Boolean = {
     val a = if (self.x.isInstanceOf[Num]) 1 else 0

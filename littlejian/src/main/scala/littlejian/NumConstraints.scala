@@ -211,7 +211,30 @@ implicit class GoalNumOpOps(self: GoalNumOp2) {
 }
 
 implicit class GoalNumRangeOps(self: GoalNumRange) {
+
+  import math.Ordered._
+
+  private def check[T <: Num](num: T, low: Option[Boundary[VarOr[T]]], high: Option[Boundary[VarOr[T]]])(implicit order: Ordering[T]): Boolean =
+    check0(num, low.asInstanceOf[Option[Boundary[T]]], high.asInstanceOf[Option[Boundary[T]]])
+
+  private def check0[T <: Num](num: T, low: Option[Boundary[T]], high: Option[Boundary[T]])(implicit order: Ordering[T]): Boolean = {
+    val lowOk = low match {
+      case None => true
+      case Some(Boundary(b, true)) => num >= b
+      case Some(Boundary(b, false)) => num > b
+    }
+    val highOk = high match {
+      case None => true
+      case Some(Boundary(b, true)) => num <= b
+      case Some(Boundary(b, false)) => num < b
+    }
+    lowOk && highOk
+  }
+
+  def guard(x: Boolean): Vector[Unifying[Option[GoalNumRange]]] = Vector(Unifying.guard(x) >> Unifying.success(None))
+
   def check: Vector[Unifying[Option[GoalNumRange]]] = self match {
+    case GoalNumRangeByte(num: Byte, Some(low@Boundary(_: Byte, _)), Some(high@Boundary(_: Byte, _))) => guard(check(num, Some(low), Some(high)))
     case _ => ???
   }
 }

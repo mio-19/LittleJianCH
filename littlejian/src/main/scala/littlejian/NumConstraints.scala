@@ -100,6 +100,10 @@ sealed trait GoalNumRange extends GoalBasic {
   override def execute(state: State): IterableOnce[State] = ???
 
   def walk(subst: Subst): GoalNumRange
+
+  if (low.isEmpty && high.isEmpty) {
+    throw new IllegalArgumentException("At least one boundary must be defined")
+  }
 }
 
 final case class GoalNumRangeByte(num: VarOr[Byte], low: Option[Boundary[VarOr[Byte]]], high: Option[Boundary[VarOr[Byte]]]) extends GoalNumRange {
@@ -235,7 +239,25 @@ implicit class GoalNumRangeOps(self: GoalNumRange) {
 
   def check: Vector[Unifying[Option[GoalNumRange]]] = self match {
     case GoalNumRangeByte(num: Byte, Some(low@Boundary(_: Byte, _)), Some(high@Boundary(_: Byte, _))) => guard(check(num, Some(low), Some(high)))
-    case _ => ???
+    case GoalNumRangeByte(num: Byte, None, Some(high@Boundary(_: Byte, _))) => guard(check(num, None, Some(high)))
+    case GoalNumRangeByte(num: Byte, Some(low@Boundary(_: Byte, _)), None) => guard(check(num, Some(low), None))
+    case GoalNumRangeShort(num: Short, Some(low@Boundary(_: Short, _)), Some(high@Boundary(_: Short, _))) => guard(check(num, Some(low), Some(high)))
+    case GoalNumRangeShort(num: Short, None, Some(high@Boundary(_: Short, _))) => guard(check(num, None, Some(high)))
+    case GoalNumRangeShort(num: Short, Some(low@Boundary(_: Short, _)), None) => guard(check(num, Some(low), None))
+    case GoalNumRangeInt(num: Int, Some(low@Boundary(_: Int, _)), Some(high@Boundary(_: Int, _))) => guard(check(num, Some(low), Some(high)))
+    case GoalNumRangeInt(num: Int, None, Some(high@Boundary(_: Int, _))) => guard(check(num, None, Some(high)))
+    case GoalNumRangeInt(num: Int, Some(low@Boundary(_: Int, _)), None) => guard(check(num, Some(low), None))
+    case GoalNumRangeLong(num: Long, Some(low@Boundary(_: Long, _)), Some(high@Boundary(_: Long, _))) => guard(check(num, Some(low), Some(high)))
+    case GoalNumRangeLong(num: Long, None, Some(high@Boundary(_: Long, _))) => guard(check(num, None, Some(high)))
+    case GoalNumRangeLong(num: Long, Some(low@Boundary(_: Long, _)), None) => guard(check(num, Some(low), None))
+    case GoalNumRangeFloat(num: Float, Some(low@Boundary(_: Float, _)), Some(high@Boundary(_: Float, _))) => guard(check(num, Some(low), Some(high)))
+    case GoalNumRangeFloat(num: Float, None, Some(high@Boundary(_: Float, _))) => guard(check(num, None, Some(high)))
+    case GoalNumRangeFloat(num: Float, Some(low@Boundary(_: Float, _)), None) => guard(check(num, Some(low), None))
+    case GoalNumRangeDouble(num: Double, Some(low@Boundary(_: Double, _)), Some(high@Boundary(_: Double, _))) => guard(check(num, Some(low), Some(high)))
+    case GoalNumRangeDouble(num: Double, None, Some(high@Boundary(_: Double, _))) => guard(check(num, None, Some(high)))
+    case GoalNumRangeDouble(num: Double, Some(low@Boundary(_: Double, _)), None) => guard(check(num, Some(low), None))
+    // TODO: expand small ranges
+    case x => Vector(Unifying.success(Some(x)))
   }
 }
 

@@ -84,6 +84,10 @@ final case class GoalNumOp2Double(rel: NumOp2, x: VarOr[Double], y: VarOr[Double
 
 final case class Boundary[T](x: T, eq: Boolean)
 
+implicit class BoundaryVarOrOps[T](self: Boundary[VarOr[T]]) {
+  def walk(subst: Subst): Boundary[VarOr[T]] = Boundary(subst.walk(self.x), self.eq)
+}
+
 sealed trait GoalNumRange extends GoalBasic {
   def tag: NumTag
 
@@ -99,7 +103,7 @@ sealed trait GoalNumRange extends GoalBasic {
 final case class GoalNumRangeByte(low: Option[Boundary[VarOr[Byte]]], high: Option[Boundary[VarOr[Byte]]]) extends GoalNumRange {
   override def tag = NumTag.Byte
 
-  override def walk(subst: Subst): GoalNumRangeByte = copy(low = low.map(x=>x.copy(x=subst.walk(x.x))), high = high.map(x=>x.copy(x=subst.walk(x.x))))
+  override def walk(subst: Subst): GoalNumRangeByte = copy(low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
 }
 
 implicit class GoalNumOpOps(self: GoalNumOp2) {

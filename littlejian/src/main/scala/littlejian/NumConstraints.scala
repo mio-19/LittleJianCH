@@ -134,24 +134,6 @@ final case class GoalNumRangeDouble(low: Option[VarOr[Double]], lowEq: Boolean, 
   override def walk(subst: Subst): GoalNumRangeDouble = copy(low = low.map(subst.walk(_)), high = high.map(subst.walk(_)))
 }
 
-final case class NumState(clauses: Vector[GoalNumOp2]) {
-  def insert(state: State, x: GoalNumOp2): IterableOnce[State] = NumState(x +: clauses).onEq(state.eq) map {
-    case (eq, num) => state.copy(eq = eq, num = num)
-  }
-
-  def onEq(eq: EqState): IterableOnce[(EqState, NumState)] = onEq(eq.subst) map {
-    case (subst, num) => (EqState(subst), num)
-  }
-
-  def onEq(subst: Subst): Option[(Subst, NumState)] = {
-    val (cl2, rest) = clauses.map(_.walk(subst)).partition(_.is2)
-    Unifying.runAll(cl2.map(_.solve2)).getSubst(subst) map { subst =>
-      (subst, NumState(rest))
-    }
-  }
-
-  def print: String = clauses.map(_.toString).mkString(" && ")
-}
 
 implicit class GoalNumOpOps(self: GoalNumOp2) {
   def is2: Boolean = {
@@ -225,6 +207,25 @@ implicit class GoalNumOpOps(self: GoalNumOp2) {
   }
 }
 
+final case class NumState(op2s: Vector[GoalNumOp2]) {
+  def insert(state: State, x: GoalNumOp2): IterableOnce[State] = copy(op2s = x +: op2s).onEq(state.eq) map {
+    case (eq, num) => state.copy(eq = eq, num = num)
+  }
+
+  def onEq(eq: EqState): IterableOnce[(EqState, NumState)] = NumState.runOp2s(eq.subst, op2s) map {
+    case (subst, op2s) => (EqState(subst), copy(op2s = op2s))
+  }
+
+  def print: String = op2s.map(_.toString).mkString(" && ")
+}
+
 object NumState {
+  def runOp2s(subst: Subst, op2s: Vector[GoalNumOp2]): Option[(Subst, Vector[GoalNumOp2])] = {
+    val (cl2, rest) = op2s.map(_.walk(subst)).partition(_.is2)
+    Unifying.runAll(cl2.map(_.solve2)).getSubst(subst) map { subst =>
+      (subst, rest)
+    }
+  }
+
   val empty: NumState = NumState(Vector.empty)
 }

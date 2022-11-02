@@ -84,7 +84,23 @@ final case class GoalNumOp2Double(rel: NumOp2, x: VarOr[Double], y: VarOr[Double
   override def walk(subst: Subst): GoalNumOp2Double = GoalNumOp2Double(rel, subst.walk(x), subst.walk(y), subst.walk(result))
 }
 
-final case class Boundary[T](x: T, eq: Boolean)
+final case class Boundary[T](x: T, eq: Boolean) {
+  def lowMerge(other: Boundary[T])(implicit ordering: Ordering[T]) =
+    if (ordering.gt(x, other.x)) this
+    else if (ordering.equiv(x, other.x)) Boundary(x, eq && other.eq)
+    else other
+
+  def highMerge(other: Boundary[T])(implicit ordering: Ordering[T]) =
+    if (ordering.lt(x, other.x)) this
+    else if (ordering.equiv(x, other.x)) Boundary(x, eq && other.eq)
+    else other
+}
+
+private def lowMerge[T](a: Boundary[VarOr[T]], b: Boundary[VarOr[T]])(implicit ordering: Ordering[T]): Boundary[VarOr[T]] =
+  a.asInstanceOf[Boundary[T]].lowMerge(b.asInstanceOf[Boundary[T]]).asInstanceOf[Boundary[VarOr[T]]]
+
+private def highMerge[T](a: Boundary[VarOr[T]], b: Boundary[VarOr[T]])(implicit ordering: Ordering[T]): Boundary[VarOr[T]] =
+  a.asInstanceOf[Boundary[T]].highMerge(b.asInstanceOf[Boundary[T]]).asInstanceOf[Boundary[VarOr[T]]]
 
 implicit class BoundaryVarOrOps[T](self: Boundary[VarOr[T]]) {
   def walk(subst: Subst): Boundary[VarOr[T]] = Boundary(subst.walk(self.x), self.eq)
@@ -106,42 +122,165 @@ sealed trait GoalNumRange extends GoalBasic {
   if (low.isEmpty && high.isEmpty) {
     throw new IllegalArgumentException("At least one boundary must be defined")
   }
+
+  // with the same num
+  def merge(other: GoalNumRange): IterableOnce[GoalNumRange]
 }
 
 final case class GoalNumRangeByte(num: VarOr[Byte], low: Option[Boundary[VarOr[Byte]]], high: Option[Boundary[VarOr[Byte]]]) extends GoalNumRange {
   override def tag = NumTag.Byte
 
   override def walk(subst: Subst): GoalNumRangeByte = GoalNumRangeByte(num = subst.walk(num), low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
+
+  override def merge(other: GoalNumRange): IterableOnce[GoalNumRange] = {
+    if (num != other.num) throw new IllegalArgumentException("num must be the same")
+    val o = other.asInstanceOf[GoalNumRangeByte]
+    (this, o) match {
+      case (GoalNumRangeByte(_, None, high), GoalNumRangeByte(_, low, None)) => Some(GoalNumRangeByte(num, low, high))
+      case (GoalNumRangeByte(_, low, None), GoalNumRangeByte(_, None, high)) => Some(GoalNumRangeByte(num, low, high))
+      case (GoalNumRangeByte(_, Some(low1@Boundary(_: Byte, _)), Some(high1@Boundary(_: Byte, _))), GoalNumRangeByte(_, Some(low2@Boundary(_: Byte, _)), Some(high2@Boundary(_: Byte, _)))) =>
+        Some(GoalNumRangeByte(num, Some(lowMerge(low1, low2)), Some(highMerge(high1, high2))))
+      case (GoalNumRangeByte(_, Some(low1@Boundary(_: Byte, _)), Some(high1@Boundary(_: Byte, _))), GoalNumRangeByte(_, Some(low2@Boundary(_: Byte, _)), None)) =>
+        Some(GoalNumRangeByte(num, Some(lowMerge(low1, low2)), Some(high1)))
+      case (GoalNumRangeByte(_, Some(low1@Boundary(_: Byte, _)), None), GoalNumRangeByte(_, Some(low2@Boundary(_: Byte, _)), Some(high2@Boundary(_: Byte, _)))) =>
+        Some(GoalNumRangeByte(num, Some(lowMerge(low1, low2)), Some(high2)))
+      case (GoalNumRangeByte(_, None, Some(high1@Boundary(_: Byte, _))), GoalNumRangeByte(_, Some(low2@Boundary(_: Byte, _)), Some(high2@Boundary(_: Byte, _)))) =>
+        Some(GoalNumRangeByte(num, Some(low2), Some(highMerge(high1, high2))))
+      case (GoalNumRangeByte(_, Some(low1@Boundary(_: Byte, _)), Some(high1@Boundary(_: Byte, _))), GoalNumRangeByte(_, None, Some(high2@Boundary(_: Byte, _)))) =>
+        Some(GoalNumRangeByte(num, Some(low1), Some(highMerge(high1, high2))))
+      case _ => Vector(this, o)
+    }
+  }
 }
 
 final case class GoalNumRangeShort(num: VarOr[Short], low: Option[Boundary[VarOr[Short]]], high: Option[Boundary[VarOr[Short]]]) extends GoalNumRange {
   override def tag = NumTag.Short
 
   override def walk(subst: Subst): GoalNumRangeShort = GoalNumRangeShort(num = subst.walk(num), low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
+
+  override def merge(other: GoalNumRange): IterableOnce[GoalNumRange] = {
+    if (num != other.num) throw new IllegalArgumentException("num must be the same")
+    val o = other.asInstanceOf[GoalNumRangeShort]
+    (this, o) match {
+      case (GoalNumRangeShort(_, None, high), GoalNumRangeShort(_, low, None)) => Some(GoalNumRangeShort(num, low, high))
+      case (GoalNumRangeShort(_, low, None), GoalNumRangeShort(_, None, high)) => Some(GoalNumRangeShort(num, low, high))
+      case (GoalNumRangeShort(_, Some(low1@Boundary(_: Short, _)), Some(high1@Boundary(_: Short, _))), GoalNumRangeShort(_, Some(low2@Boundary(_: Short, _)), Some(high2@Boundary(_: Short, _)))) =>
+        Some(GoalNumRangeShort(num, Some(lowMerge(low1, low2)), Some(highMerge(high1, high2))))
+      case (GoalNumRangeShort(_, Some(low1@Boundary(_: Short, _)), Some(high1@Boundary(_: Short, _))), GoalNumRangeShort(_, Some(low2@Boundary(_: Short, _)), None)) =>
+        Some(GoalNumRangeShort(num, Some(lowMerge(low1, low2)), Some(high1)))
+      case (GoalNumRangeShort(_, Some(low1@Boundary(_: Short, _)), None), GoalNumRangeShort(_, Some(low2@Boundary(_: Short, _)), Some(high2@Boundary(_: Short, _)))) =>
+        Some(GoalNumRangeShort(num, Some(lowMerge(low1, low2)), Some(high2)))
+      case (GoalNumRangeShort(_, None, Some(high1@Boundary(_: Short, _))), GoalNumRangeShort(_, Some(low2@Boundary(_: Short, _)), Some(high2@Boundary(_: Short, _)))) =>
+        Some(GoalNumRangeShort(num, Some(low2), Some(highMerge(high1, high2))))
+      case (GoalNumRangeShort(_, Some(low1@Boundary(_: Short, _)), Some(high1@Boundary(_: Short, _))), GoalNumRangeShort(_, None, Some(high2@Boundary(_: Short, _)))) =>
+        Some(GoalNumRangeShort(num, Some(low1), Some(highMerge(high1, high2))))
+      case _ => Vector(this, o)
+    }
+  }
 }
 
 final case class GoalNumRangeInt(num: VarOr[Int], low: Option[Boundary[VarOr[Int]]], high: Option[Boundary[VarOr[Int]]]) extends GoalNumRange {
   override def tag = NumTag.Int
 
   override def walk(subst: Subst): GoalNumRangeInt = GoalNumRangeInt(num = subst.walk(num), low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
+
+  override def merge(other: GoalNumRange): IterableOnce[GoalNumRange] = {
+    if (num != other.num) throw new IllegalArgumentException("num must be the same")
+    val o = other.asInstanceOf[GoalNumRangeInt]
+    (this, o) match {
+      case (GoalNumRangeInt(_, None, high), GoalNumRangeInt(_, low, None)) => Some(GoalNumRangeInt(num, low, high))
+      case (GoalNumRangeInt(_, low, None), GoalNumRangeInt(_, None, high)) => Some(GoalNumRangeInt(num, low, high))
+      case (GoalNumRangeInt(_, Some(low1@Boundary(_: Int, _)), Some(high1@Boundary(_: Int, _))), GoalNumRangeInt(_, Some(low2@Boundary(_: Int, _)), Some(high2@Boundary(_: Int, _)))) =>
+        Some(GoalNumRangeInt(num, Some(lowMerge(low1, low2)), Some(highMerge(high1, high2))))
+      case (GoalNumRangeInt(_, Some(low1@Boundary(_: Int, _)), Some(high1@Boundary(_: Int, _))), GoalNumRangeInt(_, Some(low2@Boundary(_: Int, _)), None)) =>
+        Some(GoalNumRangeInt(num, Some(lowMerge(low1, low2)), Some(high1)))
+      case (GoalNumRangeInt(_, Some(low1@Boundary(_: Int, _)), None), GoalNumRangeInt(_, Some(low2@Boundary(_: Int, _)), Some(high2@Boundary(_: Int, _)))) =>
+        Some(GoalNumRangeInt(num, Some(lowMerge(low1, low2)), Some(high2)))
+      case (GoalNumRangeInt(_, None, Some(high1@Boundary(_: Int, _))), GoalNumRangeInt(_, Some(low2@Boundary(_: Int, _)), Some(high2@Boundary(_: Int, _)))) =>
+        Some(GoalNumRangeInt(num, Some(low2), Some(highMerge(high1, high2))))
+      case (GoalNumRangeInt(_, Some(low1@Boundary(_: Int, _)), Some(high1@Boundary(_: Int, _))), GoalNumRangeInt(_, None, Some(high2@Boundary(_: Int, _)))) =>
+        Some(GoalNumRangeInt(num, Some(low1), Some(highMerge(high1, high2))))
+      case _ => Vector(this, o)
+    }
+  }
 }
 
 final case class GoalNumRangeLong(num: VarOr[Long], low: Option[Boundary[VarOr[Long]]], high: Option[Boundary[VarOr[Long]]]) extends GoalNumRange {
   override def tag = NumTag.Long
 
   override def walk(subst: Subst): GoalNumRangeLong = GoalNumRangeLong(num = subst.walk(num), low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
+
+  override def merge(other: GoalNumRange): IterableOnce[GoalNumRange] = {
+    if (num != other.num) throw new IllegalArgumentException("num must be the same")
+    val o = other.asInstanceOf[GoalNumRangeLong]
+    (this, o) match {
+      case (GoalNumRangeLong(_, None, high), GoalNumRangeLong(_, low, None)) => Some(GoalNumRangeLong(num, low, high))
+      case (GoalNumRangeLong(_, low, None), GoalNumRangeLong(_, None, high)) => Some(GoalNumRangeLong(num, low, high))
+      case (GoalNumRangeLong(_, Some(low1@Boundary(_: Long, _)), Some(high1@Boundary(_: Long, _))), GoalNumRangeLong(_, Some(low2@Boundary(_: Long, _)), Some(high2@Boundary(_: Long, _)))) =>
+        Some(GoalNumRangeLong(num, Some(lowMerge(low1, low2)), Some(highMerge(high1, high2))))
+      case (GoalNumRangeLong(_, Some(low1@Boundary(_: Long, _)), Some(high1@Boundary(_: Long, _))), GoalNumRangeLong(_, Some(low2@Boundary(_: Long, _)), None)) =>
+        Some(GoalNumRangeLong(num, Some(lowMerge(low1, low2)), Some(high1)))
+      case (GoalNumRangeLong(_, Some(low1@Boundary(_: Long, _)), None), GoalNumRangeLong(_, Some(low2@Boundary(_: Long, _)), Some(high2@Boundary(_: Long, _)))) =>
+        Some(GoalNumRangeLong(num, Some(lowMerge(low1, low2)), Some(high2)))
+      case (GoalNumRangeLong(_, None, Some(high1@Boundary(_: Long, _))), GoalNumRangeLong(_, Some(low2@Boundary(_: Long, _)), Some(high2@Boundary(_: Long, _)))) =>
+        Some(GoalNumRangeLong(num, Some(low2), Some(highMerge(high1, high2))))
+      case (GoalNumRangeLong(_, Some(low1@Boundary(_: Long, _)), Some(high1@Boundary(_: Long, _))), GoalNumRangeLong(_, None, Some(high2@Boundary(_: Long, _)))) =>
+        Some(GoalNumRangeLong(num, Some(low1), Some(highMerge(high1, high2))))
+      case _ => Vector(this, o)
+    }
+  }
 }
 
 final case class GoalNumRangeFloat(num: VarOr[Float], low: Option[Boundary[VarOr[Float]]], high: Option[Boundary[VarOr[Float]]]) extends GoalNumRange {
   override def tag = NumTag.Float
 
   override def walk(subst: Subst): GoalNumRangeFloat = GoalNumRangeFloat(num = subst.walk(num), low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
+
+  override def merge(other: GoalNumRange): IterableOnce[GoalNumRange] = {
+    if (num != other.num) throw new IllegalArgumentException("num must be the same")
+    val o = other.asInstanceOf[GoalNumRangeFloat]
+    (this, o) match {
+      case (GoalNumRangeFloat(_, None, high), GoalNumRangeFloat(_, low, None)) => Some(GoalNumRangeFloat(num, low, high))
+      case (GoalNumRangeFloat(_, low, None), GoalNumRangeFloat(_, None, high)) => Some(GoalNumRangeFloat(num, low, high))
+      case (GoalNumRangeFloat(_, Some(low1@Boundary(_: Float, _)), Some(high1@Boundary(_: Float, _))), GoalNumRangeFloat(_, Some(low2@Boundary(_: Float, _)), Some(high2@Boundary(_: Float, _)))) =>
+        Some(GoalNumRangeFloat(num, Some(lowMerge(low1, low2)), Some(highMerge(high1, high2))))
+      case (GoalNumRangeFloat(_, Some(low1@Boundary(_: Float, _)), Some(high1@Boundary(_: Float, _))), GoalNumRangeFloat(_, Some(low2@Boundary(_: Float, _)), None)) =>
+        Some(GoalNumRangeFloat(num, Some(lowMerge(low1, low2)), Some(high1)))
+      case (GoalNumRangeFloat(_, Some(low1@Boundary(_: Float, _)), None), GoalNumRangeFloat(_, Some(low2@Boundary(_: Float, _)), Some(high2@Boundary(_: Float, _)))) =>
+        Some(GoalNumRangeFloat(num, Some(lowMerge(low1, low2)), Some(high2)))
+      case (GoalNumRangeFloat(_, None, Some(high1@Boundary(_: Float, _))), GoalNumRangeFloat(_, Some(low2@Boundary(_: Float, _)), Some(high2@Boundary(_: Float, _)))) =>
+        Some(GoalNumRangeFloat(num, Some(low2), Some(highMerge(high1, high2))))
+      case (GoalNumRangeFloat(_, Some(low1@Boundary(_: Float, _)), Some(high1@Boundary(_: Float, _))), GoalNumRangeFloat(_, None, Some(high2@Boundary(_: Float, _)))) =>
+        Some(GoalNumRangeFloat(num, Some(low1), Some(highMerge(high1, high2))))
+      case _ => Vector(this, o)
+    }
+  }
 }
 
 final case class GoalNumRangeDouble(num: VarOr[Double], low: Option[Boundary[VarOr[Double]]], high: Option[Boundary[VarOr[Double]]]) extends GoalNumRange {
   override def tag = NumTag.Double
 
   override def walk(subst: Subst): GoalNumRangeDouble = GoalNumRangeDouble(num = subst.walk(num), low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
+
+  override def merge(other: GoalNumRange): IterableOnce[GoalNumRange] = {
+    if (num != other.num) throw new IllegalArgumentException("num must be the same")
+    val o = other.asInstanceOf[GoalNumRangeDouble]
+    (this, o) match {
+      case (GoalNumRangeDouble(_, None, high), GoalNumRangeDouble(_, low, None)) => Some(GoalNumRangeDouble(num, low, high))
+      case (GoalNumRangeDouble(_, low, None), GoalNumRangeDouble(_, None, high)) => Some(GoalNumRangeDouble(num, low, high))
+      case (GoalNumRangeDouble(_, Some(low1@Boundary(_: Double, _)), Some(high1@Boundary(_: Double, _))), GoalNumRangeDouble(_, Some(low2@Boundary(_: Double, _)), Some(high2@Boundary(_: Double, _)))) =>
+        Some(GoalNumRangeDouble(num, Some(lowMerge(low1, low2)), Some(highMerge(high1, high2))))
+      case (GoalNumRangeDouble(_, Some(low1@Boundary(_: Double, _)), Some(high1@Boundary(_: Double, _))), GoalNumRangeDouble(_, Some(low2@Boundary(_: Double, _)), None)) =>
+        Some(GoalNumRangeDouble(num, Some(lowMerge(low1, low2)), Some(high1)))
+      case (GoalNumRangeDouble(_, Some(low1@Boundary(_: Double, _)), None), GoalNumRangeDouble(_, Some(low2@Boundary(_: Double, _)), Some(high2@Boundary(_: Double, _)))) =>
+        Some(GoalNumRangeDouble(num, Some(lowMerge(low1, low2)), Some(high2)))
+      case (GoalNumRangeDouble(_, None, Some(high1@Boundary(_: Double, _))), GoalNumRangeDouble(_, Some(low2@Boundary(_: Double, _)), Some(high2@Boundary(_: Double, _)))) =>
+        Some(GoalNumRangeDouble(num, Some(low2), Some(highMerge(high1, high2))))
+      case (GoalNumRangeDouble(_, Some(low1@Boundary(_: Double, _)), Some(high1@Boundary(_: Double, _))), GoalNumRangeDouble(_, None, Some(high2@Boundary(_: Double, _)))) =>
+        Some(GoalNumRangeDouble(num, Some(low1), Some(highMerge(high1, high2))))
+      case _ => Vector(this, o)
+    }
+  }
 }
 
 implicit class GoalNumOpOps(self: GoalNumOp2) {

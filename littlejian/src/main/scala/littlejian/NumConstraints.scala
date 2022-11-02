@@ -453,7 +453,7 @@ final case class NumState(op2s: Vector[GoalNumOp2], ranges: Vector[GoalNumRange]
     case (eq, num) => state.copy(eq = eq, num = num)
   }
 
-  def print: String = op2s.map(_.toString).mkString(" && ")
+  def print: String = op2s.map(_.toString).appendedAll(ranges.map(_.toString)).mkString(" && ")
 }
 
 object NumState {

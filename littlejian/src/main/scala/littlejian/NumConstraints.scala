@@ -1,5 +1,7 @@
 package littlejian
 
+import scala.collection.immutable.NumericRange
+
 type Num = Byte | Short | Int | Long | Float | Double
 
 enum NumTag:
@@ -235,7 +237,20 @@ implicit class GoalNumRangeOps(self: GoalNumRange) {
     lowOk && highOk
   }
 
-  def guard(x: Boolean): Unifying[Option[GoalNumRange]] = Unifying.guard(x) >> Unifying.success(None)
+  private def guard(x: Boolean): Unifying[Option[GoalNumRange]] = Unifying.guard(x) >> Unifying.success(None)
+
+  private def doInline0[T <: Num](x: Var[T], low: Boundary[T], high: Boundary[T])(implicit unify: Unify[T], num: Integral[T]): Vector[Unifying[Unit]] = {
+    var lowX = low.x
+    if (!low.eq) lowX = num.plus(lowX, num.one)
+    var highX = high.x
+    if (!high.eq) highX = num.minus(highX, num.one)
+    NumericRange.inclusive(lowX, highX, num.one).toVector.map(_.unify(x))
+  }
+
+  private def doInline[T <: Num](x: Var[T], low: Boundary[VarOr[T]], high: Boundary[VarOr[T]])(implicit unify: Unify[T], num: Integral[T]): Vector[Unifying[Unit]] =
+    doInline0(x, low.asInstanceOf[Boundary[T]], high.asInstanceOf[Boundary[T]])
+
+  inline val inlineLimit = 10
 
   def reduce: Vector[Unifying[Unit]] | Unifying[Option[GoalNumRange]] = self match {
     case GoalNumRangeByte(num: Byte, Some(low@Boundary(_: Byte, _)), Some(high@Boundary(_: Byte, _))) => guard(check(num, Some(low), Some(high)))
@@ -256,7 +271,11 @@ implicit class GoalNumRangeOps(self: GoalNumRange) {
     case GoalNumRangeDouble(num: Double, Some(low@Boundary(_: Double, _)), Some(high@Boundary(_: Double, _))) => guard(check(num, Some(low), Some(high)))
     case GoalNumRangeDouble(num: Double, None, Some(high@Boundary(_: Double, _))) => guard(check(num, None, Some(high)))
     case GoalNumRangeDouble(num: Double, Some(low@Boundary(_: Double, _)), None) => guard(check(num, Some(low), None))
-    // TODO: expand small ranges
+    // expand small ranges
+    case GoalNumRangeByte(num: Var[Byte], Some(low@Boundary(l: Byte, _)), Some(high@Boundary(h: Byte, _))) if (h - l < inlineLimit) => doInline(num, low, high)
+    case GoalNumRangeShort(num: Var[Short], Some(low@Boundary(l: Short, _)), Some(high@Boundary(h: Short, _))) if (h - l < inlineLimit) => doInline(num, low, high)
+    case GoalNumRangeInt(num: Var[Int], Some(low@Boundary(l: Int, _)), Some(high@Boundary(h: Int, _))) if (h - l < inlineLimit) => doInline(num, low, high)
+    case GoalNumRangeLong(num: Var[Long], Some(low@Boundary(l: Long, _)), Some(high@Boundary(h: Long, _))) if (h - l < inlineLimit) => doInline(num, low, high)
     case x => Unifying.success(Some(x))
   }
 
@@ -300,7 +319,7 @@ object NumState {
       Some(subst, ranges)
     else
       for {
-        (subst, maybeRange) <- ranges.head.reduce(subst)
+        (subst, maybeRange) <- ranges.head.walk(subst).reduce(subst)
         (subst, rest) <- runRanges(subst, ranges.tail)
       } yield (subst, maybeRange ++: rest)
 

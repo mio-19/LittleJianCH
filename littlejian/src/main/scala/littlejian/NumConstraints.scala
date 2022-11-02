@@ -459,10 +459,20 @@ implicit class GoalNumRangeOps(self: GoalNumRange) {
     case GoalNumRangeShort(num: Var[Short], Some(low@Boundary(l: Short, _)), Some(high@Boundary(h: Short, _))) if (h - l < inlineLimit) => doInline(num, low, high)
     case GoalNumRangeInt(num: Var[Int], Some(low@Boundary(l: Int, _)), Some(high@Boundary(h: Int, _))) if (h - l < inlineLimit) => doInline(num, low, high)
     case GoalNumRangeLong(num: Var[Long], Some(low@Boundary(l: Long, _)), Some(high@Boundary(h: Long, _))) if (h - l < inlineLimit) => doInline(num, low, high)
-    // swap 1op
-    // TODO
     // no enough infomation
     case x => Unifying.success(Some(x))
+  }
+
+  def swap1op: Option[GoalNumRange] = self match {
+    case GoalNumRangeByte(num: Byte, Some(Boundary(low: Var[Byte], lowEq)), None) => Some(GoalNumRangeByte(num, None, Some(Boundary(low, lowEq))))
+    case GoalNumRangeByte(num: Byte, None, Some(Boundary(high: Var[Byte], highEq))) => Some(GoalNumRangeByte(num, Some(Boundary(high, highEq)), None))
+    case GoalNumRangeShort(num: Short, Some(Boundary(low: Var[Short], lowEq)), None) => Some(GoalNumRangeShort(num, None, Some(Boundary(low, lowEq))))
+    case GoalNumRangeShort(num: Short, None, Some(Boundary(high: Var[Short], highEq))) => Some(GoalNumRangeShort(num, Some(Boundary(high, highEq)), None))
+    case GoalNumRangeInt(num: Int, Some(Boundary(low: Var[Int], lowEq)), None) => Some(GoalNumRangeInt(num, None, Some(Boundary(low, lowEq))))
+    case GoalNumRangeLong(num: Long, Some(Boundary(low: Var[Long], lowEq)), None) => Some(GoalNumRangeLong(num, None, Some(Boundary(low, lowEq))))
+    case GoalNumRangeFloat(num: Float, Some(Boundary(low: Var[Float], lowEq)), None) => Some(GoalNumRangeFloat(num, None, Some(Boundary(low, lowEq))))
+    case GoalNumRangeDouble(num: Double, Some(Boundary(low: Var[Double], lowEq)), None) => Some(GoalNumRangeDouble(num, None, Some(Boundary(low, lowEq))))
+    case _ => None
   }
 
   def reduce(subst: Subst): IterableOnce[(Subst, Option[GoalNumRange])] = this.reduce match {
@@ -480,8 +490,8 @@ final case class NumState(op2s: Vector[GoalNumOp2], ranges: Vector[GoalNumRange]
   def insert(state: State, x: GoalNumRange): IterableOnce[State] = copy(ranges = x +: ranges).onInsert(state)
 
   def onEq(eq: EqState): IterableOnce[(EqState, NumState)] = for {
-    (subst, ranges) <- NumState.runRanges(eq.subst, NumState.rangesMerge(ranges))
-    (subst, op2s) <- NumState.runOp2s(subst, op2s)
+    (subst, ranges) <- NumState.runRanges(eq.subst, NumState.rangesMerge(NumState.rangesSwap1(ranges.map(_.walk(eq.subst)))))
+    (subst, op2s) <- NumState.runOp2s(subst, op2s.map(_.walk(subst)))
   } yield (EqState(subst), NumState(op2s = op2s, ranges = ranges))
 
   def onInsert(state: State): IterableOnce[State] = this.onEq(state.eq) map {
@@ -494,7 +504,7 @@ final case class NumState(op2s: Vector[GoalNumOp2], ranges: Vector[GoalNumRange]
 object NumState {
   def runOp2s(subst: Subst, op2s: Vector[GoalNumOp2]): Option[(Subst, Vector[GoalNumOp2])] = if (op2s.isEmpty) Some(subst, op2s) else // optimize
   {
-    val (cl2, rest) = op2s.map(_.walk(subst)).partition(_.is2)
+    val (cl2, rest) = op2s.partition(_.is2)
     Unifying.runAll(cl2.map(_.solve2)).getSubst(subst) map { subst =>
       (subst, rest)
     }
@@ -505,11 +515,20 @@ object NumState {
       Some(subst, ranges)
     else
       for {
-        (subst, maybeRange) <- ranges.head.walk(subst).reduce(subst)
+        (subst, maybeRange) <- ranges.head.reduce(subst)
         (subst, rest) <- runRanges(subst, ranges.tail)
       } yield (subst, maybeRange ++: rest)
 
   def rangesMerge(ranges: Vector[GoalNumRange]): Vector[GoalNumRange] = ranges.groupBy(_.num).values.toVector.flatMap(merge)
+
+  def rangesSwap1(ranges: Vector[GoalNumRange]): Vector[GoalNumRange] = ranges.map(x => {
+    x.swap1op match {
+      case Some(a) => {
+        a
+      }
+      case None => x
+    }
+  })
 
   val empty: NumState = NumState(Vector.empty, Vector.empty)
 }

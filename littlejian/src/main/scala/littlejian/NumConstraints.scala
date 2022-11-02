@@ -125,6 +125,18 @@ sealed trait GoalNumRange extends GoalBasic {
 
   // with the same num
   def merge(other: GoalNumRange): IterableOnce[GoalNumRange]
+
+  override def toString: String = (low, high) match {
+    case (Some(Boundary(low, true)), None) => s"$low <= $num"
+    case (Some(Boundary(low, false)), None) => s"$low < $num"
+    case (Some(Boundary(low, true)), Some(Boundary(high, true))) => s"$low <= $num <= $high"
+    case (Some(Boundary(low, false)), Some(Boundary(high, true))) => s"$low < $num <= $high"
+    case (Some(Boundary(low, true)), Some(Boundary(high, false))) => s"$low <= $num < $high"
+    case (Some(Boundary(low, false)), Some(Boundary(high, false))) => s"$low < $num < $high"
+    case (None, Some(Boundary(high, true))) => s"$num <= $high"
+    case (None, Some(Boundary(high, false))) => s"$num < $high"
+    case _ => throw new IllegalStateException("impossible")
+  }
 }
 
 final case class GoalNumRangeByte(num: VarOr[Byte], low: Option[Boundary[VarOr[Byte]]], high: Option[Boundary[VarOr[Byte]]]) extends GoalNumRange {

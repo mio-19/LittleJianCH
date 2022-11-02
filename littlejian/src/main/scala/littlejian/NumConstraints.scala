@@ -295,10 +295,14 @@ object NumState {
     }
   }
 
-  def runRanges(subst: Subst, ranges: Vector[GoalNumRange]): Option[(Subst, Vector[GoalNumRange])] = if (ranges.isEmpty) Some(subst, ranges) else // optimize
-  {
-    ???
-  }
+  def runRanges(subst: Subst, ranges: Vector[GoalNumRange]): Option[(Subst, Vector[GoalNumRange])] =
+    if (ranges.isEmpty)
+      Some(subst, ranges)
+    else
+      for {
+        (subst, maybeRange) <- ranges.head.reduce(subst)
+        (subst, rest) <- runRanges(subst, ranges.tail)
+      } yield (subst, maybeRange ++: rest)
 
   val empty: NumState = NumState(Vector.empty, Vector.empty)
 }

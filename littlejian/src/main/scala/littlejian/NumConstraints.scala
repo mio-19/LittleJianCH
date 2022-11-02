@@ -115,7 +115,7 @@ sealed trait GoalNumRange extends GoalBasic {
 
   def num: Num | Var[_ <: Num]
 
-  override def execute(state: State): IterableOnce[State] = ???
+  override def execute(state: State): IterableOnce[State] = state.num.insert(state, this)
 
   def walk(subst: Subst): GoalNumRange
 
@@ -124,7 +124,7 @@ sealed trait GoalNumRange extends GoalBasic {
   }
 
   // with the same num
-  def merge(other: GoalNumRange): IterableOnce[GoalNumRange]
+  def merge(other: GoalNumRange): Option[GoalNumRange]
 
   override def toString: String = (low, high) match {
     case (Some(Boundary(low, true)), None) => s"$low <= $num"
@@ -139,12 +139,33 @@ sealed trait GoalNumRange extends GoalBasic {
   }
 }
 
+private def merge(xs: Seq[GoalNumRange]): Vector[GoalNumRange] = {
+  val tail = xs.tail
+  if (tail.isEmpty) Vector(xs.head)
+  else doMerge(merge(tail), xs.head)
+}
+private def doMerge(xs: Vector[GoalNumRange], x: GoalNumRange): Vector[GoalNumRange] = {
+  val head = xs.head
+  val tail = xs.tail
+  if (tail.isEmpty) {
+    head.merge(x) match {
+      case Some(merged) => Vector(merged)
+      case None => Vector(head, x)
+    }
+  } else {
+    head.merge(x) match {
+      case Some(merged) => doMerge(tail, merged)
+      case None => head +: doMerge(tail, x)
+    }
+  }
+}
+
 final case class GoalNumRangeByte(num: VarOr[Byte], low: Option[Boundary[VarOr[Byte]]], high: Option[Boundary[VarOr[Byte]]]) extends GoalNumRange {
   override def tag = NumTag.Byte
 
   override def walk(subst: Subst): GoalNumRangeByte = GoalNumRangeByte(num = subst.walk(num), low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
 
-  override def merge(other: GoalNumRange): IterableOnce[GoalNumRange] = {
+  override def merge(other: GoalNumRange): Option[GoalNumRange] = {
     if (num != other.num) throw new IllegalArgumentException("num must be the same")
     val o = other.asInstanceOf[GoalNumRangeByte]
     (this, o) match {
@@ -160,7 +181,7 @@ final case class GoalNumRangeByte(num: VarOr[Byte], low: Option[Boundary[VarOr[B
         Some(GoalNumRangeByte(num, Some(low2), Some(highMerge(high1, high2))))
       case (GoalNumRangeByte(_, Some(low1@Boundary(_: Byte, _)), Some(high1@Boundary(_: Byte, _))), GoalNumRangeByte(_, None, Some(high2@Boundary(_: Byte, _)))) =>
         Some(GoalNumRangeByte(num, Some(low1), Some(highMerge(high1, high2))))
-      case _ => Vector(this, o)
+      case _ => None
     }
   }
 }
@@ -170,7 +191,7 @@ final case class GoalNumRangeShort(num: VarOr[Short], low: Option[Boundary[VarOr
 
   override def walk(subst: Subst): GoalNumRangeShort = GoalNumRangeShort(num = subst.walk(num), low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
 
-  override def merge(other: GoalNumRange): IterableOnce[GoalNumRange] = {
+  override def merge(other: GoalNumRange): Option[GoalNumRange] = {
     if (num != other.num) throw new IllegalArgumentException("num must be the same")
     val o = other.asInstanceOf[GoalNumRangeShort]
     (this, o) match {
@@ -186,7 +207,7 @@ final case class GoalNumRangeShort(num: VarOr[Short], low: Option[Boundary[VarOr
         Some(GoalNumRangeShort(num, Some(low2), Some(highMerge(high1, high2))))
       case (GoalNumRangeShort(_, Some(low1@Boundary(_: Short, _)), Some(high1@Boundary(_: Short, _))), GoalNumRangeShort(_, None, Some(high2@Boundary(_: Short, _)))) =>
         Some(GoalNumRangeShort(num, Some(low1), Some(highMerge(high1, high2))))
-      case _ => Vector(this, o)
+      case _ => None
     }
   }
 }
@@ -196,7 +217,7 @@ final case class GoalNumRangeInt(num: VarOr[Int], low: Option[Boundary[VarOr[Int
 
   override def walk(subst: Subst): GoalNumRangeInt = GoalNumRangeInt(num = subst.walk(num), low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
 
-  override def merge(other: GoalNumRange): IterableOnce[GoalNumRange] = {
+  override def merge(other: GoalNumRange): Option[GoalNumRange] = {
     if (num != other.num) throw new IllegalArgumentException("num must be the same")
     val o = other.asInstanceOf[GoalNumRangeInt]
     (this, o) match {
@@ -212,7 +233,7 @@ final case class GoalNumRangeInt(num: VarOr[Int], low: Option[Boundary[VarOr[Int
         Some(GoalNumRangeInt(num, Some(low2), Some(highMerge(high1, high2))))
       case (GoalNumRangeInt(_, Some(low1@Boundary(_: Int, _)), Some(high1@Boundary(_: Int, _))), GoalNumRangeInt(_, None, Some(high2@Boundary(_: Int, _)))) =>
         Some(GoalNumRangeInt(num, Some(low1), Some(highMerge(high1, high2))))
-      case _ => Vector(this, o)
+      case _ => None
     }
   }
 }
@@ -222,7 +243,7 @@ final case class GoalNumRangeLong(num: VarOr[Long], low: Option[Boundary[VarOr[L
 
   override def walk(subst: Subst): GoalNumRangeLong = GoalNumRangeLong(num = subst.walk(num), low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
 
-  override def merge(other: GoalNumRange): IterableOnce[GoalNumRange] = {
+  override def merge(other: GoalNumRange): Option[GoalNumRange] = {
     if (num != other.num) throw new IllegalArgumentException("num must be the same")
     val o = other.asInstanceOf[GoalNumRangeLong]
     (this, o) match {
@@ -238,7 +259,7 @@ final case class GoalNumRangeLong(num: VarOr[Long], low: Option[Boundary[VarOr[L
         Some(GoalNumRangeLong(num, Some(low2), Some(highMerge(high1, high2))))
       case (GoalNumRangeLong(_, Some(low1@Boundary(_: Long, _)), Some(high1@Boundary(_: Long, _))), GoalNumRangeLong(_, None, Some(high2@Boundary(_: Long, _)))) =>
         Some(GoalNumRangeLong(num, Some(low1), Some(highMerge(high1, high2))))
-      case _ => Vector(this, o)
+      case _ => None
     }
   }
 }
@@ -248,7 +269,7 @@ final case class GoalNumRangeFloat(num: VarOr[Float], low: Option[Boundary[VarOr
 
   override def walk(subst: Subst): GoalNumRangeFloat = GoalNumRangeFloat(num = subst.walk(num), low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
 
-  override def merge(other: GoalNumRange): IterableOnce[GoalNumRange] = {
+  override def merge(other: GoalNumRange): Option[GoalNumRange] = {
     if (num != other.num) throw new IllegalArgumentException("num must be the same")
     val o = other.asInstanceOf[GoalNumRangeFloat]
     (this, o) match {
@@ -264,7 +285,7 @@ final case class GoalNumRangeFloat(num: VarOr[Float], low: Option[Boundary[VarOr
         Some(GoalNumRangeFloat(num, Some(low2), Some(highMerge(high1, high2))))
       case (GoalNumRangeFloat(_, Some(low1@Boundary(_: Float, _)), Some(high1@Boundary(_: Float, _))), GoalNumRangeFloat(_, None, Some(high2@Boundary(_: Float, _)))) =>
         Some(GoalNumRangeFloat(num, Some(low1), Some(highMerge(high1, high2))))
-      case _ => Vector(this, o)
+      case _ => None
     }
   }
 }
@@ -274,7 +295,7 @@ final case class GoalNumRangeDouble(num: VarOr[Double], low: Option[Boundary[Var
 
   override def walk(subst: Subst): GoalNumRangeDouble = GoalNumRangeDouble(num = subst.walk(num), low = low.map(_.walk(subst)), high = high.map(_.walk(subst)))
 
-  override def merge(other: GoalNumRange): IterableOnce[GoalNumRange] = {
+  override def merge(other: GoalNumRange): Option[GoalNumRange] = {
     if (num != other.num) throw new IllegalArgumentException("num must be the same")
     val o = other.asInstanceOf[GoalNumRangeDouble]
     (this, o) match {
@@ -290,7 +311,7 @@ final case class GoalNumRangeDouble(num: VarOr[Double], low: Option[Boundary[Var
         Some(GoalNumRangeDouble(num, Some(low2), Some(highMerge(high1, high2))))
       case (GoalNumRangeDouble(_, Some(low1@Boundary(_: Double, _)), Some(high1@Boundary(_: Double, _))), GoalNumRangeDouble(_, None, Some(high2@Boundary(_: Double, _)))) =>
         Some(GoalNumRangeDouble(num, Some(low1), Some(highMerge(high1, high2))))
-      case _ => Vector(this, o)
+      case _ => None
     }
   }
 }
@@ -445,7 +466,7 @@ final case class NumState(op2s: Vector[GoalNumOp2], ranges: Vector[GoalNumRange]
   def insert(state: State, x: GoalNumRange): IterableOnce[State] = copy(ranges = x +: ranges).onInsert(state)
 
   def onEq(eq: EqState): IterableOnce[(EqState, NumState)] = for {
-    (subst, ranges) <- NumState.runRanges(eq.subst, ranges)
+    (subst, ranges) <- NumState.runRanges(eq.subst, NumState.rangesMerge(ranges))
     (subst, op2s) <- NumState.runOp2s(subst, op2s)
   } yield (EqState(subst), NumState(op2s = op2s, ranges = ranges))
 
@@ -473,6 +494,8 @@ object NumState {
         (subst, maybeRange) <- ranges.head.walk(subst).reduce(subst)
         (subst, rest) <- runRanges(subst, ranges.tail)
       } yield (subst, maybeRange ++: rest)
+
+  def rangesMerge(ranges: Vector[GoalNumRange]): Vector[GoalNumRange] = ranges.groupBy(_.num).values.toVector.flatMap(merge)
 
   val empty: NumState = NumState(Vector.empty, Vector.empty)
 }

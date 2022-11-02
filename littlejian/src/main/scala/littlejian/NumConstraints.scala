@@ -94,7 +94,11 @@ final case class Boundary[T](x: T, eq: Boolean) {
     if (ordering.lt(x, other.x)) this
     else if (ordering.equiv(x, other.x)) Boundary(x, eq && other.eq)
     else other
+
+  def gt(other: Boundary[T])(implicit ordering: Ordering[T]): Boolean = ordering.gt(x, other.x) || (ordering.equiv(x, other.x) && eq && !other.eq)
 }
+
+private def gt[T](x: Boundary[VarOr[T]], y: Boundary[VarOr[T]])(implicit ordering: Ordering[T]): Boolean = x.asInstanceOf[Boundary[T]].gt(y.asInstanceOf[Boundary[T]])
 
 private def lowMerge[T](a: Boundary[VarOr[T]], b: Boundary[VarOr[T]])(implicit ordering: Ordering[T]): Boundary[VarOr[T]] =
   a.asInstanceOf[Boundary[T]].lowMerge(b.asInstanceOf[Boundary[T]]).asInstanceOf[Boundary[VarOr[T]]]
@@ -443,11 +447,19 @@ implicit class GoalNumRangeOps(self: GoalNumRange) {
     case GoalNumRangeDouble(num: Double, Some(low@Boundary(_: Double, _)), Some(high@Boundary(_: Double, _))) => guard(check(num, Some(low), Some(high)))
     case GoalNumRangeDouble(num: Double, None, Some(high@Boundary(_: Double, _))) => guard(check(num, None, Some(high)))
     case GoalNumRangeDouble(num: Double, Some(low@Boundary(_: Double, _)), None) => guard(check(num, Some(low), None))
+    // check reversed ranges
+    case GoalNumRangeByte(_, Some(low@Boundary(l: Byte, _)), Some(high@Boundary(h: Byte, _))) if gt(low, high) => Unifying.failure
+    case GoalNumRangeShort(_, Some(low@Boundary(l: Short, _)), Some(high@Boundary(h: Short, _))) if gt(low, high) => Unifying.failure
+    case GoalNumRangeInt(_, Some(low@Boundary(l: Int, _)), Some(high@Boundary(h: Int, _))) if gt(low, high) => Unifying.failure
+    case GoalNumRangeLong(_, Some(low@Boundary(l: Long, _)), Some(high@Boundary(h: Long, _))) if gt(low, high) => Unifying.failure
+    case GoalNumRangeFloat(_, Some(low@Boundary(l: Float, _)), Some(high@Boundary(h: Float, _))) if gt(low, high) => Unifying.failure
+    case GoalNumRangeDouble(_, Some(low@Boundary(l: Double, _)), Some(high@Boundary(h: Double, _))) if gt(low, high) => Unifying.failure
     // expand small ranges
     case GoalNumRangeByte(num: Var[Byte], Some(low@Boundary(l: Byte, _)), Some(high@Boundary(h: Byte, _))) if (h - l < inlineLimit) => doInline(num, low, high)
     case GoalNumRangeShort(num: Var[Short], Some(low@Boundary(l: Short, _)), Some(high@Boundary(h: Short, _))) if (h - l < inlineLimit) => doInline(num, low, high)
     case GoalNumRangeInt(num: Var[Int], Some(low@Boundary(l: Int, _)), Some(high@Boundary(h: Int, _))) if (h - l < inlineLimit) => doInline(num, low, high)
     case GoalNumRangeLong(num: Var[Long], Some(low@Boundary(l: Long, _)), Some(high@Boundary(h: Long, _))) if (h - l < inlineLimit) => doInline(num, low, high)
+    // no enough infomation
     case x => Unifying.success(Some(x))
   }
 

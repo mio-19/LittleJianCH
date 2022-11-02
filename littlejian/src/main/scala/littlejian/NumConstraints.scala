@@ -452,7 +452,7 @@ implicit class GoalNumRangeOps(self: GoalNumRange) {
   }
 
   def reduce(subst: Subst): Option[(Subst, Option[GoalNumRange])] = this.reduce match {
-    case v: Vector[_] => Unifying.runAll(v).getSubst(subst).map((_, None))
+    case v: Vector[_] => Unifying.runAll(v).getSubst(subst).map((_, None)) // TODO: fix me
     case unify: Unifying[_] => unify.run(subst) match {
       case Some((subst, _), v) => Some(subst, v)
       case None => None

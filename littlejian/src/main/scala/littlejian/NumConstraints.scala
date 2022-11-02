@@ -459,6 +459,8 @@ implicit class GoalNumRangeOps(self: GoalNumRange) {
     case GoalNumRangeShort(num: Var[Short], Some(low@Boundary(l: Short, _)), Some(high@Boundary(h: Short, _))) if (h - l < inlineLimit) => doInline(num, low, high)
     case GoalNumRangeInt(num: Var[Int], Some(low@Boundary(l: Int, _)), Some(high@Boundary(h: Int, _))) if (h - l < inlineLimit) => doInline(num, low, high)
     case GoalNumRangeLong(num: Var[Long], Some(low@Boundary(l: Long, _)), Some(high@Boundary(h: Long, _))) if (h - l < inlineLimit) => doInline(num, low, high)
+    // swap 1op
+    // TODO
     // no enough infomation
     case x => Unifying.success(Some(x))
   }

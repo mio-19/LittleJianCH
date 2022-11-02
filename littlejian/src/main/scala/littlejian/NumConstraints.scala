@@ -451,8 +451,8 @@ implicit class GoalNumRangeOps(self: GoalNumRange) {
     case x => Unifying.success(Some(x))
   }
 
-  def reduce(subst: Subst): Option[(Subst, Option[GoalNumRange])] = this.reduce match {
-    case v: Vector[_] => Unifying.runAll(v).getSubst(subst).map((_, None)) // TODO: fix me
+  def reduce(subst: Subst): IterableOnce[(Subst, Option[GoalNumRange])] = this.reduce match {
+    case v: Vector[_] => v.flatMap(_.getSubst(subst).map((_, None)))
     case unify: Unifying[_] => unify.run(subst) match {
       case Some((subst, _), v) => Some(subst, v)
       case None => None
@@ -486,7 +486,7 @@ object NumState {
     }
   }
 
-  def runRanges(subst: Subst, ranges: Vector[GoalNumRange]): Option[(Subst, Vector[GoalNumRange])] =
+  def runRanges(subst: Subst, ranges: Vector[GoalNumRange]): IterableOnce[(Subst, Vector[GoalNumRange])] =
     if (ranges.isEmpty)
       Some(subst, ranges)
     else

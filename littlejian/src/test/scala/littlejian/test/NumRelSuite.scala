@@ -12,6 +12,7 @@ class NumRelSuite extends munit.FunSuite {
     assertEquals(Set.from(run[Int] { x => x < 9999 && x > 11 }), Set(
       """$1
 11 < $1 < 9999"""))
+    assertEquals(Set.from(run[Int] { x => x > 9 && x < 1 }), Set())
   }
 
 }

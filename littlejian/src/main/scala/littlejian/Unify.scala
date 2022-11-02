@@ -19,6 +19,8 @@ object Unifying {
 }
 
 implicit class UnifyingOps[T](self: Unifying[T]) {
+  def run(subst: Subst): Option[((Subst, SubstPatch), T)] = self.run((subst, SubstPatch.empty))
+
   def getSubst(subst: Subst): Option[Subst] = self.run((subst, SubstPatch.empty)).map(_._1._1)
 
   def getSubstWithPatch(subst: Subst): Option[(Subst, SubstPatch)] = self.run((subst, SubstPatch.empty)).map(_._1)

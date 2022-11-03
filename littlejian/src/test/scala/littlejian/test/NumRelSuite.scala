@@ -16,6 +16,9 @@ class NumRelSuite extends munit.FunSuite {
     assertEquals(Set.from(run[Int] { x => x + 1 === 10 }), Set("9"))
     assertEquals(Set.from(run[Int] { x => x + 1 === 10 && x > 1 }), Set("9"))
     assertEquals(Set.from(run[Int] { x => x - 1 === 10 && x > 1 }), Set("11"))
+    assertEquals(Set.from(run[Int] { x => 2 - x === 10 }), Set("-8"))
+    assertEquals(Set.from(run[Int] { x => x * 2 === 10 }), Set("5"))
+    assertEquals(Set.from(run[Float] { x => x * 2 === 10 }), Set("5.0"))
   }
 
 }

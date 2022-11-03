@@ -45,4 +45,19 @@ implicit class VarOrRuntimeValueOps(self: VarOr[RuntimeValue]) {
   def getType: Rel[Type] = self.force.map(_.getType)
 }
 
+type UInt = Int
 
+type Locals = Mapping[UInt, RuntimeValue]
+
+final case class Activation(pc: VarOr[UInt], functionIndex: VarOr[UInt], locals: VarOr[Locals]) derives Unify
+
+type ActivationStack = LList[Activation]
+
+enum RuntimeError derives Unify:
+  case NotFound(str: VarOr[Str])
+  case ExpectCodeSection
+  case ExpectValueStack
+  case ExpectLabelStack
+  case ExpectActivationStack
+  case Unimplemented
+  case InvalidArgs(xs: VarOr[LList[Type]], ys: VarOr[LList[Type]])

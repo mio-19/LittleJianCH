@@ -29,16 +29,12 @@ object Type {
     case _ => throw new IllegalArgumentException(s"Unknown type: $x")
   }
 
-  def from(x: Int8): Rel[Type] = x.elim(
-    Int8.from(0x7F) -> Type.I32,
-    Int8.from(0x7E) -> Type.I64,
-    Int8.from(0x7D) -> Type.F32,
-    Int8.from(0x7C) -> Type.F64
+  def from(x: VarOr[Byte]): Rel[Type] = x.switch(
+    0x7F.toByte -> Type.I32,
+    0x7E.toByte -> Type.I64,
+    0x7D.toByte -> Type.F32,
+    0x7C.toByte -> Type.F64
   )
 }
 
-final case class UIntN(x: Int32) derives Unify
-
-object UIntN {
-  def from(x: Int): UIntN = UIntN(Int32.from(x))
-}
+type UIntN = Int

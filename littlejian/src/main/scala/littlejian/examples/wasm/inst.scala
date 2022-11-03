@@ -1,7 +1,7 @@
 package littlejian.examples.wasm
-import littlejian.{given, *}
-import littlejian.ext.{given, *}
-import littlejian.data.{given, *}
+import littlejian._
+import littlejian.ext._
+import littlejian.data._
 sealed trait Inst derives Unify
 object Inst {
   case object Reserved extends Inst derives Unify

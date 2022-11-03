@@ -40,3 +40,9 @@ final case class MappingNonEmpty[K, V](key: K, value: V, next: Mapping[K, V]) ex
     next.notContains(k)
   }
 }
+
+object Mapping {
+  def from[K, V](xs: Seq[(K, V)]): Mapping[K, V] = if (xs.isEmpty) MappingEmpty() else MappingNonEmpty(xs.head._1, xs.head._2, from(xs.tail))
+
+  def apply[K, V](xs: (K, V)*): Mapping[K, V] = from(xs)
+}

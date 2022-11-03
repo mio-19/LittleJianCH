@@ -20,6 +20,16 @@ implicit class VarOrByteOps(self: VarOr[Byte]) {
     _ <- GoalNumOp2Byte(NumOp2.Mul, self, other, result)
   } yield result
 
+  def /(other: VarOr[Byte]): Rel[Byte] = for {
+    result <- fresh[Byte]
+    _ <- GoalNumOp2Byte(NumOp2.Div, self, other, result)
+  } yield result
+
+  def %(other: VarOr[Byte]): Rel[Byte] = for {
+    result <- fresh[Byte]
+    _ <- GoalNumOp2Byte(NumOp2.Mod, self, other, result)
+  } yield result
+
   def <(other: VarOr[Byte]): Goal = if (self.isInstanceOf[Var[_]]) GoalNumRangeByte(self, None, Some(Boundary(other, false))) else GoalNumRangeByte(other, None, Some(Boundary(self, false)))
 
   def <=(other: VarOr[Byte]): Goal = if (self.isInstanceOf[Var[_]]) GoalNumRangeByte(self, None, Some(Boundary(other, true))) else GoalNumRangeByte(other, None, Some(Boundary(self, true)))
@@ -45,6 +55,16 @@ implicit class VarOrShortOps(self: VarOr[Short]) {
   def *(other: VarOr[Short]): Rel[Short] = for {
     result <- fresh[Short]
     _ <- GoalNumOp2Short(NumOp2.Mul, self, other, result)
+  } yield result
+
+  def /(other: VarOr[Short]): Rel[Short] = for {
+    result <- fresh[Short]
+    _ <- GoalNumOp2Short(NumOp2.Div, self, other, result)
+  } yield result
+
+  def %(other: VarOr[Short]): Rel[Short] = for {
+    result <- fresh[Short]
+    _ <- GoalNumOp2Short(NumOp2.Mod, self, other, result)
   } yield result
 
   def <(other: VarOr[Short]): Goal = if (self.isInstanceOf[Var[_]]) GoalNumRangeShort(self, None, Some(Boundary(other, false))) else GoalNumRangeShort(other, None, Some(Boundary(self, false)))
@@ -74,6 +94,16 @@ implicit class VarOrIntOps(self: VarOr[Int]) {
     _ <- GoalNumOp2Int(NumOp2.Mul, self, other, result)
   } yield result
 
+  def /(other: VarOr[Int]): Rel[Int] = for {
+    result <- fresh[Int]
+    _ <- GoalNumOp2Int(NumOp2.Div, self, other, result)
+  } yield result
+
+  def %(other: VarOr[Int]): Rel[Int] = for {
+    result <- fresh[Int]
+    _ <- GoalNumOp2Int(NumOp2.Mod, self, other, result)
+  } yield result
+
   def <(other: VarOr[Int]): Goal = if (self.isInstanceOf[Var[_]]) GoalNumRangeInt(self, None, Some(Boundary(other, false))) else GoalNumRangeInt(other, None, Some(Boundary(self, false)))
 
   def <=(other: VarOr[Int]): Goal = if (self.isInstanceOf[Var[_]]) GoalNumRangeInt(self, None, Some(Boundary(other, true))) else GoalNumRangeInt(other, None, Some(Boundary(self, true)))
@@ -99,6 +129,16 @@ implicit class VarOrLongOps(self: VarOr[Long]) {
   def *(other: VarOr[Long]): Rel[Long] = for {
     result <- fresh[Long]
     _ <- GoalNumOp2Long(NumOp2.Mul, self, other, result)
+  } yield result
+
+  def /(other: VarOr[Long]): Rel[Long] = for {
+    result <- fresh[Long]
+    _ <- GoalNumOp2Long(NumOp2.Div, self, other, result)
+  } yield result
+
+  def %(other: VarOr[Long]): Rel[Long] = for {
+    result <- fresh[Long]
+    _ <- GoalNumOp2Long(NumOp2.Mod, self, other, result)
   } yield result
 
   def <(other: VarOr[Long]): Goal = if (self.isInstanceOf[Var[_]]) GoalNumRangeLong(self, None, Some(Boundary(other, false))) else GoalNumRangeLong(other, None, Some(Boundary(self, false)))
@@ -128,6 +168,11 @@ implicit class VarOrFloatOps(self: VarOr[Float]) {
     _ <- GoalNumOp2Float(NumOp2.Mul, self, other, result)
   } yield result
 
+  def /(other: VarOr[Float]): Rel[Float] = for {
+    result <- fresh[Float]
+    _ <- GoalNumOp2Float(NumOp2.Div, self, other, result)
+  } yield result
+
   def <(other: VarOr[Float]): Goal = if (self.isInstanceOf[Var[_]]) GoalNumRangeFloat(self, None, Some(Boundary(other, false))) else GoalNumRangeFloat(other, None, Some(Boundary(self, false)))
 
   def <=(other: VarOr[Float]): Goal = if (self.isInstanceOf[Var[_]]) GoalNumRangeFloat(self, None, Some(Boundary(other, true))) else GoalNumRangeFloat(other, None, Some(Boundary(self, true)))
@@ -151,6 +196,11 @@ implicit class VarOrDoubleOps(self: VarOr[Double]) {
   def *(other: VarOr[Double]): Rel[Double] = for {
     result <- fresh[Double]
     _ <- GoalNumOp2Double(NumOp2.Mul, self, other, result)
+  } yield result
+
+  def /(other: VarOr[Double]): Rel[Double] = for {
+    result <- fresh[Double]
+    _ <- GoalNumOp2Double(NumOp2.Div, self, other, result)
   } yield result
 
   def <(other: VarOr[Double]): Goal = if (self.isInstanceOf[Var[_]]) GoalNumRangeDouble(self, None, Some(Boundary(other, false))) else GoalNumRangeDouble(other, None, Some(Boundary(self, false)))

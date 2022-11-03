@@ -18,6 +18,8 @@ enum NumOp2:
   case Add
   case Sub
   case Mul
+  case Div
+  case Mod
 
 sealed trait GoalNumOp2 extends GoalBasic {
   def rel: NumOp2
@@ -321,14 +323,19 @@ final case class GoalNumRangeDouble(num: VarOr[Double], low: Option[Boundary[Var
 }
 
 implicit class GoalNumOpOps(self: GoalNumOp2) {
-  def is2: Boolean = {
-    val a = if (self.x.isInstanceOf[Num]) 1 else 0
-    val b = if (self.y.isInstanceOf[Num]) 1 else 0
-    val c = if (self.result.isInstanceOf[Num]) 1 else 0
-    a + b + c >= 2
-  }
+  def is2: Boolean =
+    if (self.rel == NumOp2.Mod) {
+      self.x.isInstanceOf[Num] && self.y.isInstanceOf[Num]
+    }
+    else {
+      val a = if (self.x.isInstanceOf[Num]) 1 else 0
+      val b = if (self.y.isInstanceOf[Num]) 1 else 0
+      val c = if (self.result.isInstanceOf[Num]) 1 else 0
+      a + b + c >= 2
+    }
 
-  def solve2: Unifying[Unit] = self match {
+  // TODO: check rounding on Div
+  def solve2: Unifying[Unit] | GoalNumRange = self match {
     case GoalNumOp2Byte(NumOp2.Add, x: Byte, y: Byte, rel) => rel.unify((x + y).asInstanceOf[Byte])
     case GoalNumOp2Byte(NumOp2.Add, x, y: Byte, rel: Byte) => x.unify((rel - y).asInstanceOf[Byte])
     case GoalNumOp2Byte(NumOp2.Add, x: Byte, y, rel: Byte) => y.unify((rel - x).asInstanceOf[Byte])
@@ -338,6 +345,10 @@ implicit class GoalNumOpOps(self: GoalNumOp2) {
     case GoalNumOp2Byte(NumOp2.Mul, x: Byte, y: Byte, rel) => rel.unify((x * y).asInstanceOf[Byte])
     case GoalNumOp2Byte(NumOp2.Mul, x, y: Byte, rel: Byte) => if (rel % y == 0) x.unify((rel / y).asInstanceOf[Byte]) else Unifying.failure
     case GoalNumOp2Byte(NumOp2.Mul, x: Byte, y, rel: Byte) => if (rel % x == 0) y.unify((rel / x).asInstanceOf[Byte]) else Unifying.failure
+    case GoalNumOp2Byte(NumOp2.Div, x: Byte, y: Byte, rel) => rel.unify((x / y).asInstanceOf[Byte])
+    case GoalNumOp2Byte(NumOp2.Div, x, y: Byte, rel: Byte) => GoalNumRangeByte(x, Some(Boundary((rel * y).max(Byte.MinValue.toInt).toByte, true)), Some(Boundary((rel * (y + 1)).min(Byte.MaxValue.toInt).toByte, false)))
+    case GoalNumOp2Byte(NumOp2.Div, x: Byte, y, rel: Byte) => GoalNumRangeByte(y, Some(Boundary((x / (rel + 1)).max(Byte.MinValue.toInt).toByte, false)), Some(Boundary((x / rel).min(Byte.MaxValue.toInt).toByte, true)))
+    case GoalNumOp2Byte(NumOp2.Mod, x: Byte, y: Byte, rel) => rel.unify((x % y).asInstanceOf[Byte])
     case GoalNumOp2Byte(_, _, _, _) => throw new IllegalArgumentException("not a 2-arg goal")
     case GoalNumOp2Short(NumOp2.Add, x: Short, y: Short, rel) => rel.unify((x + y).asInstanceOf[Short])
     case GoalNumOp2Short(NumOp2.Add, x, y: Short, rel: Short) => x.unify((rel - y).asInstanceOf[Short])
@@ -348,6 +359,10 @@ implicit class GoalNumOpOps(self: GoalNumOp2) {
     case GoalNumOp2Short(NumOp2.Mul, x: Short, y: Short, rel) => rel.unify((x * y).asInstanceOf[Short])
     case GoalNumOp2Short(NumOp2.Mul, x, y: Short, rel: Short) => if (rel % y == 0) x.unify((rel / y).asInstanceOf[Short]) else Unifying.failure
     case GoalNumOp2Short(NumOp2.Mul, x: Short, y, rel: Short) => if (rel % x == 0) y.unify((rel / x).asInstanceOf[Short]) else Unifying.failure
+    case GoalNumOp2Short(NumOp2.Div, x: Short, y: Short, rel) => rel.unify((x / y).asInstanceOf[Short])
+    case GoalNumOp2Short(NumOp2.Div, x, y: Short, rel: Short) => GoalNumRangeShort(x, Some(Boundary((rel * y).max(Short.MinValue.toInt).toShort, true)), Some(Boundary((rel * (y + 1)).min(Short.MaxValue.toInt).toShort, false)))
+    case GoalNumOp2Short(NumOp2.Div, x: Short, y, rel: Short) => GoalNumRangeShort(y, Some(Boundary((x / (rel + 1)).max(Short.MinValue.toInt).toShort, false)), Some(Boundary((x / rel).min(Short.MaxValue.toInt).toShort, true)))
+    case GoalNumOp2Short(NumOp2.Mod, x: Short, y: Short, rel) => rel.unify((x % y).asInstanceOf[Short])
     case GoalNumOp2Short(_, _, _, _) => throw new IllegalArgumentException("not a 2-arg goal")
     case GoalNumOp2Int(NumOp2.Add, x: Int, y: Int, rel) => rel.unify(x + y)
     case GoalNumOp2Int(NumOp2.Add, x, y: Int, rel: Int) => x.unify(rel - y)
@@ -358,6 +373,10 @@ implicit class GoalNumOpOps(self: GoalNumOp2) {
     case GoalNumOp2Int(NumOp2.Mul, x: Int, y: Int, rel) => rel.unify(x * y)
     case GoalNumOp2Int(NumOp2.Mul, x, y: Int, rel: Int) => if (rel % y == 0) x.unify(rel / y) else Unifying.failure
     case GoalNumOp2Int(NumOp2.Mul, x: Int, y, rel: Int) => if (rel % x == 0) y.unify(rel / x) else Unifying.failure
+    case GoalNumOp2Int(NumOp2.Div, x: Int, y: Int, rel) => rel.unify(x / y)
+    case GoalNumOp2Int(NumOp2.Div, x, y: Int, rel: Int) => GoalNumRangeInt(x, Some(Boundary(rel * y, true)), Some(Boundary(rel * (y + 1), false)))
+    case GoalNumOp2Int(NumOp2.Div, x: Int, y, rel: Int) => GoalNumRangeInt(y, Some(Boundary(x / (rel + 1), false)), Some(Boundary(x / rel, true)))
+    case GoalNumOp2Int(NumOp2.Mod, x: Int, y: Int, rel) => rel.unify(x % y)
     case GoalNumOp2Int(_, _, _, _) => throw new IllegalArgumentException("not a 2-arg goal")
     case GoalNumOp2Long(NumOp2.Add, x: Long, y: Long, rel) => rel.unify(x + y)
     case GoalNumOp2Long(NumOp2.Add, x, y: Long, rel: Long) => x.unify(rel - y)
@@ -368,6 +387,10 @@ implicit class GoalNumOpOps(self: GoalNumOp2) {
     case GoalNumOp2Long(NumOp2.Mul, x: Long, y: Long, rel) => rel.unify(x * y)
     case GoalNumOp2Long(NumOp2.Mul, x, y: Long, rel: Long) => if (rel % y == 0) x.unify(rel / y) else Unifying.failure
     case GoalNumOp2Long(NumOp2.Mul, x: Long, y, rel: Long) => if (rel % x == 0) y.unify(rel / x) else Unifying.failure
+    case GoalNumOp2Long(NumOp2.Div, x: Long, y: Long, rel) => rel.unify(x / y)
+    case GoalNumOp2Long(NumOp2.Div, x, y: Long, rel: Long) => GoalNumRangeLong(x, Some(Boundary(rel * y, true)), Some(Boundary(rel * (y + 1), false)))
+    case GoalNumOp2Long(NumOp2.Div, x: Long, y, rel: Long) => GoalNumRangeLong(y, Some(Boundary(x / (rel + 1), false)), Some(Boundary(x / rel, true)))
+    case GoalNumOp2Long(NumOp2.Mod, x: Long, y: Long, rel) => rel.unify(x % y)
     case GoalNumOp2Long(_, _, _, _) => throw new IllegalArgumentException("not a 2-arg goal")
     case GoalNumOp2Float(NumOp2.Add, x: Float, y: Float, rel) => rel.unify(x + y)
     case GoalNumOp2Float(NumOp2.Add, x, y: Float, rel: Float) => x.unify(rel - y)
@@ -378,6 +401,10 @@ implicit class GoalNumOpOps(self: GoalNumOp2) {
     case GoalNumOp2Float(NumOp2.Mul, x: Float, y: Float, rel) => rel.unify(x * y)
     case GoalNumOp2Float(NumOp2.Mul, x, y: Float, rel: Float) => x.unify(rel / y)
     case GoalNumOp2Float(NumOp2.Mul, x: Float, y, rel: Float) => y.unify(rel / x)
+    case GoalNumOp2Float(NumOp2.Div, x: Float, y: Float, rel) => rel.unify(x / y)
+    case GoalNumOp2Float(NumOp2.Div, x, y: Float, rel: Float) => x.unify(rel * y)
+    case GoalNumOp2Float(NumOp2.Div, x: Float, y, rel: Float) => y.unify(x / rel)
+    case GoalNumOp2Float(NumOp2.Mod, _, _, _) => throw new IllegalArgumentException("mod not supported on float")
     case GoalNumOp2Float(_, _, _, _) => throw new IllegalArgumentException("not a 2-arg goal")
     case GoalNumOp2Double(NumOp2.Add, x: Double, y: Double, rel) => rel.unify(x + y)
     case GoalNumOp2Double(NumOp2.Add, x, y: Double, rel: Double) => x.unify(rel - y)
@@ -388,6 +415,10 @@ implicit class GoalNumOpOps(self: GoalNumOp2) {
     case GoalNumOp2Double(NumOp2.Mul, x: Double, y: Double, rel) => rel.unify(x * y)
     case GoalNumOp2Double(NumOp2.Mul, x, y: Double, rel: Double) => x.unify(rel / y)
     case GoalNumOp2Double(NumOp2.Mul, x: Double, y, rel: Double) => y.unify(rel / x)
+    case GoalNumOp2Double(NumOp2.Div, x: Double, y: Double, rel) => rel.unify(x / y)
+    case GoalNumOp2Double(NumOp2.Div, x, y: Double, rel: Double) => x.unify(rel * y)
+    case GoalNumOp2Double(NumOp2.Div, x: Double, y, rel: Double) => y.unify(x / rel)
+    case GoalNumOp2Double(NumOp2.Mod, _, _, _) => throw new IllegalArgumentException("mod not supported on double")
     case GoalNumOp2Double(_, _, _, _) => throw new IllegalArgumentException("not a 2-arg goal")
   }
 }
@@ -490,8 +521,9 @@ final case class NumState(op2s: Vector[GoalNumOp2], ranges: Vector[GoalNumRange]
   def insert(state: State, x: GoalNumRange): IterableOnce[State] = copy(ranges = x +: ranges).onInsert(state)
 
   def onEq(eq: EqState): IterableOnce[(EqState, NumState)] = for {
-    (subst, ranges) <- NumState.runRanges(eq.subst, NumState.rangesMerge(NumState.rangesSwap1(ranges.map(_.walk(eq.subst)))))
-    (subst, op2s) <- NumState.runOp2s(subst, op2s.map(_.walk(subst)))
+    (subst, ranges) <- NumState.preprocessAndRunRanges(eq.subst, ranges)
+    (subst, op2s, newRanges) <- NumState.runOp2s(subst, op2s.map(_.walk(subst))).toSeq
+    (subst, ranges) <- if(newRanges.nonEmpty) NumState.preprocessAndRunRanges(subst, ranges ++ newRanges) else Vector((subst, ranges))
   } yield (EqState(subst), NumState(op2s = op2s, ranges = ranges))
 
   def onInsert(state: State): IterableOnce[State] = this.onEq(state.eq) map {
@@ -502,11 +534,14 @@ final case class NumState(op2s: Vector[GoalNumOp2], ranges: Vector[GoalNumRange]
 }
 
 object NumState {
-  def runOp2s(subst: Subst, op2s: Vector[GoalNumOp2]): Option[(Subst, Vector[GoalNumOp2])] = if (op2s.isEmpty) Some(subst, op2s) else // optimize
+  def runOp2s(subst: Subst, op2s: Vector[GoalNumOp2]): Option[(Subst, Vector[GoalNumOp2], Vector[GoalNumRange])] = if (op2s.isEmpty) Some(subst, op2s, Vector.empty) else // optimize
   {
     val (cl2, rest) = op2s.partition(_.is2)
-    Unifying.runAll(cl2.map(_.solve2)).getSubst(subst) map { subst =>
-      (subst, rest)
+    val (unifys0, ranges0) = cl2.map(_.solve2).partition(_.isInstanceOf[Unifying[_]])
+    val unifys = unifys0.asInstanceOf[Vector[Unifying[Unit]]]
+    val ranges = ranges0.asInstanceOf[Vector[GoalNumRange]]
+    Unifying.runAll(unifys).getSubst(subst) map { subst =>
+      (subst, rest, ranges)
     }
   }
 
@@ -518,6 +553,8 @@ object NumState {
         (subst, maybeRange) <- ranges.head.reduce(subst)
         (subst, rest) <- runRanges(subst, ranges.tail)
       } yield (subst, maybeRange ++: rest)
+
+  def preprocessAndRunRanges(subst: Subst, ranges: Vector[GoalNumRange]): IterableOnce[(Subst, Vector[GoalNumRange])] = NumState.runRanges(subst, NumState.rangesMerge(NumState.rangesSwap1(ranges.map(_.walk(subst)))))
 
   def rangesMerge(ranges: Vector[GoalNumRange]): Vector[GoalNumRange] = ranges.groupBy(_.num).values.toVector.flatMap(merge)
 

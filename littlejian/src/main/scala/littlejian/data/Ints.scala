@@ -94,21 +94,21 @@ abstract class VarOrIntNOps[T <: IntN[T]](self: VarOr[T], unifier: Unify[T]) {
 
   protected def consThis(x: VarOr[T]): VarOrIntNOps[T]
 
-  def get: GoalWith[T]
+  def force: GoalWith[T]
 
   final inline def +(other: VarOr[T]): Rel[T] = for {
-    x <- this.get
-    y <- consThis(other).get
+    x <- this.force
+    y <- consThis(other).force
     (c, r) <- x.plus(y)
   } yield r
 
   final inline def unary_! : Rel[T] = for {
-    x <- this.get
+    x <- this.force
     r <- !x
   } yield r
 
   final inline def unary_- : Rel[T] = for {
-    x <- this.get
+    x <- this.force
     r <- -x
   } yield r
 
@@ -130,7 +130,7 @@ abstract class VarOrIntNOps[T <: IntN[T]](self: VarOr[T], unifier: Unify[T]) {
 implicit class VarOrInt4Ops(self: VarOr[Int4]) extends VarOrIntNOps[Int4](self, implicitly[Unify[Int4]]) {
   override protected def consThis(x: VarOr[Int4]): VarOrInt4Ops = VarOrInt4Ops(x)
 
-  override def get: GoalWith[Int4] = for {
+  override def force: GoalWith[Int4] = for {
     x <- self.is[Boolean, Boolean, Boolean, Boolean](Int4(_, _, _, _))
   } yield Int4(x._1, x._2, x._3, x._4)
 }
@@ -199,7 +199,7 @@ object Int8 {
 implicit class VarOrInt8Ops(self: VarOr[Int8])(using u: Unify[Int8]) extends VarOrIntNOps[Int8](self, u) {
   override protected def consThis(x: VarOr[Int8]): VarOrInt8Ops = VarOrInt8Ops(x)
 
-  def get: GoalWith[Int8] = for {
+  def force: GoalWith[Int8] = for {
     (b0, b1, b2, b3) <- fresh[Boolean, Boolean, Boolean, Boolean]
     (b4, b5, b6, b7) <- fresh[Boolean, Boolean, Boolean, Boolean]
     result = Int8(Int4(b0, b1, b2, b3), Int4(b4, b5, b6, b7))
@@ -231,7 +231,7 @@ final case class Int16(lo: Int8, hi: Int8) extends IntN[Int16] derives Unify {
 implicit class VarOrInt16Ops(self: VarOr[Int16])(using u: Unify[Int16]) extends VarOrIntNOps[Int16](self, u) {
   override protected def consThis(x: VarOr[Int16]): VarOrIntNOps[Int16] = VarOrInt16Ops(x)
 
-  override def get: GoalWith[Int16] = for {
+  override def force: GoalWith[Int16] = for {
     (b0, b1, b2, b3) <- fresh[Boolean, Boolean, Boolean, Boolean]
     (b4, b5, b6, b7) <- fresh[Boolean, Boolean, Boolean, Boolean]
     (b8, b9, b10, b11) <- fresh[Boolean, Boolean, Boolean, Boolean]
@@ -282,7 +282,7 @@ final case class Int32(lo: Int16, hi: Int16) extends IntN[Int32] derives Unify {
 implicit class VarOrInt32Ops(self: VarOr[Int32])(using u: Unify[Int32]) extends VarOrIntNOps[Int32](self, u) {
   override protected def consThis(x: VarOr[Int32]): VarOrIntNOps[Int32] = VarOrInt32Ops(x)
 
-  override def get: GoalWith[Int32] = for {
+  override def force: GoalWith[Int32] = for {
     (b0, b1, b2, b3) <- fresh[Boolean, Boolean, Boolean, Boolean]
     (b4, b5, b6, b7) <- fresh[Boolean, Boolean, Boolean, Boolean]
     (b8, b9, b10, b11) <- fresh[Boolean, Boolean, Boolean, Boolean]
@@ -336,7 +336,7 @@ final case class Int64(lo: Int32, hi: Int32) extends IntN[Int64] derives Unify {
 implicit class VarOrInt64Ops(self: VarOr[Int64])(using u: Unify[Int64]) extends VarOrIntNOps[Int64](self, u) {
   override protected def consThis(x: VarOr[Int64]): VarOrIntNOps[Int64] = VarOrInt64Ops(x)
 
-  override def get: GoalWith[Int64] = for {
+  override def force: GoalWith[Int64] = for {
     (b0, b1, b2, b3) <- fresh[Boolean, Boolean, Boolean, Boolean]
     (b4, b5, b6, b7) <- fresh[Boolean, Boolean, Boolean, Boolean]
     (b8, b9, b10, b11) <- fresh[Boolean, Boolean, Boolean, Boolean]

@@ -20,8 +20,8 @@ implicit class RuntimeValueOps(self: RuntimeValue) {
   }
 }
 
-implicit class VarOrRuntimeValueOps(self: VarOr[RuntimeValue]) {
-  def force: GoalWith[RuntimeValue] = GoalWith(k => conde(
+implicit object ForceRuntimeValue extends Force[RuntimeValue] {
+  override def force(self: VarOr[RuntimeValue]): GoalWith[RuntimeValue] = GoalWith(k => conde(
     for {
       x <- self.is[Int](RuntimeValue.I32(_))
       _ <- k(RuntimeValue.I32(x))
@@ -39,8 +39,10 @@ implicit class VarOrRuntimeValueOps(self: VarOr[RuntimeValue]) {
       _ <- k(RuntimeValue.F64(x))
     } yield (),
   ))
+}
 
-  def getType: Rel[Type] = force.map(_.getType)
+implicit class VarOrRuntimeValueOps(self: VarOr[RuntimeValue]) {
+  def getType: Rel[Type] = self.force.map(_.getType)
 }
 
 

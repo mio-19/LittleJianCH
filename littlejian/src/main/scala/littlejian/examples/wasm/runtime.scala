@@ -5,11 +5,13 @@ import littlejian.ext._
 import littlejian.data._
 
 enum RuntimeValue derives Unify :
-  case I32(x: VarOr[Int])
+  case I32(x: VarOr[IntSigned])
   case I64(x: VarOr[Long])
   case F32(x: VarOr[Float])
   case F64(x: VarOr[Double])
 // TODO: 128
+
+type Val = RuntimeValue
 
 implicit class RuntimeValueOps(self: RuntimeValue) {
   def getType: ValueType = self match {
@@ -44,8 +46,6 @@ implicit object ForceRuntimeValue extends Force[RuntimeValue] {
 implicit class VarOrRuntimeValueOps(self: VarOr[RuntimeValue]) {
   def getType: Rel[ValueType] = self.force.map(_.getType)
 }
-
-type UInt = Int
 
 type Locals = Mapping[UInt, RuntimeValue]
 

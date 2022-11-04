@@ -66,4 +66,13 @@ object ValueType {
   )
 }
 
-type UIntN = Int
+
+final case class DataSegment(index: VarOr[UInt], offset: VarOr[UInt], data: VarOr[LList[U8]]) derives Unify
+
+type DataSection = LList[DataSegment]
+
+final case class LocalEntry(count: VarOr[UInt], valueType: VarOr[ValueType]) derives Unify
+
+final case class FunctionBody(locales: VarOr[LList[LocalEntry]], code: VarOr[LList[Inst]]) derives Unify
+
+type CodeSection = LList[FunctionBody]

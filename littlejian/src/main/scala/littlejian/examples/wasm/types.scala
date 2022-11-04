@@ -29,7 +29,23 @@ enum ExternalKind derives Unify :
   case Table
   case Memory
   case Global
-  case Unknown
+
+object ExternalKind {
+  def from(x: UIntN): ExternalKind = x match {
+    case 0x00 => ExternalKind.Function
+    case 0x01 => ExternalKind.Table
+    case 0x02 => ExternalKind.Memory
+    case 0x03 => ExternalKind.Global
+    case _ => throw new IllegalArgumentException(s"Unknown ExternalKind: $x")
+  }
+
+  def from(x: VarOr[UIntN]): Rel[ExternalKind] = x.switch(
+    0x00 -> ExternalKind.Function,
+    0x01 -> ExternalKind.Table,
+    0x02 -> ExternalKind.Memory,
+    0x03 -> ExternalKind.Global
+  )
+}
 
 final case class ExportEntry(fieldStr: VarOr[Str], kind: VarOr[ExternalKind], index: VarOr[UInt]) derives Unify
 

@@ -12,11 +12,11 @@ enum RuntimeValue derives Unify :
 // TODO: 128
 
 implicit class RuntimeValueOps(self: RuntimeValue) {
-  def getType: Type = self match {
-    case RuntimeValue.I32(_) => Type.I32
-    case RuntimeValue.I64(_) => Type.I64
-    case RuntimeValue.F32(_) => Type.F32
-    case RuntimeValue.F64(_) => Type.F64
+  def getType: ValueType = self match {
+    case RuntimeValue.I32(_) => ValueType.I32
+    case RuntimeValue.I64(_) => ValueType.I64
+    case RuntimeValue.F32(_) => ValueType.F32
+    case RuntimeValue.F64(_) => ValueType.F64
   }
 }
 
@@ -42,7 +42,7 @@ implicit object ForceRuntimeValue extends Force[RuntimeValue] {
 }
 
 implicit class VarOrRuntimeValueOps(self: VarOr[RuntimeValue]) {
-  def getType: Rel[Type] = self.force.map(_.getType)
+  def getType: Rel[ValueType] = self.force.map(_.getType)
 }
 
 type UInt = Int
@@ -60,4 +60,8 @@ enum RuntimeError derives Unify:
   case ExpectLabelStack
   case ExpectActivationStack
   case Unimplemented
-  case InvalidArgs(xs: VarOr[LList[Type]], ys: VarOr[LList[Type]])
+  case InvalidArgs(xs: VarOr[LList[ValueType]], ys: VarOr[LList[ValueType]])
+
+final case class Function(params: VarOr[LList[ValueType]], returns: VarOr[LList[ValueType]], code: VarOr[LList[Inst]]) derives Unify
+
+type FunctionTable = LList[Function]

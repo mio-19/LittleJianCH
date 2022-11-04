@@ -24,7 +24,14 @@ final case class FuncType(params: VarOr[LList[ValueType]], results: VarOr[LList[
 
 final case class FunctionSection(types: VarOr[LList[UInt]]) derives Unify
 
-final case class ExportEntry()
+enum ExternalKind derives Unify :
+  case Function
+  case Table
+  case Memory
+  case Global
+  case Unknown
+
+final case class ExportEntry(fieldStr: VarOr[Str], kind: VarOr[ExternalKind], index: VarOr[UInt]) derives Unify
 
 object ValueType {
   def from(x: Byte): ValueType = x match {

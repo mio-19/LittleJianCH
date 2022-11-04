@@ -62,6 +62,8 @@ enum RuntimeError derives Unify:
   case Unimplemented
   case InvalidArgs(xs: VarOr[LList[ValueType]], ys: VarOr[LList[ValueType]])
 
-final case class Function(params: VarOr[LList[ValueType]], returns: VarOr[LList[ValueType]], code: VarOr[LList[Inst]]) derives Unify
+final case class Function(params: VarOr[LList[ValueType]], returns: VarOr[LList[ValueType]], code: VarOr[LList[Inst]]) derives Unify {
+  def getType: FuncType = FuncType(params, returns)
+}
 
 type FunctionTable = LList[Function]

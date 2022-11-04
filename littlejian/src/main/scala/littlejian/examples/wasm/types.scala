@@ -20,6 +20,12 @@ enum BlockType derives Unify :
   case F64
   case Empty
 
+final case class FuncType(params: VarOr[LList[ValueType]], results: VarOr[LList[ValueType]]) derives Unify
+
+final case class FunctionSection(types: VarOr[LList[UInt]]) derives Unify
+
+final case class ExportEntry()
+
 object ValueType {
   def from(x: Byte): ValueType = x match {
     case 0x7F => ValueType.I32

@@ -26,11 +26,11 @@ sealed trait GoalNumOp2 extends GoalBasic {
 
   def tag: NumTag
 
-  def x: Num | Var[_ <: Num]
+  def x: VarOrOf[Num]
 
-  def y: Num | Var[_ <: Num]
+  def y: VarOrOf[Num]
 
-  def result: Num | Var[_ <: Num]
+  def result: VarOrOf[Num]
 
   override def execute(state: State): IterableOnce[State] = state.num.insert(state, this)
 
@@ -47,7 +47,7 @@ sealed trait GoalNumOp2 extends GoalBasic {
 }
 
 object GoalNumOp2 {
-  def unapply(self: GoalNumOp2): Some[(NumOp2, NumTag, Num | Var[_ <: Num], Num | Var[_ <: Num], Num | Var[_ <: Num])] = Some((self.rel, self.tag, self.x, self.y, self.result))
+  def unapply(self: GoalNumOp2): Some[(NumOp2, NumTag, VarOrOf[Num], VarOrOf[Num], VarOrOf[Num])] = Some((self.rel, self.tag, self.x, self.y, self.result))
 }
 
 final case class GoalNumOp2Byte(rel: NumOp2, x: VarOr[Byte], y: VarOr[Byte], result: VarOr[Byte]) extends GoalNumOp2 {
@@ -115,11 +115,11 @@ implicit class BoundaryVarOrOps[T](self: Boundary[VarOr[T]]) {
 sealed trait GoalNumRange extends GoalBasic {
   def tag: NumTag
 
-  def low: Option[Boundary[_ <: Num | Var[_ <: Num]]]
+  def low: Option[Boundary[_ <: VarOrOf[Num]]]
 
-  def high: Option[Boundary[_ <: Num | Var[_ <: Num]]]
+  def high: Option[Boundary[_ <: VarOrOf[Num]]]
 
-  def num: Num | Var[_ <: Num]
+  def num: VarOrOf[Num]
 
   override def execute(state: State): IterableOnce[State] = state.num.insert(state, this)
 

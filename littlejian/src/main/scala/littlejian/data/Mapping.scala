@@ -41,7 +41,7 @@ case class MappingEmpty[K, V]() extends Mapping[K, V] derives Unify {
   override def notContains(k: VarOr[K])(implicit uK: Unify[K], uV: Unify[V]): Goal = Goal.success
 }
 
-case class MappingNonEmpty[K, V](key: VarOr[K], value: VarOr[V], next: VarOr[Mapping[K, V]]) extends Mapping[K, V] derives Unify {
+case class MappingNonEmpty[K, V](key: VarOr[K], value: VarOr[V], next: VarOrOf[Mapping[K, V]]) extends Mapping[K, V] derives Unify {
   override def get(k: VarOr[K])(implicit uK: Unify[K], uV: Unify[V]): Rel[V] = compare(key, k) {
     value
   } {

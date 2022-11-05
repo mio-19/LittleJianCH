@@ -13,7 +13,9 @@ sealed trait Mapping[K, V] derives Unify {
   def updated(key: VarOr[K], value: VarOr[V]): Mapping[K, V] = MappingNonEmpty(key, value, this)
 }
 
-implicit class VarOrMappingOps[K, V](self: VarOr[Mapping[K, V]]) {
+implicit class VarOrMappingOps[K, V](self0: VarOrOf[Mapping[K, V]]) {
+  val self: VarOr[Mapping[K, V]] = self0.asInstanceOf
+
   private def force(implicit uK: Unify[K], uV: Unify[V]): GoalWith[Mapping[K, V]] = GoalWith(k => conde(
     (self === MappingEmpty()) && k(MappingEmpty()),
     for {
@@ -31,7 +33,7 @@ implicit class VarOrMappingOps[K, V](self: VarOr[Mapping[K, V]]) {
   def updated(key: VarOr[K], value: VarOr[V]): Mapping[K, V] = MappingNonEmpty(key, value, self)
 }
 
-final case class MappingEmpty[K, V]() extends Mapping[K, V] derives Unify {
+case class MappingEmpty[K, V]() extends Mapping[K, V] derives Unify {
   override def get(k: VarOr[K])(implicit uK: Unify[K], uV: Unify[V]): Rel[V] = Rel.failure
 
   override def getOption(k: VarOr[K])(implicit uK: Unify[K], uV: Unify[V]): Rel[Option[VarOr[V]]] = None
@@ -39,7 +41,7 @@ final case class MappingEmpty[K, V]() extends Mapping[K, V] derives Unify {
   override def notContains(k: VarOr[K])(implicit uK: Unify[K], uV: Unify[V]): Goal = Goal.success
 }
 
-final case class MappingNonEmpty[K, V](key: VarOr[K], value: VarOr[V], next: VarOr[Mapping[K, V]]) extends Mapping[K, V] derives Unify {
+case class MappingNonEmpty[K, V](key: VarOr[K], value: VarOr[V], next: VarOr[Mapping[K, V]]) extends Mapping[K, V] derives Unify {
   override def get(k: VarOr[K])(implicit uK: Unify[K], uV: Unify[V]): Rel[V] = compare(key, k) {
     value
   } {
@@ -55,7 +57,7 @@ final case class MappingNonEmpty[K, V](key: VarOr[K], value: VarOr[V], next: Var
   override def notContains(k: VarOr[K])(implicit uK: Unify[K], uV: Unify[V]): Goal = compare(key, k) {
     Goal.failure
   } {
-    next.notContains(k)
+    next.notContains(k)(uK, uV)
   }
 }
 

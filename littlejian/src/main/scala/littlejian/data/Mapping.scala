@@ -13,9 +13,7 @@ sealed trait Mapping[K, V] derives Unify {
   def updated(key: VarOr[K], value: VarOr[V]): Mapping[K, V] = MappingNonEmpty(key, value, this)
 }
 
-implicit class VarOrMappingOps[K, V](self0: VarOrOf[Mapping[K, V]]) {
-  val self: VarOr[Mapping[K, V]] = self0.asInstanceOf
-
+implicit class VarOrMappingOps[K, V](self: VarOr[Mapping[K, V]]) {
   private def force(implicit uK: Unify[K], uV: Unify[V]): GoalWith[Mapping[K, V]] = GoalWith(k => conde(
     (self === MappingEmpty()) && k(MappingEmpty()),
     for {
@@ -31,6 +29,14 @@ implicit class VarOrMappingOps[K, V](self0: VarOrOf[Mapping[K, V]]) {
   def notContains(k: VarOr[K])(implicit uK: Unify[K], uV: Unify[V]): Goal = force.flatMap(_.notContains(k)).goal
 
   def updated(key: VarOr[K], value: VarOr[V]): Mapping[K, V] = MappingNonEmpty(key, value, self)
+
+  def toLList(implicit uK: Unify[K], uV: Unify[V]): Rel[LList[Tup2[K, V]]] = conde(
+    (self === Mapping.empty) >> LList.empty,
+    for {
+      (key, value, tail) <- self.is[K, V, Mapping[K, V]](MappingNonEmpty(_, _, _))
+      rest <- tail.toLList
+    } yield (key, value) :: rest
+  )
 }
 
 case class MappingEmpty[K, V]() extends Mapping[K, V] derives Unify {

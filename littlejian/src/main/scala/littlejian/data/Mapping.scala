@@ -73,4 +73,9 @@ object Mapping {
   def from[K, V](xs: Seq[(K, V)]): Mapping[K, V] = if (xs.isEmpty) MappingEmpty() else MappingNonEmpty(xs.head._1, xs.head._2, from(xs.tail))
 
   def apply[K, V](xs: (K, V)*): Mapping[K, V] = from(xs)
+
+  def from[K, V](xs: VarOr[LList[Tup2[K, V]]])(implicit uK: Unify[K], uV: Unify[V]): Rel[Mapping[K, V]] = xs.elim(Mapping.empty)((x, xs) => for {
+    tail <- from(xs)
+    (key, value) <- x.is[K, V]((_, _))
+  } yield tail.updated(key, value))
 }

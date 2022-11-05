@@ -26,31 +26,31 @@ object Inst {
   final case class TeeLocal(x: VarOr[UIntN]) extends Inst derives Unify
   final case class GetGlobal(x: VarOr[UIntN]) extends Inst derives Unify
   final case class SetGlobal(x: VarOr[UIntN]) extends Inst derives Unify
-  final case class I32Load(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class I64Load(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class F32Load(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class F64Load(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class I32Load8S(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class I32Load8U(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class I32Load16S(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class I32Load16U(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class I64Load8S(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class I64Load8U(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class I64Load16S(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class I64Load16U(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class I64Load32S(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class I64Load32U(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class I32Store(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class I64Store(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class F32Store(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class F64Store(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class I32Store8(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class I32Store16(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class I64Store8(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class I64Store16(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
-  final case class I64Store32(x: VarOr[Int32], y: VarOr[Int32]) extends Inst derives Unify
+  final case class I32Load(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class I64Load(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class F32Load(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class F64Load(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class I32Load8S(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class I32Load8U(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class I32Load16S(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class I32Load16U(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class I64Load8S(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class I64Load8U(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class I64Load16S(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class I64Load16U(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class I64Load32S(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class I64Load32U(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class I32Store(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class I64Store(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class F32Store(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class F64Store(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class I32Store8(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class I32Store16(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class I64Store8(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class I64Store16(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
+  final case class I64Store32(x: VarOr[IntSigned], y: VarOr[IntSigned]) extends Inst derives Unify
   final case class CurrentMemory(x: VarOr[UIntN]) extends Inst derives Unify
   final case class GrowMemory(x: VarOr[UIntN]) extends Inst derives Unify
-  final case class I32Const(x: Int32) extends Inst derives Unify
-  final case class I64Const(x: Int64) extends Inst derives Unify
+  final case class I32Const(x: VarOr[IntSigned]) extends Inst derives Unify
+  final case class I64Const(x: VarOr[Int64Signed]) extends Inst derives Unify
 }

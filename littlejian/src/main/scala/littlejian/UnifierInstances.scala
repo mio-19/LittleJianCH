@@ -2,8 +2,6 @@ package littlejian
 
 implicit def U$VarOr[T](implicit unifier: Unify[T]): Unify[VarOr[T]] = unifier.asInstanceOf
 
-implicit def U$VarOrOf[T](implicit unifier: Unify[T]): Unify[VarOrOf[T]] = unifier.asInstanceOf
-
 import scala.annotation.targetName
 import scala.reflect.ClassTag
 

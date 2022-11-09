@@ -7,7 +7,9 @@ import littlejian.data.*
 import scala.annotation.targetName
 import scala.language.implicitConversions
 
-sealed trait LListData extends LList[Data]
+sealed trait LListData
+
+implicit def LListData2LListData(x: LListData): LList[Data] = x.asInstanceOf
 
 final class EmptyList extends LEmpty[Data] with LListData
 
@@ -19,7 +21,7 @@ implicit def toLListData(x: LList[Data]): LListData = x match {
   case LEmpty() => new EmptyList
   case LCons(head, tail) => new NonEmptyList(head, tail)
 }
-given U$LListData: Unify[LListData] = U$LList(U$Data).asInstanceOf[Unify[LListData]]
+given U$LListData: Unify[LListData] = implicitly[Unify[LList[Data]]].asInstanceOf[Unify[LListData]]
 
 type Data = (String | Int32 | Boolean) | LListData | (Closure | Macro) | Unit
 
@@ -71,5 +73,5 @@ def envGet(envId: VarOr[EnvVar], id: VarOr[String], env: VarOr[WholeEnv]): Rel[O
   r <- envGet(eid, id, env)
   ret <- r.elim {
     envGet(tail, id, env)
-  }{ v => Rel(v) }
+  } { v => Rel(v) }
 } yield ret

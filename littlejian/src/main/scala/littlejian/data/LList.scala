@@ -4,7 +4,7 @@ import littlejian._
 import littlejian.ext._
 import scala.language.implicitConversions
 
-trait LList[T]
+sealed trait LList[T] derives Unify
 
 implicit class LListOps[T](self: VarOr[LList[T]]) {
   inline def ::(elem: VarOr[T]): LList[T] = LCons(elem, self)
@@ -37,7 +37,6 @@ implicit class LListOps[T](self: VarOr[LList[T]]) {
 }
 
 implicit class VarOrLListOps[T](self: VarOr[LList[T]])(implicit U$T: Unify[T]) {
-  implicit val U$LListT: Unify[LList[T]] = U$LList(U$T)
   implicit val U$SeqT: Unify[Seq[VarOr[T]]] = U$Seq(U$VarOr(U$T))
 
   def eqEmpty: Goal = self === LList.empty[T]
@@ -57,13 +56,11 @@ object LList {
   def from[T](xs: Seq[VarOr[T]]): LList[T] = if (xs.isEmpty) LEmpty() else LCons(xs.head, LList.from(xs.tail))
 }
 
-case class LEmpty[T]() extends LList[T] {
+case class LEmpty[T]() extends LList[T] derives Unify {
   override def toString: String = "LList()"
 }
 
-def U$LEmpty[T]: Unify[LEmpty[T]] = new EqualUnify[LEmpty[T]] {}
-
-case class LCons[T](head: VarOr[T], tail: VarOr[LList[T]]) extends LList[T] with Product2[VarOr[T], VarOr[LList[T]]] {
+case class LCons[T](head: VarOr[T], tail: VarOr[LList[T]]) extends LList[T] derives Unify {
   override def toString: String = {
     val t = tail.toString
     if (t == "LList()")
@@ -74,24 +71,10 @@ case class LCons[T](head: VarOr[T], tail: VarOr[LList[T]]) extends LList[T] with
   }
 }
 
-def U$LCons[T](implicit U$T: Unify[T], U$LListT: Unify[LList[T]]): Unify[LCons[T]] = U$Product
-
-implicit def U$LList[T](implicit unifier: Unify[T]): Unify[LList[T]] = {
-  implicit object U extends Unify[LList[T]] {
-    override def concreteUnify(self: LList[T], other: LList[T]): Unifying[Unit] = (self, other) match {
-      case (LEmpty(), LEmpty()) => Unifying.success(())
-      case (LCons(x, xs), LCons(y, ys)) => for {
-        _ <- x.unify(y)
-        _ <- xs.unify(ys)
-      } yield ()
-      case _ => Unifying.failure
-    }
-  }
-  U
-}
-
 trait LListOf[A] {
-  sealed trait LListT extends LList[A]
+  sealed trait LListT
+
+  implicit def LListT2LList(x: LListT): LList[A] = x.asInstanceOf
 
   val empty: LListT = new EmptyList
 

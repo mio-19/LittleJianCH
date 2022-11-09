@@ -6,7 +6,13 @@ import littlejian.ext.*
 
 import scala.annotation.tailrec
 
-type SExp = Cons | Unit | String
+type SExpAtom = String | Int | Long | Float | Double
+
+type SExp = Cons | Unit | SExpAtom
+
+implicit val U$SExp: Unify[SExp] = U$Union[Cons, Unit, String, Int, Long, Float, Double]
+
+implicit val I$SExp: Inspect[SExp] = I$Union(I$Cons, I$Unit, I$String, I$Int, I$Long, I$Float, I$Double)
 
 object SExp {
   def parse(s: String): SExp = {
@@ -47,10 +53,6 @@ object SExp {
     }
   }
 }
-
-implicit val U$SExp: Unify[SExp] = U$Union[Cons, Unit, String]
-
-implicit val I$SExp: Inspect[SExp] = I$Union(I$Cons, I$Unit, I$String)
 
 final class Cons(a: VarOr[SExp], d: VarOr[SExp]) extends Pair[SExp, SExp](a, d) {
 }

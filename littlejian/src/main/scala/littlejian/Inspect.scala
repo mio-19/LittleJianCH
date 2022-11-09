@@ -75,6 +75,10 @@ implicit object I$Int extends AtomInspect[Int]
 
 implicit object I$Long extends AtomInspect[Long]
 
+implicit object I$Float extends AtomInspect[Float]
+
+implicit object I$Double extends AtomInspect[Double]
+
 implicit object I$Integer extends AtomInspect[Integer]
 
 implicit object I$Unit extends AtomInspect[Unit]
@@ -110,6 +114,100 @@ implicit def I$Union[T, U, V](tr: => Inspect[T], ur: => Inspect[U], vr: => Inspe
     if (tc.isInstance(x)) t.inspect(x.asInstanceOf[T])
     else if (uc.isInstance(x)) u.inspect(x.asInstanceOf[U])
     else v.inspect(x.asInstanceOf[V])
+  }
+}
+
+@targetName("I$Union_") implicit def I$Union[T, U, V, W](implicit tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V], wr: => Inspect[W], tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W]): Inspect[T | U | V | W] = I$Union(tr, ur, vr, wr, tev, uev, vev, wev)
+implicit def I$Union[T, U, V, W](tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V], wr: => Inspect[W])(implicit tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W]): Inspect[T | U | V | W] = {
+  lazy val t = tr
+  lazy val u = ur
+  lazy val v = vr
+  lazy val w = wr
+  val tc = tev.runtimeClass
+  val uc = uev.runtimeClass
+  val vc = vev.runtimeClass
+  val wc = wev.runtimeClass
+  if (tc == uc || tc == vc || tc == wc || uc == vc || uc == wc || vc == wc) throw new IllegalArgumentException("T == U or T == V or T == W or U == V or U == W or V == W")
+  (x) => {
+    if (tc.isInstance(x)) t.inspect(x.asInstanceOf[T])
+    else if (uc.isInstance(x)) u.inspect(x.asInstanceOf[U])
+    else if (vc.isInstance(x)) v.inspect(x.asInstanceOf[V])
+    else w.inspect(x.asInstanceOf[W])
+  }
+}
+
+@targetName("I$Union_") implicit def I$Union[T, U, V, W, X](implicit tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V], wr: => Inspect[W], xr: => Inspect[X], tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W], xev: ClassTag[X]): Inspect[T | U | V | W | X] = I$Union(tr, ur, vr, wr, xr, tev, uev, vev, wev, xev)
+implicit def I$Union[T, U, V, W, X](tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V], wr: => Inspect[W], xr: => Inspect[X])(implicit tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W], xev: ClassTag[X]): Inspect[T | U | V | W | X] = {
+  lazy val t = tr
+  lazy val u = ur
+  lazy val v = vr
+  lazy val w = wr
+  lazy val x = xr
+  val tc = tev.runtimeClass
+  val uc = uev.runtimeClass
+  val vc = vev.runtimeClass
+  val wc = wev.runtimeClass
+  val xc = xev.runtimeClass
+  if (tc == uc || tc == vc || tc == wc || tc == xc || uc == vc || uc == wc || uc == xc || vc == wc || vc == xc || wc == xc) throw new IllegalArgumentException("T == U or T == V or T == W or T == X or U == V or U == W or U == X or V == W or V == X or W == X")
+  (arg) => {
+    if (tc.isInstance(arg)) t.inspect(arg.asInstanceOf[T])
+    else if (uc.isInstance(arg)) u.inspect(arg.asInstanceOf[U])
+    else if (vc.isInstance(arg)) v.inspect(arg.asInstanceOf[V])
+    else if (wc.isInstance(arg)) w.inspect(arg.asInstanceOf[W])
+    else x.inspect(arg.asInstanceOf[X])
+  }
+}
+
+@targetName("I$Union_") implicit def I$Union[T, U, V, W, X, Y](implicit tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V], wr: => Inspect[W], xr: => Inspect[X], yr: => Inspect[Y], tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W], xev: ClassTag[X], yev: ClassTag[Y]): Inspect[T | U | V | W | X | Y] = I$Union(tr, ur, vr, wr, xr, yr, tev, uev, vev, wev, xev, yev)
+implicit def I$Union[T, U, V, W, X, Y](tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V], wr: => Inspect[W], xr: => Inspect[X], yr: => Inspect[Y])(implicit tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W], xev: ClassTag[X], yev: ClassTag[Y]): Inspect[T | U | V | W | X | Y] = {
+  lazy val t = tr
+  lazy val u = ur
+  lazy val v = vr
+  lazy val w = wr
+  lazy val x = xr
+  lazy val y = yr
+  val tc = tev.runtimeClass
+  val uc = uev.runtimeClass
+  val vc = vev.runtimeClass
+  val wc = wev.runtimeClass
+  val xc = xev.runtimeClass
+  val yc = yev.runtimeClass
+  if (tc == uc || tc == vc || tc == wc || tc == xc || tc == yc || uc == vc || uc == wc || uc == xc || uc == yc || vc == wc || vc == xc || vc == yc || wc == xc || wc == yc || xc == yc) throw new IllegalArgumentException("T == U or T == V or T == W or T == X or T == Y or U == V or U == W or U == X or U == Y or V == W or V == X or V == Y or W == X or W == Y or X == Y")
+  (arg) => {
+    if (tc.isInstance(arg)) t.inspect(arg.asInstanceOf[T])
+    else if (uc.isInstance(arg)) u.inspect(arg.asInstanceOf[U])
+    else if (vc.isInstance(arg)) v.inspect(arg.asInstanceOf[V])
+    else if (wc.isInstance(arg)) w.inspect(arg.asInstanceOf[W])
+    else if (xc.isInstance(arg)) x.inspect(arg.asInstanceOf[X])
+    else y.inspect(arg.asInstanceOf[Y])
+  }
+}
+
+@targetName("I$Union_") implicit def I$Union[T, U, V, W, X, Y, Z](implicit tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V], wr: => Inspect[W], xr: => Inspect[X], yr: => Inspect[Y], zr: => Inspect[Z], tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W], xev: ClassTag[X], yev: ClassTag[Y], zev: ClassTag[Z]): Inspect[T | U | V | W | X | Y | Z] = I$Union(tr, ur, vr, wr, xr, yr, zr, tev, uev, vev, wev, xev, yev, zev)
+implicit def I$Union[T, U, V, W, X, Y, Z](tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V], wr: => Inspect[W], xr: => Inspect[X], yr: => Inspect[Y], zr: => Inspect[Z])(implicit tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W], xev: ClassTag[X], yev: ClassTag[Y], zev: ClassTag[Z]): Inspect[T | U | V | W | X | Y | Z] = {
+  lazy val t = tr
+  lazy val u = ur
+  lazy val v = vr
+  lazy val w = wr
+  lazy val x = xr
+  lazy val y = yr
+  lazy val z = zr
+  val tc = tev.runtimeClass
+  val uc = uev.runtimeClass
+  val vc = vev.runtimeClass
+  val wc = wev.runtimeClass
+  val xc = xev.runtimeClass
+  val yc = yev.runtimeClass
+  val zc = zev.runtimeClass
+  if (tc == uc || tc == vc || tc == wc || tc == xc || tc == yc || tc == zc || uc == vc || uc == wc || uc == xc || uc == yc || uc == zc || vc == wc || vc == xc || vc == yc || vc == zc || wc == xc || wc == yc || wc == zc || xc == yc || xc == zc || yc == zc) throw new IllegalArgumentException("T == U or T == V or T == W or T == X or T == Y or T == Z or U == V or U == W or U == X or U == Y or U == Z or V == W or V == X or V == Y or V == Z or W == X or W == Y or W == Z or X == Y or X == Z or Y == Z")
+  (arg) => {
+    if (tc.isInstance(arg)) t.inspect(arg.asInstanceOf[T])
+    else if (uc.isInstance(arg)) u.inspect(arg.asInstanceOf[U])
+    else if (vc.isInstance(arg)) v.inspect(arg.asInstanceOf[V])
+    else if (wc.isInstance(arg)) w.inspect(arg.asInstanceOf[W])
+    else if (xc.isInstance(arg)) x.inspect(arg.asInstanceOf[X])
+    else if (yc.isInstance(arg)) y.inspect(arg.asInstanceOf[Y])
+    else z.inspect(arg.asInstanceOf[Z])
   }
 }
 

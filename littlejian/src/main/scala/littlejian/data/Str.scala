@@ -1,8 +1,10 @@
 package littlejian.data
 
-import littlejian._
+import littlejian.*
 
-final case class Str(xs: LList[Character]) derives Unify {
+import scala.language.implicitConversions
+
+final case class Str(xs: LList[Character]) derives Unify, Inspect {
   override def toString: String = xs.getStrings match {
     case s: String => s"Str($s)"
     case (s, xs) => try {
@@ -22,3 +24,5 @@ object Str {
 
   def from(xs: String): Str = Str(LList.from(xs.toList.map(Character.from)))
 }
+
+implicit def StrPack(x: String): Str = Str.from(x)

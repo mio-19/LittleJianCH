@@ -4,7 +4,7 @@ import littlejian._
 import littlejian.ext._
 import scala.language.implicitConversions
 
-trait LList[T]
+sealed trait LList[T]
 
 implicit class LListOps[T](self: VarOr[LList[T]]) {
   inline def ::(elem: VarOr[T]): LList[T] = LCons(elem, self)
@@ -91,7 +91,9 @@ implicit def U$LList[T](implicit unifier: Unify[T]): Unify[LList[T]] = {
 }
 
 trait LListOf[A] {
-  sealed trait LListT extends LList[A]
+  sealed trait LListT
+
+  implicit def LListT2LList(t: LListT): LList[A] = t.asInstanceOf
 
   val empty: LListT = new EmptyList
 

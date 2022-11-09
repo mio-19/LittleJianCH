@@ -7,7 +7,9 @@ import littlejian.data.*
 import scala.annotation.targetName
 import scala.language.implicitConversions
 
-sealed trait LListData extends LList[Data]
+sealed trait LListData
+
+implicit def LListData2LList(x: LListData): LList[Data] = x.asInstanceOf
 
 final class EmptyList extends LEmpty[Data] with LListData
 

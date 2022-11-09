@@ -34,6 +34,31 @@ trait Inspect[T] {
   // Some(Seq(...)): uncertain
   inline final def scanUncertain(x: T, resolver: Any => Any, v: Any): Option[Seq[WithInspector[_]]] = WithInspector(x)(this).scanUncertain(resolver, v)
 }
+/* // TODO: rewrite Inspect
+trait Internaler {
+  def apply[T](x: T)(implicit inspect: Internal[T]): Boolean
+}
+
+trait Internal[T] {
+  def contains(rec: Internaler)(self: T, x: Any): Boolean
+}
+
+private val containsRecHistory = new Parameter[HashSet[Any]]
+
+implicit class InternalOps[T](self: Internal[T]) {
+  def runContains(walker: Any => Any, v: VarOr[T], x: Any): Boolean = {
+    if (v == x) return true
+    val value: VarOr[T] = walker(v).asInstanceOf
+    if (value == x) return true
+    val history = containsRecHistory.get.getOrElse(HashSet.empty)
+    if (history.contains(value)) return false
+    if (value.isInstanceOf[Var[_]]) return false
+    containsRecHistory.callWith(history.incl(value)) {
+      self.contains(???)(value.asInstanceOf, x)
+    }
+  }
+}
+*/
 
 object Inspect {
   // None: contains

@@ -69,6 +69,8 @@ implicit object I$Var extends AtomInspect[Var[_]]
 
 implicit object I$String extends AtomInspect[String]
 
+implicit object I$BigDecimal extends AtomInspect[BigDecimal]
+
 implicit object I$Boolean extends AtomInspect[Boolean]
 
 implicit object I$Int extends AtomInspect[Int]

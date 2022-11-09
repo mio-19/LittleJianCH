@@ -206,6 +206,8 @@ implicit object U$Symbol extends EqualUnify[Symbol]
 
 implicit object U$String extends EqualUnify[String]
 
+implicit object U$BigDecimal extends EqualUnify[BigDecimal]
+
 implicit object U$Unit extends EqualUnify[Unit]
 
 implicit object U$Byte extends EqualUnify[Byte]

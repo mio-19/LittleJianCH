@@ -73,6 +73,8 @@ implicit object I$BigDecimal extends AtomInspect[BigDecimal]
 
 implicit object I$Boolean extends AtomInspect[Boolean]
 
+implicit object I$Short extends AtomInspect[Short]
+
 implicit object I$Int extends AtomInspect[Int]
 
 implicit object I$Long extends AtomInspect[Long]

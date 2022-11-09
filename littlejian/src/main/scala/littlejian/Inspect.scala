@@ -89,7 +89,7 @@ implicit object I$Unit extends AtomInspect[Unit]
 
 implicit def I$VarOr[T](implicit inspector: Inspect[T]): Inspect[VarOr[T]] = {
   case v: Var[_] => I$Var.inspect(v)
-  case t: T => inspector.inspect(t)
+  case t => inspector.inspect(t.asInstanceOf)
 }
 
 //@targetName("I$Union_") implicit def I$Union[T, U](implicit tr: => Inspect[T], ur: => Inspect[U], tev: ClassTag[T], uev: ClassTag[U]): Inspect[T | U] = I$Union(tr, ur)(tev, uev)

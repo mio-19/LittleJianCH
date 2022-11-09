@@ -4,7 +4,7 @@ import littlejian._
 import littlejian.ext._
 import scala.language.implicitConversions
 
-sealed trait LList[T] derives Unify
+sealed trait LList[T] derives Unify, Inspect
 
 implicit class LListOps[T](self: VarOr[LList[T]]) {
   inline def ::(elem: VarOr[T]): LList[T] = LCons(elem, self)
@@ -56,11 +56,11 @@ object LList {
   def from[T](xs: Seq[VarOr[T]]): LList[T] = if (xs.isEmpty) LEmpty() else LCons(xs.head, LList.from(xs.tail))
 }
 
-case class LEmpty[T]() extends LList[T] derives Unify {
+case class LEmpty[T]() extends LList[T] derives Unify, Inspect {
   override def toString: String = "LList()"
 }
 
-case class LCons[T](head: VarOr[T], tail: VarOr[LList[T]]) extends LList[T] derives Unify {
+case class LCons[T](head: VarOr[T], tail: VarOr[LList[T]]) extends LList[T] derives Unify, Inspect {
   override def toString: String = {
     val t = tail.toString
     if (t == "LList()")

@@ -2,7 +2,7 @@ package littlejian.data
 
 import littlejian._
 
-sealed trait Character derives Inspect
+sealed trait Character
 
 object Character {
   def apply(chr: Int16): Character = Chr16(chr)
@@ -12,7 +12,7 @@ object Character {
   def from(c: Char): Character = ChrShort.from(c)
 }
 
-final case class Chr16(chr: Int16) extends Character derives Unify, Inspect {
+final case class Chr16(chr: Int16) extends Character derives Unify {
   override def toString: String = {
     val i = chr.toString
     try {
@@ -31,7 +31,7 @@ object Chr16 {
   def from(c: Char): Chr16 = Chr16(Int16.from(c.toShort))
 }
 
-final case class ChrShort(code: Short) extends Character derives Unify, Inspect {
+final case class ChrShort(code: Short) extends Character derives Unify {
   override def toString: String = {
     val i = code.toString
     try {

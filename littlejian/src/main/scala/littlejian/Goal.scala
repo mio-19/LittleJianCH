@@ -1,5 +1,7 @@
 package littlejian
 
+import littlejian.utils.Parameter
+
 import scala.annotation.{tailrec, targetName}
 
 sealed trait Goal

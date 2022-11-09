@@ -1,5 +1,7 @@
 package littlejian
 
+import littlejian.utils.Parameter
+
 final class PrettyPrintVarCounter {
   var varCount: Int = 0
   var varNames: scala.collection.mutable.HashMap[Var[_], Int] = scala.collection.mutable.HashMap.empty

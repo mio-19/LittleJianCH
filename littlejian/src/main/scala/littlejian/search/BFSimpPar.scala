@@ -1,7 +1,9 @@
 package littlejian.search
 
-import littlejian._
-import collection.parallel.CollectionConverters._
+import littlejian.*
+import littlejian.utils.Parameter
+
+import collection.parallel.CollectionConverters.*
 import scala.collection.parallel.immutable.ParVector
 
 implicit object BFSimpPar extends Searcher {

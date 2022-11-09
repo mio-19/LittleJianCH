@@ -1,4 +1,4 @@
-package littlejian
+package littlejian.utils
 
 final class Parameter[T] {
   private val current = new java.lang.ThreadLocal[T]

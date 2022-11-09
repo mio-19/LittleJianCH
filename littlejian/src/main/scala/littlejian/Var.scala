@@ -1,5 +1,7 @@
 package littlejian
 
+import littlejian.utils.ToStringRecCatcher
+
 // using reference equality
 final class Var[T] private[littlejian] {
   override def toString: String =

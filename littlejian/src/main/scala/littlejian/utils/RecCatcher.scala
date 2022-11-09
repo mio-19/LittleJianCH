@@ -1,4 +1,6 @@
-package littlejian
+package littlejian.utils
+
+import littlejian._
 
 // started from 1
 final class ToStringRecCatcherCounter {

@@ -143,7 +143,7 @@ implicit class VarOrPredOps[T](x: VarOr[T]) {
 
   inline def isNotType[T](implicit t: ClassTag[T]): Goal = GoalPredNotType(t, x)
 
-  inline def absent(absent: Any)(implicit inspector: Inspect[T]): Goal = GoalAbsent(WithInspector(x)(inspector), absent)
+  inline def absent(absent: Any)(implicit inspect: Inspect[T]): Goal = GoalAbsent(x, absent, inspect)
 }
 
 implicit class VarOrCast[T](x: VarOr[T]) {

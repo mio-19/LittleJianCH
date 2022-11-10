@@ -118,15 +118,15 @@ object PredNotTypeState {
   val empty: PredNotTypeState = PredNotTypeState(Vector.empty)
 }
 
-final case class AbsentState(absents: Vector /*conj*/ [(Any, Vector /*disj*/ [WithInspector[_]])]) {
-  def insert(eq: EqState, goal: GoalAbsent[_]): Option[AbsentState] = Inspect.scanUncertain(goal.x, eq.subst.walk, goal.absent) match {
-    case None => None
-    case Some(xs) => if (xs.isEmpty) Some(this) else Some(AbsentState((goal.absent, Vector.from(xs)) +: absents))
-  }
+final case class AbsentState(absents: AbsentStore) {
+  def insert(eq: EqState, goal: GoalAbsent[_]): Option[AbsentState] =
+    goal.inspect.runInspect(eq.subst.walk, goal.x, goal.absent) map { ors =>
+      AbsentState(AbsentStore.insert(absents, goal.absent, ors))
+    }
 
-  def onEq(eq: EqState): Option[AbsentState] = AbsentState.check(eq, absents)
+  def onEq(eq: EqState): Option[AbsentState] = AbsentStore.run(eq.subst.walk, absents).map(AbsentState(_))
 
-  def print: String = if (absents.isEmpty) "" else absents.map(x => x._2.map(wi => s"${x._1}.absent(${wi.x})").mkString(" || ")).mkString("\n")
+  def print: String = AbsentStore.print(absents)
 }
 
 object AbsentState {
@@ -134,16 +134,6 @@ object AbsentState {
 
   import littlejian.utils._
 
-  def check(eq: EqState, absents: Vector /*conj*/ [(Any, Vector /*disj*/ [WithInspector[_]])]): Option[AbsentState] =
-    if (absents.isEmpty) Some(AbsentState.empty) // optimize
-    else {
-      traverse(absents.map({ case (v, xs) => for {
-        ys <- Inspect.scanUncertain(xs, eq.subst.walk, v)
-      } yield (v, ys)
-      })).map(
-        next => AbsentState(next.filter({ case (_, xs) => xs.nonEmpty }))
-      )
-    }
 }
 
 final case class State(eq: EqState, notEq: NotEqState, predType: PredTypeState, predNotType: PredNotTypeState, absent: AbsentState, num: NumState) {

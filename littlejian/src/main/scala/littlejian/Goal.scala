@@ -52,10 +52,10 @@ final case class GoalPredNotType[T](tag: PredTypeTag, x: VarOr[T]) extends GoalB
   override def toString: String = s"${x}.isNotType[${tag}]"
 }
 
-final case class GoalAbsent[T](x: WithInspector[T], absent: Any) extends GoalBasic {
+final case class GoalAbsent[T](x: VarOr[T], absent: Any, inspect: Inspect[T]) extends GoalBasic {
   override def execute(state: State): Option[State] = state.absent.insert(state.eq, this).map(x=>state.copy(absent = x))
 
-  override def toString: String = s"${x.x}.absent(${absent})"
+  override def toString: String = s"${x}.absent(${absent})"
 }
 
 sealed trait GoalControl extends Goal

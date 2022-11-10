@@ -6,41 +6,40 @@ import scala.reflect.ClassTag
 import littlejian.utils.*
 import scala.collection.immutable.HashSet
 
-private val scanRecHistory = new Parameter[HashSet[Any]]
-
-final case class WithInspector[T](x: VarOr[T])(implicit inspector: Inspect[T]) {
-  // None: contains
-  // Some(Seq()): not contains
-  // Some(Seq(...)): uncertain
-  final def scanUncertain(resolver: Any => Any, v: Any): Option[Seq[WithInspector[_]]] = {
-    val todo = resolver(x).asInstanceOf[VarOr[T]]
-    val history = scanRecHistory.get.getOrElse(HashSet.empty)
-    if (history.contains(todo)) return Some(Seq())
-    if (todo.isInstanceOf[Var[_]])
-      Some(Seq(this))
-    else if (todo == v) None
-    else scanRecHistory.callWith(history.incl(todo)) {
-      traverse(inspector.inspect(todo.asInstanceOf[T]).map(_.scanUncertain(resolver, v))).map(_.flatten)
-    }
-  }
-}
-
 // for GoalAbsent usages
-trait Inspect[T] {
-  def inspect(x: T): Seq[WithInspector[_]]
 
-  // None: contains
-  // Some(Seq()): not contains
-  // Some(Seq(...)): uncertain
-  inline final def scanUncertain(x: T, resolver: Any => Any, v: Any): Option[Seq[WithInspector[_]]] = WithInspector(x)(this).scanUncertain(resolver, v)
+final case class VarWithInspect[T](self: Var[T])(implicit inspect: Inspect[T]) {
+  def runInspect(walker: Any => Any, x: Any): InspectResult = inspect.runInspect(walker, self, x)
 }
 
 // None: contains
 // Some(Vector()): not contains
 // Some(Vector(...)): uncertain
-final case class VarWithInspector[T](x: Var[T])(implicit inspect: Internal[T])
+type InspectResult = Option[Vector /*orIn*/ [VarWithInspect[_]]]
 
-type InspectResult = Option[Vector[VarWithInspector[_]]]
+// None: contains
+// Some(Vector()): not contains
+// Some(Vector(...)): uncertain
+type InspectResults = Option[Vector /*andIn*/ [Vector /*orIn*/ [VarWithInspect[_]]]]
+type AbsentStore = Vector /*and*/ [(Any /*x*/ , Vector /*orIn*/ [VarWithInspect[_]])]
+
+object AbsentStore {
+  def insert(self: AbsentStore, x: Any, ors: Vector /*orIn*/ [VarWithInspect[_]]): AbsentStore =
+    if (ors.isEmpty) self else (x, ors) +: self
+
+  def run0(walker: Any => Any, x: Any, ors: Vector /*orIn*/ [VarWithInspect[_]]): InspectResult = {
+    if (ors.isEmpty) throw new IllegalArgumentException()
+    ors.map(_.runInspect(walker, x)).reduce(_.orIn(_))
+  }
+
+  def run(walker: Any => Any, store: AbsentStore): Option[AbsentStore] = traverse(store.map {
+    case (x, clauses) => run0(walker, x, clauses) map { result => (x, result) }
+  }).map(_.filter(_._2.nonEmpty))
+
+  def print0(x: Any, ors: Vector /*orIn*/ [VarWithInspect[_]]): String = ors.map(wi => s"${x}.absent(${wi.self})").mkString(" || ")
+
+  def print(self: AbsentStore): String = if (self.isEmpty) "" else self.map({ case (x, clauses) => print0(x, clauses) }).mkString("\n")
+}
 
 implicit class InspectResultOps(self: InspectResult) {
   def orIn(other: InspectResult): InspectResult = for {
@@ -50,85 +49,63 @@ implicit class InspectResultOps(self: InspectResult) {
 }
 
 object InspectResult {
+  def apply(x: Boolean): InspectResult = if (x) Contains else NotContains
+
   val Contains: InspectResult = None
   val NotContains: InspectResult = Some(Vector.empty)
 
-  def Maybe[T](x: Var[T])(implicit inspect: Internal[T]): InspectResult = Some(Vector(VarWithInspector(x)(inspect)))
+  def Maybe[T](x: Var[T])(implicit inspect: Inspect[T]): InspectResult = Some(Vector(VarWithInspect(x)(inspect)))
 }
 
-trait Internaler {
-  def apply[T](x: VarOr[T])(implicit inspect: Internal[T]): InspectResult
+trait Inspector {
+  def apply[T](x: VarOr[T])(implicit inspect: Inspect[T]): InspectResult
 }
 
-trait Internal[T] {
-  def contains(rec: Internaler)(self: T, x: Any): InspectResult
+trait Inspect[T] {
+  def inspect(rec: Inspector, self: T, x: Any): InspectResult
 }
 
-private val containsRecHistory = new Parameter[HashSet[Any]]
+private val inspectRecHistory = new Parameter[HashSet[Any]]
 
-implicit class InternalOps[T](self: Internal[T]) {
+implicit class InspectOps[T](self: Inspect[T]) {
   def runInspect(walker: Any => Any, v: VarOr[T], x: Any): InspectResult = {
     if (v == x) return InspectResult.Contains
     val value: VarOr[T] = walker(v).asInstanceOf
     if (value == x) return InspectResult.Contains
-    val history = containsRecHistory.get.getOrElse(HashSet.empty)
+    val history = inspectRecHistory.get.getOrElse(HashSet.empty)
     if (history.contains(value)) return InspectResult.NotContains
     if (value.isInstanceOf[Var[_]]) return InspectResult.Maybe(value.asInstanceOf[Var[T]])(self)
-    containsRecHistory.callWith(history.incl(value)) {
-      self.contains(new Internaler() {
-        override def apply[T](arg: VarOr[T])(implicit inspect: Internal[T]): InspectResult = inspect.runInspect(walker, arg, x)
-      })(value.asInstanceOf, x)
+    inspectRecHistory.callWith(history.incl(value)) {
+      self.inspect(new Inspector() {
+        override def apply[T](arg: VarOr[T])(implicit inspect: Inspect[T]): InspectResult = inspect.runInspect(walker, arg, x)
+      }, value.asInstanceOf, x)
     }
   }
 }
 
-object Internal {
-
-  import shapeless3.deriving.*
-
-  given inspectSum[A] (using inst: K0.CoproductInstances[Internal, A]): Internal[A] with
-    def contains(rec: Internaler)(self: A, x: Any): InspectResult = inst.fold(self)(
-      [t] => (i: Internal[t], t0: t) => i.contains(rec)(t0, x)
-    )
-
-  given inspectProduct[A] (using inst: K0.ProductInstances[Internal, A]): Internal[A] with
-    def contains(rec: Internaler)(self: A, x: Any): InspectResult = inst.foldLeft(self)(InspectResult.NotContains)(
-      [t] => (acc: InspectResult, i: Internal[t], t0: t) =>
-        rec(t0)(i) orIn acc
-    )
-
-  inline def derived[A](using gen: K0.Generic[A]): Internal[A] =
-    gen.derive(inspectProduct, inspectSum)
-}
-
 object Inspect {
-  // None: contains
-  // Some(Seq()): not contains
-  // Some(Seq(...)): uncertain
-  def scanUncertain[T](x: WithInspector[T], resolver: Any => Any, v: Any): Option[Seq[WithInspector[_]]] = x.scanUncertain(resolver, v)
-
-  def scanUncertain(xs: Vector[WithInspector[_]], resolver: Any => Any, v: Any): Option[Vector[WithInspector[_]]] = traverse(xs.map(_.scanUncertain(resolver, v))).map(_.flatten)
-
 
   import shapeless3.deriving.*
 
   given inspectSum[A] (using inst: K0.CoproductInstances[Inspect, A]): Inspect[A] with
-    def inspect(x: A): Seq[WithInspector[_]] = inst.fold(x)(
-      [t] => (i: Inspect[t], t0: t) => Seq(WithInspector(t0)(i))
+    def inspect(rec: Inspector, self: A, x: Any): InspectResult = inst.fold(self)(
+      [t] => (i: Inspect[t], t0: t) => i.inspect(rec, t0, x)
     )
 
   given inspectProduct[A] (using inst: K0.ProductInstances[Inspect, A]): Inspect[A] with
-    def inspect(x: A): Seq[WithInspector[_]] = inst.foldLeft(x)(Seq.empty: Seq[WithInspector[_]])(
-      [t] => (acc: Seq[WithInspector[_]], i: Inspect[t], t0: t) =>
-        WithInspector(t0)(i) +: acc
+    def inspect(rec: Inspector, self: A, x: Any): InspectResult = inst.foldLeft(self)(InspectResult.NotContains)(
+      [t] => (acc: InspectResult, i: Inspect[t], t0: t) =>
+        rec(t0)(i) orIn acc
     )
 
   inline def derived[A](using gen: K0.Generic[A]): Inspect[A] =
     gen.derive(inspectProduct, inspectSum)
 }
 
+implicit def I$VarOr[T](implicit x: Inspect[T]): Inspect[VarOr[T]] = x.asInstanceOf
+
 trait AtomInspect[T] extends Inspect[T] {
-  override def inspect(x: T): Seq[WithInspector[_]] = Seq.empty
+  override def inspect(rec: Inspector, self: T, x: Any): InspectResult = InspectResult.NotContains
 }
 
 implicit object I$Var extends AtomInspect[Var[_]]
@@ -153,153 +130,131 @@ implicit object I$Integer extends AtomInspect[Integer]
 
 implicit object I$Unit extends AtomInspect[Unit]
 
-implicit def I$VarOr[T](implicit inspector: Inspect[T]): Inspect[VarOr[T]] = {
-  case v: Var[_] => I$Var.inspect(v)
-  case t => inspector.inspect(t.asInstanceOf)
-}
-
-//@targetName("I$Union_") implicit def I$Union[T, U](implicit tr: => Inspect[T], ur: => Inspect[U], tev: ClassTag[T], uev: ClassTag[U]): Inspect[T | U] = I$Union(tr, ur)(tev, uev)
-implicit def I$Union[T, U](tr: => Inspect[T], ur: => Inspect[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Inspect[T | U] = {
+def I$Union[T, U](tr: => Inspect[T], ur: => Inspect[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Inspect[T | U] = {
   lazy val t = tr
   lazy val u = ur
   val tc = tev.runtimeClass
   val uc = uev.runtimeClass
-  if (tc == uc) throw new IllegalArgumentException("T == U")
-  (x) => {
-    if (tc.isInstance(x)) t.inspect(x.asInstanceOf[T])
-    else u.inspect(x.asInstanceOf[U])
+  if (Set(tc, uc).size != 2) throw new IllegalArgumentException("duplication")
+  (rec, self, x) => {
+    if (tc.isInstance(self)) t.inspect(rec, self.asInstanceOf, x)
+    else u.inspect(rec, self.asInstanceOf, x)
   }
 }
 
-//@targetName("I$Union_") implicit def I$Union[T, U, V](implicit tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V], tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V]): Inspect[T | U | V] = I$Union(tr, ur, vr)(tev, uev, vev)
-implicit def I$Union[T, U, V](tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V])(implicit tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V]): Inspect[T | U | V] = {
-  lazy val t = tr
-  lazy val u = ur
-  lazy val v = vr
-  val tc = tev.runtimeClass
-  val uc = uev.runtimeClass
-  val vc = vev.runtimeClass
-  if (tc == uc || tc == vc || uc == vc) throw new IllegalArgumentException("T == U or T == V or U == V")
-  (x) => {
-    if (tc.isInstance(x)) t.inspect(x.asInstanceOf[T])
-    else if (uc.isInstance(x)) u.inspect(x.asInstanceOf[U])
-    else v.inspect(x.asInstanceOf[V])
+def I$Union[A, B, C](ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C]): Inspect[A | B | C] = {
+  lazy val a = ar
+  lazy val b = br
+  lazy val c = cr
+  val ac = aev.runtimeClass
+  val bc = bev.runtimeClass
+  val cc = cev.runtimeClass
+  if (Set(ac, bc, cc).size != 3) throw new IllegalArgumentException("duplication")
+  (rec, self, x) => {
+    if (ac.isInstance(self)) a.inspect(rec, self.asInstanceOf, x)
+    else if (bc.isInstance(self)) b.inspect(rec, self.asInstanceOf, x)
+    else c.inspect(rec, self.asInstanceOf, x)
   }
 }
 
-//@targetName("I$Union_") implicit def I$Union[T, U, V, W](implicit tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V], wr: => Inspect[W], tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W]): Inspect[T | U | V | W] = I$Union(tr, ur, vr, wr)(tev, uev, vev, wev)
-implicit def I$Union[T, U, V, W](tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V], wr: => Inspect[W])(implicit tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W]): Inspect[T | U | V | W] = {
-  lazy val t = tr
-  lazy val u = ur
-  lazy val v = vr
-  lazy val w = wr
-  val tc = tev.runtimeClass
-  val uc = uev.runtimeClass
-  val vc = vev.runtimeClass
-  val wc = wev.runtimeClass
-  if (tc == uc || tc == vc || tc == wc || uc == vc || uc == wc || vc == wc) throw new IllegalArgumentException("T == U or T == V or T == W or U == V or U == W or V == W")
-  (x) => {
-    if (tc.isInstance(x)) t.inspect(x.asInstanceOf[T])
-    else if (uc.isInstance(x)) u.inspect(x.asInstanceOf[U])
-    else if (vc.isInstance(x)) v.inspect(x.asInstanceOf[V])
-    else w.inspect(x.asInstanceOf[W])
+def I$Union[A, B, C, D](ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C], dr: => Inspect[D])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D]): Inspect[A | B | C | D] = {
+  lazy val a = ar
+  lazy val b = br
+  lazy val c = cr
+  lazy val d = dr
+  val ac = aev.runtimeClass
+  val bc = bev.runtimeClass
+  val cc = cev.runtimeClass
+  val dc = dev.runtimeClass
+  if (Set(ac, bc, cc, dc).size != 4) throw new IllegalArgumentException("duplication")
+  (rec, self, x) => {
+    if (ac.isInstance(self)) a.inspect(rec, self.asInstanceOf, x)
+    else if (bc.isInstance(self)) b.inspect(rec, self.asInstanceOf, x)
+    else if (cc.isInstance(self)) c.inspect(rec, self.asInstanceOf, x)
+    else d.inspect(rec, self.asInstanceOf, x)
   }
 }
 
-//@targetName("I$Union_") implicit def I$Union[T, U, V, W, X](implicit tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V], wr: => Inspect[W], xr: => Inspect[X], tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W], xev: ClassTag[X]): Inspect[T | U | V | W | X] = I$Union(tr, ur, vr, wr, xr)(tev, uev, vev, wev, xev)
-implicit def I$Union[T, U, V, W, X](tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V], wr: => Inspect[W], xr: => Inspect[X])(implicit tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W], xev: ClassTag[X]): Inspect[T | U | V | W | X] = {
-  lazy val t = tr
-  lazy val u = ur
-  lazy val v = vr
-  lazy val w = wr
-  lazy val x = xr
-  val tc = tev.runtimeClass
-  val uc = uev.runtimeClass
-  val vc = vev.runtimeClass
-  val wc = wev.runtimeClass
-  val xc = xev.runtimeClass
-  if (tc == uc || tc == vc || tc == wc || tc == xc || uc == vc || uc == wc || uc == xc || vc == wc || vc == xc || wc == xc) throw new IllegalArgumentException("T == U or T == V or T == W or T == X or U == V or U == W or U == X or V == W or V == X or W == X")
-  (arg) => {
-    if (tc.isInstance(arg)) t.inspect(arg.asInstanceOf[T])
-    else if (uc.isInstance(arg)) u.inspect(arg.asInstanceOf[U])
-    else if (vc.isInstance(arg)) v.inspect(arg.asInstanceOf[V])
-    else if (wc.isInstance(arg)) w.inspect(arg.asInstanceOf[W])
-    else x.inspect(arg.asInstanceOf[X])
+def I$Union[A, B, C, D, E](ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C], dr: => Inspect[D], er: => Inspect[E])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E]): Inspect[A | B | C | D | E] = {
+  lazy val a = ar
+  lazy val b = br
+  lazy val c = cr
+  lazy val d = dr
+  lazy val e = er
+  val ac = aev.runtimeClass
+  val bc = bev.runtimeClass
+  val cc = cev.runtimeClass
+  val dc = dev.runtimeClass
+  val ec = eev.runtimeClass
+  if (Set(ac, bc, cc, dc, ec).size != 5) throw new IllegalArgumentException("duplication")
+  (rec, self, x) => {
+    if (ac.isInstance(self)) a.inspect(rec, self.asInstanceOf, x)
+    else if (bc.isInstance(self)) b.inspect(rec, self.asInstanceOf, x)
+    else if (cc.isInstance(self)) c.inspect(rec, self.asInstanceOf, x)
+    else if (dc.isInstance(self)) d.inspect(rec, self.asInstanceOf, x)
+    else e.inspect(rec, self.asInstanceOf, x)
   }
 }
-
-//@targetName("I$Union_") implicit def I$Union[T, U, V, W, X, Y](implicit tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V], wr: => Inspect[W], xr: => Inspect[X], yr: => Inspect[Y], tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W], xev: ClassTag[X], yev: ClassTag[Y]): Inspect[T | U | V | W | X | Y] = I$Union(tr, ur, vr, wr, xr, yr)(tev, uev, vev, wev, xev, yev)
-implicit def I$Union[T, U, V, W, X, Y](tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V], wr: => Inspect[W], xr: => Inspect[X], yr: => Inspect[Y])(implicit tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W], xev: ClassTag[X], yev: ClassTag[Y]): Inspect[T | U | V | W | X | Y] = {
-  lazy val t = tr
-  lazy val u = ur
-  lazy val v = vr
-  lazy val w = wr
-  lazy val x = xr
-  lazy val y = yr
-  val tc = tev.runtimeClass
-  val uc = uev.runtimeClass
-  val vc = vev.runtimeClass
-  val wc = wev.runtimeClass
-  val xc = xev.runtimeClass
-  val yc = yev.runtimeClass
-  if (tc == uc || tc == vc || tc == wc || tc == xc || tc == yc || uc == vc || uc == wc || uc == xc || uc == yc || vc == wc || vc == xc || vc == yc || wc == xc || wc == yc || xc == yc) throw new IllegalArgumentException("T == U or T == V or T == W or T == X or T == Y or U == V or U == W or U == X or U == Y or V == W or V == X or V == Y or W == X or W == Y or X == Y")
-  (arg) => {
-    if (tc.isInstance(arg)) t.inspect(arg.asInstanceOf[T])
-    else if (uc.isInstance(arg)) u.inspect(arg.asInstanceOf[U])
-    else if (vc.isInstance(arg)) v.inspect(arg.asInstanceOf[V])
-    else if (wc.isInstance(arg)) w.inspect(arg.asInstanceOf[W])
-    else if (xc.isInstance(arg)) x.inspect(arg.asInstanceOf[X])
-    else y.inspect(arg.asInstanceOf[Y])
-  }
-}
-
-//@targetName("I$Union_") implicit def I$Union[T, U, V, W, X, Y, Z](implicit tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V], wr: => Inspect[W], xr: => Inspect[X], yr: => Inspect[Y], zr: => Inspect[Z], tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W], xev: ClassTag[X], yev: ClassTag[Y], zev: ClassTag[Z]): Inspect[T | U | V | W | X | Y | Z] = I$Union(tr, ur, vr, wr, xr, yr, zr)(tev, uev, vev, wev, xev, yev, zev)
-implicit def I$Union[T, U, V, W, X, Y, Z](tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V], wr: => Inspect[W], xr: => Inspect[X], yr: => Inspect[Y], zr: => Inspect[Z])(implicit tev: ClassTag[T], uev: ClassTag[U], vev: ClassTag[V], wev: ClassTag[W], xev: ClassTag[X], yev: ClassTag[Y], zev: ClassTag[Z]): Inspect[T | U | V | W | X | Y | Z] = {
-  lazy val t = tr
-  lazy val u = ur
-  lazy val v = vr
-  lazy val w = wr
-  lazy val x = xr
-  lazy val y = yr
-  lazy val z = zr
-  val tc = tev.runtimeClass
-  val uc = uev.runtimeClass
-  val vc = vev.runtimeClass
-  val wc = wev.runtimeClass
-  val xc = xev.runtimeClass
-  val yc = yev.runtimeClass
-  val zc = zev.runtimeClass
-  if (tc == uc || tc == vc || tc == wc || tc == xc || tc == yc || tc == zc || uc == vc || uc == wc || uc == xc || uc == yc || uc == zc || vc == wc || vc == xc || vc == yc || vc == zc || wc == xc || wc == yc || wc == zc || xc == yc || xc == zc || yc == zc) throw new IllegalArgumentException("T == U or T == V or T == W or T == X or T == Y or T == Z or U == V or U == W or U == X or U == Y or U == Z or V == W or V == X or V == Y or V == Z or W == X or W == Y or W == Z or X == Y or X == Z or Y == Z")
-  (arg) => {
-    if (tc.isInstance(arg)) t.inspect(arg.asInstanceOf[T])
-    else if (uc.isInstance(arg)) u.inspect(arg.asInstanceOf[U])
-    else if (vc.isInstance(arg)) v.inspect(arg.asInstanceOf[V])
-    else if (wc.isInstance(arg)) w.inspect(arg.asInstanceOf[W])
-    else if (xc.isInstance(arg)) x.inspect(arg.asInstanceOf[X])
-    else if (yc.isInstance(arg)) y.inspect(arg.asInstanceOf[Y])
-    else z.inspect(arg.asInstanceOf[Z])
+def I$Union[A, B, C, D, E, F](ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C], dr: => Inspect[D], er: => Inspect[E], fr: => Inspect[F])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F]): Inspect[A | B | C | D | E | F] = {
+  lazy val a = ar
+  lazy val b = br
+  lazy val c = cr
+  lazy val d = dr
+  lazy val e = er
+  lazy val f = fr
+  val ac = aev.runtimeClass
+  val bc = bev.runtimeClass
+  val cc = cev.runtimeClass
+  val dc = dev.runtimeClass
+  val ec = eev.runtimeClass
+  val fc = fev.runtimeClass
+  if (Set(ac, bc, cc, dc, ec, fc).size != 6) throw new IllegalArgumentException("duplication")
+  (rec, self, x) => {
+    if (ac.isInstance(self)) a.inspect(rec, self.asInstanceOf, x)
+    else if (bc.isInstance(self)) b.inspect(rec, self.asInstanceOf, x)
+    else if (cc.isInstance(self)) c.inspect(rec, self.asInstanceOf, x)
+    else if (dc.isInstance(self)) d.inspect(rec, self.asInstanceOf, x)
+    else if (ec.isInstance(self)) e.inspect(rec, self.asInstanceOf, x)
+    else f.inspect(rec, self.asInstanceOf, x)
   }
 }
 
 implicit def I$Product[T, R <: Product1[T]](implicit tr: => Inspect[T]): Inspect[R] = {
   lazy val t = tr
-  (x) => Seq(WithInspector(x._1)(t))
+  (rec, self, x) => rec(self._1)(t)
 }
 implicit def I$Product[T, U, R <: Product2[T, U]](implicit tr: => Inspect[T], ur: => Inspect[U]): Inspect[R] = {
   lazy val t = tr
   lazy val u = ur
-  (x) => Seq(WithInspector(x._1)(t), WithInspector(x._2)(u))
+  (rec, self, x) => rec(self._1)(t) orIn rec(self._2)(u)
 }
-implicit def I$Product[T, U, V, R <: Product3[T, U, V]](implicit tr: => Inspect[T], ur: => Inspect[U], vr: => Inspect[V]): Inspect[R] = {
-  lazy val t = tr
-  lazy val u = ur
-  lazy val v = vr
-  (x) => Seq(WithInspector(x._1)(t), WithInspector(x._2)(u), WithInspector(x._3)(v))
+implicit def I$Product[A, B, C, R <: Product3[A, B, C]](implicit ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C]): Inspect[R] = {
+  lazy val a = ar
+  lazy val b = br
+  lazy val c = cr
+  (rec, self, x) => rec(self._1)(a) orIn rec(self._2)(b) orIn rec(self._3)(c)
 }
-implicit def I$Produce[A, B, C, D, R <: Product4[A, B, C, D]](implicit ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C], dr: => Inspect[D]): Inspect[R] = {
+implicit def I$Product[A, B, C, D, R <: Product4[A, B, C, D]](implicit ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C], dr: => Inspect[D]): Inspect[R] = {
   lazy val a = ar
   lazy val b = br
   lazy val c = cr
   lazy val d = dr
-  (x) => Seq(WithInspector(x._1)(a), WithInspector(x._2)(b), WithInspector(x._3)(c), WithInspector(x._4)(d))
+  (rec, self, x) => rec(self._1)(a) orIn rec(self._2)(b) orIn rec(self._3)(c) orIn rec(self._4)(d)
+}
+implicit def I$Product[A, B, C, D, E, R <: Product5[A, B, C, D, E]](implicit ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C], dr: => Inspect[D], er: => Inspect[E]): Inspect[R] = {
+  lazy val a = ar
+  lazy val b = br
+  lazy val c = cr
+  lazy val d = dr
+  lazy val e = er
+  (rec, self, x) => rec(self._1)(a) orIn rec(self._2)(b) orIn rec(self._3)(c) orIn rec(self._4)(d) orIn rec(self._5)(e)
+}
+implicit def I$Product[A, B, C, D, E, F, R <: Product6[A, B, C, D, E, F]](implicit ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C], dr: => Inspect[D], er: => Inspect[E], fr: => Inspect[F]): Inspect[R] = {
+  lazy val a = ar
+  lazy val b = br
+  lazy val c = cr
+  lazy val d = dr
+  lazy val e = er
+  lazy val f = fr
+  (rec, self, x) => rec(self._1)(a) orIn rec(self._2)(b) orIn rec(self._3)(c) orIn rec(self._4)(d) orIn rec(self._5)(e) orIn rec(self._6)(f)
 }

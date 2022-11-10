@@ -34,31 +34,72 @@ trait Inspect[T] {
   // Some(Seq(...)): uncertain
   inline final def scanUncertain(x: T, resolver: Any => Any, v: Any): Option[Seq[WithInspector[_]]] = WithInspector(x)(this).scanUncertain(resolver, v)
 }
-/* // TODO: rewrite Inspect
+
+// None: contains
+// Some(Vector()): not contains
+// Some(Vector(...)): uncertain
+final case class VarWithInspector[T](x: Var[T])(implicit inspect: Internal[T])
+
+type InspectResult = Option[Vector[VarWithInspector[_]]]
+
+implicit class InspectResultOps(self: InspectResult) {
+  def orIn(other: InspectResult): InspectResult = for {
+    xs <- self
+    ys <- other
+  } yield xs ++ ys
+}
+
+object InspectResult {
+  val Contains: InspectResult = None
+  val NotContains: InspectResult = Some(Vector.empty)
+
+  def Maybe[T](x: Var[T])(implicit inspect: Internal[T]): InspectResult = Some(Vector(VarWithInspector(x)(inspect)))
+}
+
 trait Internaler {
-  def apply[T](x: T)(implicit inspect: Internal[T]): Boolean
+  def apply[T](x: VarOr[T])(implicit inspect: Internal[T]): InspectResult
 }
 
 trait Internal[T] {
-  def contains(rec: Internaler)(self: T, x: Any): Boolean
+  def contains(rec: Internaler)(self: T, x: Any): InspectResult
 }
 
 private val containsRecHistory = new Parameter[HashSet[Any]]
 
 implicit class InternalOps[T](self: Internal[T]) {
-  def runContains(walker: Any => Any, v: VarOr[T], x: Any): Boolean = {
-    if (v == x) return true
+  def runInspect(walker: Any => Any, v: VarOr[T], x: Any): InspectResult = {
+    if (v == x) return InspectResult.Contains
     val value: VarOr[T] = walker(v).asInstanceOf
-    if (value == x) return true
+    if (value == x) return InspectResult.Contains
     val history = containsRecHistory.get.getOrElse(HashSet.empty)
-    if (history.contains(value)) return false
-    if (value.isInstanceOf[Var[_]]) return false
+    if (history.contains(value)) return InspectResult.NotContains
+    if (value.isInstanceOf[Var[_]]) return InspectResult.Maybe(value.asInstanceOf[Var[T]])(self)
     containsRecHistory.callWith(history.incl(value)) {
-      self.contains(???)(value.asInstanceOf, x)
+      self.contains(new Internaler() {
+        override def apply[T](arg: VarOr[T])(implicit inspect: Internal[T]): InspectResult = inspect.runInspect(walker, arg, x)
+      })(value.asInstanceOf, x)
     }
   }
 }
-*/
+
+object Internal {
+
+  import shapeless3.deriving.*
+
+  given inspectSum[A] (using inst: K0.CoproductInstances[Internal, A]): Internal[A] with
+    def contains(rec: Internaler)(self: A, x: Any): InspectResult = inst.fold(self)(
+      [t] => (i: Internal[t], t0: t) => i.contains(rec)(t0, x)
+    )
+
+  given inspectProduct[A] (using inst: K0.ProductInstances[Internal, A]): Internal[A] with
+    def contains(rec: Internaler)(self: A, x: Any): InspectResult = inst.foldLeft(self)(InspectResult.NotContains)(
+      [t] => (acc: InspectResult, i: Internal[t], t0: t) =>
+        rec(t0)(i) orIn acc
+    )
+
+  inline def derived[A](using gen: K0.Generic[A]): Internal[A] =
+    gen.derive(inspectProduct, inspectSum)
+}
 
 object Inspect {
   // None: contains

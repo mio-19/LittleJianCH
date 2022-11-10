@@ -516,21 +516,21 @@ implicit class GoalNumRangeOps(self: GoalNumRange) {
 }
 
 final case class NumState(op2s: Vector[GoalNumOp2], ranges: Vector[GoalNumRange]) {
-  def insert(state: State, x: GoalNumOp2): IterableOnce[State] = copy(op2s = x +: op2s).onInsert(state)
+  inline def insert(state: State, x: GoalNumOp2): IterableOnce[State] = copy(op2s = x +: op2s).onInsert(state)
 
-  def insert(state: State, x: GoalNumRange): IterableOnce[State] = copy(ranges = x +: ranges).onInsert(state)
+  inline def insert(state: State, x: GoalNumRange): IterableOnce[State] = copy(ranges = x +: ranges).onInsert(state)
 
-  def onEq(eq: EqState): IterableOnce[(EqState, NumState)] = for {
+  inline def onEq(eq: EqState): IterableOnce[(EqState, NumState)] = for {
     (subst, ranges) <- NumState.preprocessAndRunRanges(eq.subst, ranges)
     (subst, op2s, newRanges) <- NumState.runOp2s(subst, op2s.map(_.walk(subst))).toSeq
     (subst, ranges) <- if(newRanges.nonEmpty) NumState.preprocessAndRunRanges(subst, ranges ++ newRanges) else Vector((subst, ranges))
   } yield (EqState(subst), NumState(op2s = op2s, ranges = ranges))
 
-  def onInsert(state: State): IterableOnce[State] = this.onEq(state.eq) map {
+  inline def onInsert(state: State): IterableOnce[State] = this.onEq(state.eq) map {
     case (eq, num) => state.copy(eq = eq, num = num)
   }
 
-  def print: String = op2s.map(_.toString).appendedAll(ranges.map(_.toString)).mkString(" && ")
+  inline def print: String = op2s.map(_.toString).appendedAll(ranges.map(_.toString)).mkString(" && ")
 }
 
 object NumState {

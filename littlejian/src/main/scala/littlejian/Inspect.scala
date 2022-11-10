@@ -24,37 +24,37 @@ type InspectResults = Option[Vector /*andIn*/ [Vector /*orIn*/ [VarWithInspect[_
 type AbsentStore = Vector /*and*/ [(Any /*x*/ , Vector /*orIn*/ [VarWithInspect[_]])]
 
 object AbsentStore {
-  def insert(self: AbsentStore, x: Any, ors: Vector /*orIn*/ [VarWithInspect[_]]): AbsentStore =
+  inline def insert(self: AbsentStore, x: Any, ors: Vector /*orIn*/ [VarWithInspect[_]]): AbsentStore =
     if (ors.isEmpty) self else (x, ors) +: self
 
-  def run0(walker: Any => Any, x: Any, ors: Vector /*orIn*/ [VarWithInspect[_]]): InspectResult = {
+  inline def run0(walker: Any => Any, x: Any, ors: Vector /*orIn*/ [VarWithInspect[_]]): InspectResult = {
     if (ors.isEmpty) throw new IllegalArgumentException()
     ors.map(_.runInspect(walker, x)).reduce(_.orIn(_))
   }
 
-  def run(walker: Any => Any, store: AbsentStore): Option[AbsentStore] = traverse(store.map {
+  inline def run(walker: Any => Any, store: AbsentStore): Option[AbsentStore] = traverse(store.map {
     case (x, clauses) => run0(walker, x, clauses) map { result => (x, result) }
   }).map(_.filter(_._2.nonEmpty))
 
-  def print0(x: Any, ors: Vector /*orIn*/ [VarWithInspect[_]]): String = ors.map(wi => s"${x}.absent(${wi.self})").mkString(" || ")
+  inline def print0(x: Any, ors: Vector /*orIn*/ [VarWithInspect[_]]): String = ors.map(wi => s"${x}.absent(${wi.self})").mkString(" || ")
 
-  def print(self: AbsentStore): String = if (self.isEmpty) "" else self.map({ case (x, clauses) => print0(x, clauses) }).mkString("\n")
+  inline def print(self: AbsentStore): String = if (self.isEmpty) "" else self.map({ case (x, clauses) => print0(x, clauses) }).mkString("\n")
 }
 
 implicit class InspectResultOps(self: InspectResult) {
-  def orIn(other: InspectResult): InspectResult = for {
+  inline def orIn(other: InspectResult): InspectResult = for {
     xs <- self
     ys <- other
   } yield xs ++ ys
 }
 
 object InspectResult {
-  def apply(x: Boolean): InspectResult = if (x) Contains else NotContains
+  inline def apply(x: Boolean): InspectResult = if (x) Contains else NotContains
 
   val Contains: InspectResult = None
   val NotContains: InspectResult = Some(Vector.empty)
 
-  def Maybe[T](x: Var[T])(implicit inspect: Inspect[T]): InspectResult = Some(Vector(VarWithInspect(x)(inspect)))
+  inline def Maybe[T](x: Var[T])(implicit inspect: Inspect[T]): InspectResult = Some(Vector(VarWithInspect(x)(inspect)))
 }
 
 trait Inspector {

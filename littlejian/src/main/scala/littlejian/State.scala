@@ -119,14 +119,14 @@ object PredNotTypeState {
 }
 
 final case class AbsentState(absents: AbsentStore) {
-  def insert(eq: EqState, goal: GoalAbsent[_]): Option[AbsentState] =
+  inline def insert(eq: EqState, goal: GoalAbsent[_]): Option[AbsentState] =
     goal.inspect.runInspect(eq.subst.walk, goal.x, goal.absent) map { ors =>
       AbsentState(AbsentStore.insert(absents, goal.absent, ors))
     }
 
-  def onEq(eq: EqState): Option[AbsentState] = AbsentStore.run(eq.subst.walk, absents).map(AbsentState(_))
+  inline def onEq(eq: EqState): Option[AbsentState] = AbsentStore.run(eq.subst.walk, absents).map(AbsentState(_))
 
-  def print: String = AbsentStore.print(absents)
+  inline def print: String = AbsentStore.print(absents)
 }
 
 object AbsentState {

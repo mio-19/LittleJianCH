@@ -7,6 +7,8 @@ import scala.collection.immutable.HashSet
 trait DeepWalk[T] {
   def walk(self: T): T
 }
+// DeepWalk instances must follow this property
+implicit def DeepWalkCovariance[T, U <: T](implicit x: DeepWalk[T]): DeepWalk[U] = x.asInstanceOf
 
 object DeepWalk {
 

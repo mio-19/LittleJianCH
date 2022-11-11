@@ -61,7 +61,7 @@ trait Inspector {
   def apply[T](x: VarOr[T])(implicit inspect: Inspect[T]): InspectResult
 }
 
-trait Inspect[T] {
+trait Inspect[-T] {
   def inspect(rec: Inspector, self: T, x: Any): InspectResult
 }
 

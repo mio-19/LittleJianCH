@@ -16,9 +16,6 @@ sealed class NotEqRequest[T](val x: VarOr[T], val y: VarOr[T], val unifier: Unif
   def relatedOnEq(v: Set[Var[_]]): Boolean = true
 }
 
-private def NotEqRequestUnchecked[T, U](x: T, y: U, unifier: Unify[_]): NotEqRequest[_] =
-  new NotEqRequest[T | U](x, y, unifier.asInstanceOf[Unify[T | U]])
-
 final case class NotEqElem[T](override val x: Var[T], override val y: VarOr[T], override val unifier: Unify[T]) extends NotEqRequest[T](x, y, unifier) {
   override def relatedOnEq(v: Set[Var[_]]): Boolean = {
     val vs: Set[Any] = v.asInstanceOf[Set[Any]]
@@ -26,11 +23,6 @@ final case class NotEqElem[T](override val x: Var[T], override val y: VarOr[T], 
   }
 
   override def toString: String = s"$x =/= $y"
-}
-
-object NotEqElem {
-  def unchecked(x: Var[_], y: Any, unifier: Unify[_]): NotEqElem[_] =
-    NotEqElem(x.asInstanceOf[Var[Any]], y.asInstanceOf[VarOr[Any]], unifier.asInstanceOf[Unify[Any]])
 }
 
 final case class NotEqState(clauses: Vector /*conj*/ [Vector[NotEqElem[_]] /*disj not eq*/ ]) {
@@ -51,12 +43,12 @@ object NotEqState {
   private def execCheck[T](eq: EqState, req: NotEqRequest[T], updatedVars: /*nullable*/ Set[Var[_]]): Option[Vector /*disj, empty means success*/ [NotEqElem[_]]] =
     if (updatedVars != null && !req.relatedOnEq(updatedVars)) Some(Vector(req.asInstanceOf[NotEqElem[_]]))
     else (eq.subst.walk(req.x), eq.subst.walk(req.y)) match {
-      case (x: Var[T], y: Var[T]) if x == y => None
-      case (x: Var[T], y) => Some(Vector(NotEqElem(x, y, req.unifier)))
-      case (x, y: Var[T]) => Some(Vector(NotEqElem(y, x, req.unifier)))
+      case (x: Var[_], y: Var[_]) if x == y => None
+      case (x: Var[_], y) => Some(Vector(NotEqElem(x.asInstanceOf, y, req.unifier)))
+      case (x, y: Var[_]) => Some(Vector(NotEqElem(y.asInstanceOf, x, req.unifier)))
       case (x, y) => req.unifier.unify(x, y).getSubstPatch(eq.subst) match {
         case None => Some(Vector.empty)
-        case Some(newSubst) => if (newSubst.isEmpty) None else Some(newSubst.map({ case (v, unifier, x) => NotEqElem.unchecked(v, x, unifier) }))
+        case Some(newSubst) => if (newSubst.isEmpty) None else Some(newSubst.map({ case (v, unifier, x) => NotEqElem(v.asInstanceOf, x.asInstanceOf, unifier) }))
       }
     }
 

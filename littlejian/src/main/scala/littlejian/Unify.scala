@@ -35,20 +35,22 @@ implicit class UnifyingOps[T](self: Unifying[T]) {
 }
 
 trait Unify[T] {
-  final implicit val thisUnifier: Unify[T] = this
+  def concreteUnify(self: T, other: T): Unifying[Unit]
+}
 
-  final def unify(self: VarOr[T], other: VarOr[T]): Unifying[Unit] = for {
+implicit class UnifyOps[T](instance: Unify[T]) {
+  final implicit val thisUnifier: Unify[T] = instance
+
+  def unify(self: VarOr[T], other: VarOr[T]): Unifying[Unit] = for {
     self <- Subst.walk(self)
     other <- Subst.walk(other)
     _ <- (self, other) match {
       case _ if self == other => Unifying.success(())
       case (self: Var[_], _) => Subst.addEntry(self.asInstanceOf[Var[T]], other)
       case (_, other: Var[_]) => Subst.addEntry(other.asInstanceOf[Var[T]], self)
-      case _ => concreteUnify(self.asInstanceOf[T], other.asInstanceOf[T])
+      case _ => instance.concreteUnify(self.asInstanceOf[T], other.asInstanceOf[T])
     }
   } yield ()
-
-  def concreteUnify(self: T, other: T): Unifying[Unit]
 }
 
 implicit class InfixUnify[T](self: VarOr[T])(implicit unifier: Unify[T]) {
@@ -56,7 +58,9 @@ implicit class InfixUnify[T](self: VarOr[T])(implicit unifier: Unify[T]) {
 }
 
 object Unify {
+
   import shapeless3.deriving.*
+
   given unifySum[A] (using inst: K0.CoproductInstances[Unify, A]): Unify[A] with
     def concreteUnify(x: A, y: A): Unifying[Unit] = inst.fold2(x, y)(Unifying.failure: Unifying[Unit])(
       [t] => (u: Unify[t], t0: t, t1: t) => u.unify(t0, t1)

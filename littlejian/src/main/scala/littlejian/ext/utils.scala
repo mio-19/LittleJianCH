@@ -152,7 +152,7 @@ implicit class VarOrPredOps[U](x: VarOr[U]) {
 implicit class VarOrCast[T](x: VarOr[T]) {
   def cast[U <: T](implicit u: ClassTag[U], unifier: Unify[U]): Rel[U] = for {
     result <- fresh[U]
-    _ <- x.isType[U]
+    _ <- x.isType[U] // TODO: this only works in unfair conj
     _ <- x match {
       case x: Var[_] => result === x.asInstanceOf[Var[U]]
       case x if u.runtimeClass.isInstance(x) => result === x.asInstanceOf[U]

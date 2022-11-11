@@ -4,7 +4,7 @@ import scala.annotation.tailrec
 
 type Trampoline[T] = TrampolineMore[T] | T
 
-final case class TrampolineMore[T](call: () => Trampoline[T])
+final case class TrampolineMore[+T](call: () => Trampoline[T])
 
 object Trampoline {
   @tailrec

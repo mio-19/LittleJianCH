@@ -35,7 +35,7 @@ private object DeprecatedStateOption {
 
 private final class StateVar[T](var value: T)
 
-final class StateOption[S, T](val fn: StateVar[S] => Trampoline[Option[T]]) {
+final class StateOption[S, +T](val fn: StateVar[S] => Trampoline[Option[T]]) {
   def run(state: S): Option[(S, T)] = {
     val stateVar = new StateVar(state)
     fn(stateVar).get.map { t => (stateVar.value, t) }

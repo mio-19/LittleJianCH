@@ -62,7 +62,7 @@ trait IntN[T <: IntN[T]] {
   }
 }
 
-final case class Int4(bit0: VarOr[Boolean], bit1: VarOr[Boolean], bit2: VarOr[Boolean], bit3: VarOr[Boolean]) extends IntN[Int4] derives Unify {
+final case class Int4(bit0: VarOr[Boolean], bit1: VarOr[Boolean], bit2: VarOr[Boolean], bit3: VarOr[Boolean]) extends IntN[Int4] derives Unify, DeepWalk {
   override def plus(that: Int4): GoalWith[(VarOr[Boolean], Int4)] = for {
     (c0, r0) <- add(bit0, that.bit0)
     (c1, r1) <- add(bit1, that.bit1, c0)
@@ -152,7 +152,7 @@ object Int4 {
 }
 
 // aka Byte
-final case class Int8(lo: Int4, hi: Int4) extends IntN[Int8] derives Unify {
+final case class Int8(lo: Int4, hi: Int4) extends IntN[Int8] derives Unify, DeepWalk {
   override def plus(that: Int8): GoalWith[(VarOr[Boolean], Int8)] = for {
     (c, r) <- lo.plus(that.lo)
     (c2, r2) <- hi.plus(that.hi, c)
@@ -207,7 +207,7 @@ implicit class VarOrInt8Ops(self: VarOr[Int8])(using u: Unify[Int8]) extends Var
   } yield result
 }
 
-final case class Int16(lo: Int8, hi: Int8) extends IntN[Int16] derives Unify {
+final case class Int16(lo: Int8, hi: Int8) extends IntN[Int16] derives Unify, DeepWalk {
   override def plus(that: Int16): GoalWith[(VarOr[Boolean], Int16)] = for {
     (c, r) <- lo.plus(that.lo)
     (c2, r2) <- hi.plus(that.hi, c)
@@ -258,7 +258,7 @@ object Int16 {
     else Int16(Int8.from(xs.take(8)), Int8.from(xs.drop(8)))
 }
 
-final case class Int32(lo: Int16, hi: Int16) extends IntN[Int32] derives Unify {
+final case class Int32(lo: Int16, hi: Int16) extends IntN[Int32] derives Unify, DeepWalk {
   override def plus(that: Int32): GoalWith[(VarOr[Boolean], Int32)] = for {
     (c, r) <- lo.plus(that.lo)
     (c2, r2) <- hi.plus(that.hi, c)
@@ -312,7 +312,7 @@ object Int32 {
     else Int32(Int16.from(xs.take(16)), Int16.from(xs.drop(16)))
 }
 
-final case class Int64(lo: Int32, hi: Int32) extends IntN[Int64] derives Unify {
+final case class Int64(lo: Int32, hi: Int32) extends IntN[Int64] derives Unify, DeepWalk {
   override def plus(that: Int64): GoalWith[(VarOr[Boolean], Int64)] = for {
     (c, r) <- lo.plus(that.lo)
     (c2, r2) <- hi.plus(that.hi, c)
@@ -377,7 +377,7 @@ object Int64 {
 
 type BinaryNatVal = LList[Boolean]
 
-final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LList[Boolean]]] derives Unify {
+final case class BinaryNat(xs: VarOr[LList[Boolean]]) extends Product1[VarOr[LList[Boolean]]] derives Unify, DeepWalk {
   def succ: Rel[BinaryNatVal] = conde(
     xs.eqEmpty >> LList(true),
     for {
@@ -494,7 +494,7 @@ implicit class VarOrBinaryNatOps(self: VarOr[BinaryNat])(using u: Unify[BinaryNa
   } yield result
 }
 
-final case class BinaryInt(sign: VarOr[Boolean], x: BinaryNat) extends Product2[VarOr[Boolean], BinaryNat] derives Unify
+final case class BinaryInt(sign: VarOr[Boolean], x: BinaryNat) extends Product2[VarOr[Boolean], BinaryNat] derives Unify, DeepWalk
 
 object BinaryInt {
   def from(n: BinaryNat): BinaryInt = BinaryInt(true, n)

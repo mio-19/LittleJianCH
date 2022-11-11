@@ -58,4 +58,10 @@ trait AtomDeepWalk[T] extends DeepWalk[T] {
   final override def walk(self: T): T = self
 }
 
-implicit object W$AnyVal extends AtomDeepWalk[AnyVal]
+implicit object W$Unit extends AtomDeepWalk[Unit]
+
+implicit object W$Boolean extends AtomDeepWalk[Boolean]
+
+implicit object W$Short extends AtomDeepWalk[Short]
+
+implicit object W$String extends AtomDeepWalk[String]

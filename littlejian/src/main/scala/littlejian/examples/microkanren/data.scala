@@ -18,11 +18,13 @@ def cons(a: VarOr[MKData], b: VarOr[MKData]): MKPair = new MKPair(a, b)
 
 implicit val U$MKPair: Unify[MKPair] = implicitly[Unify[Pair[MKData, MKData]]].asInstanceOf[Unify[MKPair]]
 
+type mkMap = Mapping[MKData, MKData]
+
 sealed trait MKMap
 
 final class MKMapEmpty extends MappingEmpty[MKData, MKData] with MKMap
 
-final class MKMapCons(key: VarOr[MKData], value: VarOr[MKData], tail: VarOr[MKMap]) extends MappingNonEmpty[MKData, MKData](key, value, tail.asInstanceOf) with MKMap
+final class MKMapCons(key: VarOr[MKData], value: VarOr[MKData], tail: VarOr[mkMap]) extends MappingNonEmpty[MKData, MKData](key, value, tail.asInstanceOf) with MKMap
 
 implicit val U$MKMap: Unify[MKMap] = implicitly[Unify[Mapping[MKData, MKData]]].asInstanceOf
 
@@ -33,9 +35,9 @@ enum MKThunkKind derives Unify :
 
 val U$MKThunkKind: Unify[MKThunkKind] = implicitly[Unify[MKThunkKind]]
 
-final case class MKThunk(kind: VarOr[MKThunkKind], xs: VarOr[List[VarOr[MKData]]]) extends Product2[VarOr[MKThunkKind], VarOr[List[VarOr[MKData]]]]
+final case class MKThunk(kind: VarOr[MKThunkKind], xs: VarOr[Vector[VarOr[MKData]]]) derives Unify
 
-implicit val U$MKThunk: Unify[MKThunk] = U$Product(U$VarOr(U$MKThunkKind), U$VarOr(U$List(U$VarOr(U$MKData))))
+val U$MKThunk: Unify[MKThunk] = implicitly[Unify[MKThunk]]
 
 sealed trait MKGoal derives Unify
 
@@ -54,7 +56,5 @@ final case class MKRec(x: VarOr[MKData], exp: VarOr[MKData]) derives Unify
 final case class MKReg(x: VarOr[MKData]) derives Unify
 
 def list(xs: VarOr[MKData]*): VarOr[MKData] = xs.foldRight[VarOr[MKData]](())(cons)
-
-def microo(x: VarOr[MKData], env: VarOr[MKMap]): Rel[MKData] = ???
 
 def MKMapo(x: VarOr[MKData]): Rel[MKMap] = x.cast[MKMap]

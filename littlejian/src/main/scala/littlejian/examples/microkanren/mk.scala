@@ -6,7 +6,7 @@ import littlejian.ext._
 
 // https://github.com/jasonhemann/micro-in-mini/blob/master/micro-in-mini.rkt
 
-def applyEnvo(env: VarOr[MKMap], y: VarOr[MKData]): Rel[MKData] = for {
+def applyEnvo(env: VarOr[mkMap], y: VarOr[MKData]): Rel[MKData] = for {
   (key, value, tail) <- env.is(MKMapCons(_, _, _))
   result <- compare(key, y) {
     conde(
@@ -27,7 +27,7 @@ def bindo(xs: VarOr[MKData], g: VarOr[MKData]): Rel[MKData] = conde(
   begin(xs === (), ()),
   for {
     _ <- xs.is(MKThunk(_, _))
-  } yield MKThunk(MKThunkKind.Bind, List(xs, g)),
+  } yield MKThunk(MKThunkKind.Bind, Vector(xs, g)),
   for {
     (a, d) <- xs.is(MKPair(_, _))
     (aa, da) <- a.is(MKPair(_, _))
@@ -40,3 +40,6 @@ def bindo(xs: VarOr[MKData], g: VarOr[MKData]): Rel[MKData] = conde(
 def mpluso(xs: VarOr[MKData], ys: VarOr[MKData]): Rel[MKData] = ???
 
 def runGoalo(g: VarOr[MKData], s: VarOr[MKData], c: VarOr[MKData]): Rel[MKData] = ???
+
+
+def microo(x: VarOr[MKData], env: VarOr[mkMap]): Rel[MKData] = ???

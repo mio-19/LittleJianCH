@@ -53,3 +53,9 @@ implicit class DeepWalkInfix[T](x: T)(implicit walker: DeepWalk[T]) {
     walker.walk(x)
   }
 }
+
+trait AtomDeepWalk[T] extends DeepWalk[T] {
+  final override def walk(self: T): T = self
+}
+
+implicit object W$AnyVal extends AtomDeepWalk[AnyVal]

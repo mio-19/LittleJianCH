@@ -196,35 +196,33 @@ def U$Union[A, B, C, D, E, F, G, H, I](ar: => Unify[A], br: => Unify[B], cr: => 
   }
 }
 
-trait EqualUnify[T] extends Unify[T] {
-  override def concreteUnify(self: T, other: T): Unifying[Unit] = Unifying.guard(self == other)
+trait AtomUnify[T] extends Unify[T] {
+  final override def concreteUnify(self: T, other: T): Unifying[Unit] = Unifying.guard(self == other)
 }
 
-def equalUnifier[T]: Unify[T] = new EqualUnify[T] {}
+implicit object U$Symbol extends AtomUnify[Symbol]
 
-implicit object U$Symbol extends EqualUnify[Symbol]
+implicit object U$String extends AtomUnify[String]
 
-implicit object U$String extends EqualUnify[String]
+implicit object U$BigDecimal extends AtomUnify[BigDecimal]
 
-implicit object U$BigDecimal extends EqualUnify[BigDecimal]
+implicit object U$Unit extends AtomUnify[Unit]
 
-implicit object U$Unit extends EqualUnify[Unit]
+implicit object U$Byte extends AtomUnify[Byte]
 
-implicit object U$Byte extends EqualUnify[Byte]
+implicit object U$Short extends AtomUnify[Short]
 
-implicit object U$Short extends EqualUnify[Short]
+implicit object U$Int extends AtomUnify[Int]
 
-implicit object U$Int extends EqualUnify[Int]
+implicit object U$Long extends AtomUnify[Long]
 
-implicit object U$Long extends EqualUnify[Long]
+implicit object U$Float extends AtomUnify[Float]
 
-implicit object U$Float extends EqualUnify[Float]
+implicit object U$Double extends AtomUnify[Double]
 
-implicit object U$Double extends EqualUnify[Double]
+implicit object U$Integer extends AtomUnify[Integer]
 
-implicit object U$Integer extends EqualUnify[Integer]
-
-implicit object U$Boolean extends EqualUnify[Boolean]
+implicit object U$Boolean extends AtomUnify[Boolean]
 
 def U$Product[T, R <: Product1[T]](implicit tr: => Unify[T]): Unify[R] = {
   lazy val t = tr

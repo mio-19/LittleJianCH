@@ -25,17 +25,12 @@ final class MKMapCons(key: VarOr[MKData], value: VarOr[MKData], tail: VarOr[MKMa
 
 implicit val U$MKMap: Unify[MKMap] = implicitly[Unify[Mapping[MKData, MKData]]].asInstanceOf
 
-sealed trait MKThunkKind
+enum MKThunkKind derives Unify:
+  case Top
+  case Bind
+  case MPlus
 
-object MKThunkKind {
-  case object Top extends MKThunkKind
-
-  case object Bind extends MKThunkKind
-
-  case object MPlus extends MKThunkKind
-}
-
-implicit val U$MKThunkKind: Unify[MKThunkKind] = equalUnifier
+val U$MKThunkKind: Unify[MKThunkKind] = implicitly[Unify[MKThunkKind]]
 
 final case class MKThunk(kind: VarOr[MKThunkKind], xs: VarOr[List[VarOr[MKData]]]) extends Product2[VarOr[MKThunkKind], VarOr[List[VarOr[MKData]]]]
 

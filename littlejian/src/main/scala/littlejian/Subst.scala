@@ -16,7 +16,6 @@ object SubstPatch {
 }
 
 implicit final class SubstOps(self: Subst) {
-  // TODO: handle loop
   @tailrec
   def walk[T](x: VarOr[T]): VarOr[T] = x match {
     case v: Var[_] => self.get(v) match {

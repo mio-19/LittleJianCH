@@ -33,9 +33,6 @@ implicit final class SubstOps(self: Subst) {
 
   def addEntry[T](v: Var[T], x: VarOr[T])(implicit unifier: Unify[T]): Subst =
     if (self.contains(v)) throw new IllegalArgumentException("duplicate add") else self.updated(v, x)
-
-  def addEntryUnchecked(v: Var[_], x: Any)(unifier: Unify[_]): Subst =
-    if (self.contains(v)) throw new IllegalArgumentException("duplicate add") else self.updated(v, x)
 }
 
 object Subst {
@@ -60,6 +57,6 @@ object Subst {
   }
 
   def patch(subst: Subst, p: SubstPatch): Subst = p.foldLeft(subst) {
-    case (subst, (v, unifier, x)) => subst.addEntryUnchecked(v, x)(unifier)
+    case (subst, (v, unifier, x)) => subst.addEntry(v.asInstanceOf, x.asInstanceOf)(unifier)
   }
 }

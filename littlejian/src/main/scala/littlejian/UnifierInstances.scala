@@ -12,7 +12,7 @@ def U$Union[T, U](tr: => Unify[T], ur: => Unify[U])(implicit tev: ClassTag[T], u
   lazy val u = ur
   val tc = tev.runtimeClass
   val uc = uev.runtimeClass
-  if (tc == uc) throw new IllegalArgumentException("T == U")
+  if (Set(tc, uc).size != 2) throw new IllegalArgumentException("duplicate")
   (x, y) => {
     if (tc.isInstance(x) && tc.isInstance(y)) t.unify(x.asInstanceOf[T], y.asInstanceOf[T])
     else if (uc.isInstance(x) && uc.isInstance(y)) u.unify(x.asInstanceOf[U], y.asInstanceOf[U])
@@ -28,7 +28,7 @@ def U$Union[T, U, V](tr: => Unify[T], ur: => Unify[U], vr: => Unify[V])(implicit
   val tc = tev.runtimeClass
   val uc = uev.runtimeClass
   val vc = vev.runtimeClass
-  if (tc == uc || tc == vc || uc == vc) throw new IllegalArgumentException("T == U || T == V || U == V")
+  if (Set(tc, uc, vc).size != 3) throw new IllegalArgumentException("duplicate")
   (x, y) => {
     if (tc.isInstance(x) && tc.isInstance(y)) t.unify(x.asInstanceOf[T], y.asInstanceOf[T])
     else if (uc.isInstance(x) && uc.isInstance(y)) u.unify(x.asInstanceOf[U], y.asInstanceOf[U])
@@ -46,7 +46,7 @@ def U$Union[T, U, V, W](tr: => Unify[T], ur: => Unify[U], vr: => Unify[V], wr: =
   val uc = uev.runtimeClass
   val vc = vev.runtimeClass
   val wc = wev.runtimeClass
-  if (tc == uc || tc == vc || tc == wc || uc == vc || uc == wc || vc == wc) throw new IllegalArgumentException("T == U || T == V || T == W || U == V || U == W || V == W")
+  if (Set(tc, uc, vc, wc).size != 4) throw new IllegalArgumentException("duplicate")
   (x, y) => {
     if (tc.isInstance(x) && tc.isInstance(y)) t.unify(x.asInstanceOf[T], y.asInstanceOf[T])
     else if (uc.isInstance(x) && uc.isInstance(y)) u.unify(x.asInstanceOf[U], y.asInstanceOf[U])
@@ -67,7 +67,7 @@ def U$Union[A, B, C, D, E](ar: => Unify[A], br: => Unify[B], cr: => Unify[C], dr
   val cc = cev.runtimeClass
   val dc = dev.runtimeClass
   val ec = eev.runtimeClass
-  if (ac == bc || ac == cc || ac == dc || ac == ec || bc == cc || bc == dc || bc == ec || cc == dc || cc == ec || dc == ec) throw new IllegalArgumentException("A == B || A == C || A == D || A == E || B == C || B == D || B == E || C == D || C == E || D == E")
+  if (Set(ac, bc, cc, dc, ec).size != 5) throw new IllegalArgumentException("duplicate")
   (x, y) => {
     if (ac.isInstance(x) && ac.isInstance(y)) a.unify(x.asInstanceOf[A], y.asInstanceOf[A])
     else if (bc.isInstance(x) && bc.isInstance(y)) b.unify(x.asInstanceOf[B], y.asInstanceOf[B])
@@ -91,7 +91,7 @@ def U$Union[A, B, C, D, E, F](ar: => Unify[A], br: => Unify[B], cr: => Unify[C],
   val dc = dev.runtimeClass
   val ec = eev.runtimeClass
   val fc = fev.runtimeClass
-  if (ac == bc || ac == cc || ac == dc || ac == ec || ac == fc || bc == cc || bc == dc || bc == ec || bc == fc || cc == dc || cc == ec || cc == fc || dc == ec || dc == fc || ec == fc) throw new IllegalArgumentException("A == B || A == C || A == D || A == E || A == F || B == C || B == D || B == E || B == F || C == D || C == E || C == F || D == E || D == F || E == F")
+  if (Set(ac, bc, cc, dc, ec, fc).size != 6) throw new IllegalArgumentException("duplicate")
   (x, y) => {
     if (ac.isInstance(x) && ac.isInstance(y)) a.unify(x.asInstanceOf[A], y.asInstanceOf[A])
     else if (bc.isInstance(x) && bc.isInstance(y)) b.unify(x.asInstanceOf[B], y.asInstanceOf[B])
@@ -118,7 +118,7 @@ def U$Union[A, B, C, D, E, F, G](ar: => Unify[A], br: => Unify[B], cr: => Unify[
   val ec = eev.runtimeClass
   val fc = fev.runtimeClass
   val gc = gev.runtimeClass
-  if (ac == bc || ac == cc || ac == dc || ac == ec || ac == fc || ac == gc || bc == cc || bc == dc || bc == ec || bc == fc || bc == gc || cc == dc || cc == ec || cc == fc || cc == gc || dc == ec || dc == fc || dc == gc || ec == fc || ec == gc || fc == gc) throw new IllegalArgumentException("A == B || A == C || A == D || A == E || A == F || A == G || B == C || B == D || B == E || B == F || B == G || C == D || C == E || C == F || C == G || D == E || D == F || D == G || E == F || E == G || F == G")
+  if (Set(ac, bc, cc, dc, ec, fc, gc).size != 7) throw new IllegalArgumentException("duplicate")
   (x, y) => {
     if (ac.isInstance(x) && ac.isInstance(y)) a.unify(x.asInstanceOf[A], y.asInstanceOf[A])
     else if (bc.isInstance(x) && bc.isInstance(y)) b.unify(x.asInstanceOf[B], y.asInstanceOf[B])
@@ -148,7 +148,7 @@ def U$Union[A, B, C, D, E, F, G, H](ar: => Unify[A], br: => Unify[B], cr: => Uni
   val fc = fev.runtimeClass
   val gc = gev.runtimeClass
   val hc = hev.runtimeClass
-  if (ac == bc || ac == cc || ac == dc || ac == ec || ac == fc || ac == gc || ac == hc || bc == cc || bc == dc || bc == ec || bc == fc || bc == gc || bc == hc || cc == dc || cc == ec || cc == fc || cc == gc || cc == hc || dc == ec || dc == fc || dc == gc || dc == hc || ec == fc || ec == gc || ec == hc || fc == gc || fc == hc || gc == hc) throw new IllegalArgumentException("A == B || A == C || A == D || A == E || A == F || A == G || A == H || B == C || B == D || B == E || B == F || B == G || B == H || C == D || C == E || C == F || C == G || C == H || D == E || D == F || D == G || D == H || E == F || E == G || E == H || F == G || F == H || G == H")
+  if (Set(ac, bc, cc, dc, ec, fc, gc, hc).size != 8) throw new IllegalArgumentException("duplicate")
   (x, y) => {
     if (ac.isInstance(x) && ac.isInstance(y)) a.unify(x.asInstanceOf[A], y.asInstanceOf[A])
     else if (bc.isInstance(x) && bc.isInstance(y)) b.unify(x.asInstanceOf[B], y.asInstanceOf[B])
@@ -181,7 +181,7 @@ def U$Union[A, B, C, D, E, F, G, H, I](ar: => Unify[A], br: => Unify[B], cr: => 
   val gc = gev.runtimeClass
   val hc = hev.runtimeClass
   val ic = iev.runtimeClass
-  if (ac == bc || ac == cc || ac == dc || ac == ec || ac == fc || ac == gc || ac == hc || ac == ic || bc == cc || bc == dc || bc == ec || bc == fc || bc == gc || bc == hc || bc == ic || cc == dc || cc == ec || cc == fc || cc == gc || cc == hc || cc == ic || dc == ec || dc == fc || dc == gc || dc == hc || dc == ic || ec == fc || ec == gc || ec == hc || ec == ic || fc == gc || fc == hc || fc == ic || gc == hc || gc == ic || hc == ic) throw new IllegalArgumentException("A == B || A == C || A == D || A == E || A == F || A == G || A == H || A == I || B == C || B == D || B == E || B == F || B == G || B == H || B == I || C == D || C == E || C == F || C == G || C == H || C == I || D == E || D == F || D == G || D == H || D == I || E == F || E == G || E == H || E == I || F == G || F == H || F == I || G == H || G == I || H == I")
+  if (Set(ac, bc, cc, dc, ec, fc, gc, hc, ic).size != 9) throw new IllegalArgumentException("duplicate")
   (x, y) => {
     if (ac.isInstance(x) && ac.isInstance(y)) a.unify(x.asInstanceOf[A], y.asInstanceOf[A])
     else if (bc.isInstance(x) && bc.isInstance(y)) b.unify(x.asInstanceOf[B], y.asInstanceOf[B])

@@ -19,13 +19,14 @@ def cons(a: VarOr[MKData], b: VarOr[MKData]): MKPair = new MKPair(a, b)
 implicit val U$MKPair: Unify[MKPair] = implicitly[Unify[Pair[MKData, MKData]]].asInstanceOf[Unify[MKPair]]
 
 sealed trait MKMap
+
 final class MKMapEmpty extends MappingEmpty[MKData, MKData] with MKMap
 
 final class MKMapCons(key: VarOr[MKData], value: VarOr[MKData], tail: VarOr[MKMap]) extends MappingNonEmpty[MKData, MKData](key, value, tail.asInstanceOf) with MKMap
 
 implicit val U$MKMap: Unify[MKMap] = implicitly[Unify[Mapping[MKData, MKData]]].asInstanceOf
 
-enum MKThunkKind derives Unify:
+enum MKThunkKind derives Unify :
   case Top
   case Bind
   case MPlus

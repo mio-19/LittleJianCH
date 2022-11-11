@@ -12,4 +12,13 @@ implicit class CaseOnTypeOps[T, R](x: VarOr[T]) {
     } yield r,
     x.isNotType[U] >> isNotType
   )
+
+  def caseOnType[U <: T, A](maker: VarOr[A] => U)(isType: VarOr[A] => Rel[R])(isNotType: Rel[R])
+                           (implicit t: ClassTag[U], u: Unify[U], r: Unify[R], uu: Unify[T]) = conde(
+    for {
+      a <- x.is[A](maker.asInstanceOf[VarOr[A] => T])
+      r <- isType(a)
+    } yield r,
+    x.isNotType[U] >> isNotType
+  )
 }

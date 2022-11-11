@@ -5,9 +5,7 @@ import littlejian.data._
 import littlejian.ext.*
 import scala.annotation.tailrec
 
-type SExpAtom = String | BigDecimal
-
-type SExp = Cons | Unit | SExpAtom
+type SExp = Cons | Unit | String | BigDecimal
 
 implicit val U$SExp: Unify[SExp] = U$Union[Cons, Unit, String, BigDecimal]
 

@@ -44,4 +44,8 @@ def runGoalo(g: VarOr[MKData], s: VarOr[MKData], c: VarOr[MKData]): Rel[MKData] 
 
 def microo(x: VarOr[MKData], env: VarOr[mkMap]): Rel[MKData] = ???
 
-def walko(x: VarOr[MKData], subst: VarOr[mkMap]): Rel[MKData] = ???
+def walko(x: VarOr[MKData], subst: VarOr[mkMap]): Rel[MKData] = x.caseOnType(MKVar(_)) { v =>
+  ???
+} {
+  ???
+}

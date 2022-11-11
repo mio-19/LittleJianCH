@@ -34,7 +34,7 @@ implicit class UnifyingOps[T](self: Unifying[T]) {
   inline def >>[U](that: Unifying[U]): Unifying[U] = self >> that
 }
 
-trait Unify[T] {
+trait Unify[-T] {
   def concreteUnify(self: T, other: T): Unifying[Unit]
 }
 

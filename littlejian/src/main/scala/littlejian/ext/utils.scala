@@ -21,7 +21,7 @@ implicit class VarOrBooleanOps(x: VarOr[Boolean]) {
     begin(x === true, true),
     begin(x === false, y)
   )
-  
+
   def elim[T](whenTrue: Rel[T])(whenFalse: Rel[T])(implicit unifier: Unify[T]): Rel[T] = conde(
     begin(x === true, whenTrue),
     begin(x === false, whenFalse)
@@ -115,15 +115,18 @@ implicit class EqRelOps[T](x: Rel[T]) {
     y0 <- y
     _ <- x0 === y0
   } yield ()
+
   inline def =/=(y: Rel[T])(implicit unifier: Unify[T]): Goal = for {
     x0 <- x
     y0 <- y
     _ <- x0 =/= y0
   } yield ()
+
   inline def ===(y: VarOr[T])(implicit unifier: Unify[T]): Goal = for {
     x0 <- x
     _ <- x0 === y
   } yield ()
+
   inline def =/=(y: VarOr[T])(implicit unifier: Unify[T]): Goal = for {
     x0 <- x
     _ <- x0 =/= y
@@ -150,10 +153,10 @@ implicit class VarOrCast[T](x: VarOr[T]) {
   def cast[U <: T](implicit u: ClassTag[U], unifier: Unify[U]): Rel[U] = for {
     result <- fresh[U]
     _ <- x.isType[U]
-    _ <- try {
-      result === x.asInstanceOf[VarOr[U]]
-    } catch {
-      case _: ClassCastException => Goal.failure
+    _ <- x match {
+      case x: Var[_] => result === x.asInstanceOf[Var[U]]
+      case x if u.runtimeClass.isInstance(x) => result === x.asInstanceOf[U]
+      case _ => Goal.failure
     }
   } yield result
 }

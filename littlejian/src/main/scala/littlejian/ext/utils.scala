@@ -138,16 +138,16 @@ inline def compare[T, U](x: VarOr[T], y: VarOr[T])(equals: => Rel[U])(notEquals:
   begin(x === y, equals), begin(x =/= y, notEquals)
 )
 
-implicit class VarOrPredOps[T](x: VarOr[T]) {
-  inline def isType[T](implicit t: ClassTag[T]): Goal = GoalPredType(t, x)
+implicit class VarOrPredOps[U](x: VarOr[U]) {
+  inline def isType[T <: U](implicit t: ClassTag[T]): Goal = GoalPredType(t, x)
 
-  inline def isNotType[T](implicit t: ClassTag[T]): Goal = GoalPredNotType(t, x)
+  inline def isNotType[T <: U](implicit t: ClassTag[T]): Goal = GoalPredNotType(t, x)
 
-  inline def absent(absent: Any)(implicit inspect: Inspect[T]): Goal = GoalAbsent(x, absent, inspect)
+  inline def absent(absent: Any)(implicit inspect: Inspect[U]): Goal = GoalAbsent(x, absent, inspect)
 }
 
 implicit class VarOrCast[T](x: VarOr[T]) {
-  def cast[U](implicit u: ClassTag[U], unifier: Unify[U]): Rel[U] = for {
+  def cast[U <: T](implicit u: ClassTag[U], unifier: Unify[U]): Rel[U] = for {
     result <- fresh[U]
     _ <- x.isType[U]
     _ <- try {

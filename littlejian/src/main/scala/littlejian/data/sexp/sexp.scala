@@ -11,7 +11,7 @@ type SExp = Cons | Unit | SExpAtom
 
 implicit val U$SExp: Unify[SExp] = U$Union[Cons, Unit, String, BigDecimal]
 
-implicit val I$SExp: Inspect[SExp] = I$Union(I$Cons, I$Unit, I$String, I$BigDecimal)
+implicit val I$SExp: Inspect[SExp] = I$Union[Cons, Unit, String, BigDecimal]
 
 object SExp {
   def parse(s: String): SExp = {

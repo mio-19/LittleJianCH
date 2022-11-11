@@ -16,6 +16,7 @@ object SubstPatch {
 }
 
 implicit final class SubstOps(self: Subst) {
+  // TODO: handle loop
   @tailrec
   def walk[T](x: VarOr[T]): VarOr[T] = x match {
     case v: Var[_] => self.get(v) match {
@@ -26,7 +27,7 @@ implicit final class SubstOps(self: Subst) {
   }
 
   def getOption[T](x: Var[T]): Option[VarOr[T]] = self.get(x) match {
-    case Some(v) => Some(walk(v.asInstanceOf[VarOr[T]]))
+    case Some(v) => Some(walk(v.asInstanceOf))
     case None => None
   }
 

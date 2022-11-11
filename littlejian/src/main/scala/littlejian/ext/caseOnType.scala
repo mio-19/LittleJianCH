@@ -5,5 +5,11 @@ import littlejian._
 import scala.reflect.ClassTag
 
 implicit class CaseOnTypeOps[T](x: VarOr[T]) {
-  def caseOnType[U <: T, R](isType: VarOr[U] => Rel[R])(isNotType: Rel[R])(implicit t: ClassTag[U]) = ???
+  def caseOnType[U <: T, R](isType: VarOr[U] => Rel[R])(isNotType: Rel[R])(implicit t: ClassTag[U], u: Unify[U], r: Unify[R]) = conde(
+    for {
+      v <- x.cast[U]
+      r <- isType(v)
+    } yield r,
+    x.isNotType[U] >> isNotType
+  )
 }

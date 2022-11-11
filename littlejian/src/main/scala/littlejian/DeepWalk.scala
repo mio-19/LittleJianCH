@@ -3,10 +3,12 @@ package littlejian
 import littlejian.utils.Parameter
 
 import scala.collection.immutable.HashSet
+import scala.reflect.ClassTag
 
 trait DeepWalk[T] {
   def walk(self: T): T
 }
+
 // DeepWalk instances must follow this property
 implicit def DeepWalkCovariance[T, U <: T](implicit x: DeepWalk[T]): DeepWalk[U] = x.asInstanceOf
 
@@ -67,3 +69,47 @@ implicit object W$Boolean extends AtomDeepWalk[Boolean]
 implicit object W$Short extends AtomDeepWalk[Short]
 
 implicit object W$String extends AtomDeepWalk[String]
+
+def W$Union[T, U](tr: => DeepWalk[T], ur: => DeepWalk[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): DeepWalk[T | U] = {
+  lazy val t = tr
+  lazy val u = ur
+  val tc = tev.runtimeClass
+  val uc = uev.runtimeClass
+  if (Set(tc, uc).size != 2) throw new IllegalArgumentException("duplication")
+  (self) => {
+    if (tc.isInstance(self)) t.walk(self.asInstanceOf)
+    else u.walk(self.asInstanceOf)
+  }
+}
+
+def W$Union[A, B, C](ar: => DeepWalk[A], br: => DeepWalk[B], cr: => DeepWalk[C])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C]): DeepWalk[A | B | C] = {
+  lazy val a = ar
+  lazy val b = br
+  lazy val c = cr
+  val ac = aev.runtimeClass
+  val bc = bev.runtimeClass
+  val cc = cev.runtimeClass
+  if (Set(ac, bc, cc).size != 3) throw new IllegalArgumentException("duplication")
+  (self) => {
+    if (ac.isInstance(self)) a.walk(self.asInstanceOf)
+    else if (bc.isInstance(self)) b.walk(self.asInstanceOf)
+    else c.walk(self.asInstanceOf)
+  }
+}
+def W$Union[A, B, C, D](ar: => DeepWalk[A], br: => DeepWalk[B], cr: => DeepWalk[C], dr: => DeepWalk[D])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D]): DeepWalk[A | B | C | D] = {
+  lazy val a = ar
+  lazy val b = br
+  lazy val c = cr
+  lazy val d = dr
+  val ac = aev.runtimeClass
+  val bc = bev.runtimeClass
+  val cc = cev.runtimeClass
+  val dc = dev.runtimeClass
+  if (Set(ac, bc, cc, dc).size != 4) throw new IllegalArgumentException("duplication")
+  (self) => {
+    if (ac.isInstance(self)) a.walk(self.asInstanceOf)
+    else if (bc.isInstance(self)) b.walk(self.asInstanceOf)
+    else if (cc.isInstance(self)) c.walk(self.asInstanceOf)
+    else d.walk(self.asInstanceOf)
+  }
+}

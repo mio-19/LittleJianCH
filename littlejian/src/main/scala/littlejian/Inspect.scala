@@ -130,6 +130,7 @@ implicit object I$Integer extends AtomInspect[Integer]
 
 implicit object I$Unit extends AtomInspect[Unit]
 
+@targetName("I$Union_") def I$Union[T, U](implicit tr: => Inspect[T], ur: => Inspect[U], tev: ClassTag[T], uev: ClassTag[U]): Inspect[T | U] = I$Union(tr, ur)(tev, uev)
 def I$Union[T, U](tr: => Inspect[T], ur: => Inspect[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Inspect[T | U] = {
   lazy val t = tr
   lazy val u = ur
@@ -142,6 +143,7 @@ def I$Union[T, U](tr: => Inspect[T], ur: => Inspect[U])(implicit tev: ClassTag[T
   }
 }
 
+@targetName("I$Union_") def I$Union[A, B, C](implicit ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C], aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C]): Inspect[A | B | C] = I$Union(ar, br, cr)(aev, bev, cev)
 def I$Union[A, B, C](ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C]): Inspect[A | B | C] = {
   lazy val a = ar
   lazy val b = br
@@ -157,6 +159,7 @@ def I$Union[A, B, C](ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C])(im
   }
 }
 
+@targetName("I$Union_") def I$Union[A, B, C, D](implicit ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C], dr: => Inspect[D], aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D]): Inspect[A | B | C | D] = I$Union(ar, br, cr, dr)(aev, bev, cev, dev)
 def I$Union[A, B, C, D](ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C], dr: => Inspect[D])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D]): Inspect[A | B | C | D] = {
   lazy val a = ar
   lazy val b = br
@@ -175,6 +178,7 @@ def I$Union[A, B, C, D](ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C],
   }
 }
 
+@targetName("I$Union_") def I$Union[A, B, C, D, E](implicit ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C], dr: => Inspect[D], er: => Inspect[E], aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E]): Inspect[A | B | C | D | E] = I$Union(ar, br, cr, dr, er)(aev, bev, cev, dev, eev)
 def I$Union[A, B, C, D, E](ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C], dr: => Inspect[D], er: => Inspect[E])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E]): Inspect[A | B | C | D | E] = {
   lazy val a = ar
   lazy val b = br
@@ -195,6 +199,7 @@ def I$Union[A, B, C, D, E](ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[
     else e.inspect(rec, self.asInstanceOf, x)
   }
 }
+@targetName("I$Union_") def I$Union[A, B, C, D, E, F](ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C], dr: => Inspect[D], er: => Inspect[E], fr: => Inspect[F], aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F]): Inspect[A | B | C | D | E | F] = I$Union(ar, br, cr, dr, er, fr)(aev, bev, cev, dev, eev, fev)
 def I$Union[A, B, C, D, E, F](ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C], dr: => Inspect[D], er: => Inspect[E], fr: => Inspect[F])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F]): Inspect[A | B | C | D | E | F] = {
   lazy val a = ar
   lazy val b = br

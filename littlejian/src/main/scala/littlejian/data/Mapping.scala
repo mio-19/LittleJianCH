@@ -3,7 +3,7 @@ package littlejian.data
 import littlejian._
 import littlejian.ext._
 
-sealed trait Mapping[K, V] derives Unify {
+sealed trait Mapping[K, V] derives Unify, Inspect, DeepWalk {
   def get(k: VarOr[K])(implicit uK: Unify[K], uV: Unify[V]): Rel[V]
 
   def getOption(k: VarOr[K])(implicit uK: Unify[K], uV: Unify[V]): Rel[Option[VarOr[V]]]
@@ -39,7 +39,7 @@ implicit class VarOrMappingOps[K, V](self: VarOr[Mapping[K, V]]) {
   )
 }
 
-case class MappingEmpty[K, V]() extends Mapping[K, V] derives Unify {
+case class MappingEmpty[K, V]() extends Mapping[K, V] derives Unify, Inspect, DeepWalk {
   override def get(k: VarOr[K])(implicit uK: Unify[K], uV: Unify[V]): Rel[V] = Rel.failure
 
   override def getOption(k: VarOr[K])(implicit uK: Unify[K], uV: Unify[V]): Rel[Option[VarOr[V]]] = None
@@ -47,7 +47,7 @@ case class MappingEmpty[K, V]() extends Mapping[K, V] derives Unify {
   override def notContains(k: VarOr[K])(implicit uK: Unify[K], uV: Unify[V]): Goal = Goal.success
 }
 
-case class MappingNonEmpty[K, V](key: VarOr[K], value: VarOr[V], next: VarOr[Mapping[K, V]]) extends Mapping[K, V] derives Unify {
+case class MappingNonEmpty[K, V](key: VarOr[K], value: VarOr[V], next: VarOr[Mapping[K, V]]) extends Mapping[K, V] derives Unify, Inspect, DeepWalk {
   override def get(k: VarOr[K])(implicit uK: Unify[K], uV: Unify[V]): Rel[V] = compare(key, k) {
     value
   } {

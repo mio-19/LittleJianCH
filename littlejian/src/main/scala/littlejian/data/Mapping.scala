@@ -17,8 +17,8 @@ implicit class VarOrMappingOps[K, V](self: VarOr[Mapping[K, V]]) {
   private def force(implicit uK: Unify[K], uV: Unify[V]): GoalWith[Mapping[K, V]] = GoalWith(k => conde(
     (self === MappingEmpty()) && k(MappingEmpty()),
     for {
-      (key, value, next) <- self.is[K, V, Mapping[K, V]](MappingNonEmpty(_, _, _))
-      _ <- k(MappingNonEmpty(key, value, next))
+      x <- self.as(MappingNonEmpty[K, V](_, _, _))
+      _ <- k(x)
     } yield ()
   ))
 

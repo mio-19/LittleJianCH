@@ -38,7 +38,12 @@ def bindo(xs: VarOr[MKData], g: VarOr[MKData]): Rel[MKData] = conde(
   } yield result
 )
 
-def mpluso(xs: VarOr[MKData], ys: VarOr[MKData]): Rel[MKData] = ???
+def mpluso(xs: VarOr[MKData], ys: VarOr[MKData]): Rel[MKData] = conde(
+  (xs === ()) >> ys,
+  for {
+    xs <- xs.as(MKThunk(_, _))
+  } yield ???
+)
 
 def runGoalo(goal: VarOr[MKData], subst: VarOr[mkMap], c: VarOr[MKData]): Rel[MKData] = conde(
   for {

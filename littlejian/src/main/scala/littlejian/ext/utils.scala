@@ -161,6 +161,38 @@ implicit class VarOrCast[T](x: VarOr[T]) {
   } yield result
 }
 
+implicit class VarOrAsByCons[T](x: VarOr[T]) {
+  def as[A, R <: T](cons: VarOr[A] => R)(implicit unify: Unify[T]): GoalWith[R] = for {
+    a <- fresh[A]
+    result = cons(a)
+    _ <- x === result
+  } yield result
+
+  def as[A, B, R <: T](cons: (VarOr[A], VarOr[B]) => R)(implicit unify: Unify[T]): GoalWith[R] = for {
+    a <- fresh[A]
+    b <- fresh[B]
+    result = cons(a, b)
+    _ <- x === result
+  } yield result
+
+  def as[A, B, C, R <: T](cons: (VarOr[A], VarOr[B], VarOr[C]) => R)(implicit unify: Unify[T]): GoalWith[R] = for {
+    a <- fresh[A]
+    b <- fresh[B]
+    c <- fresh[C]
+    result = cons(a, b, c)
+    _ <- x === result
+  } yield result
+
+  def as[A, B, C, D, R <: T](cons: (VarOr[A], VarOr[B], VarOr[C], VarOr[D]) => R)(implicit unify: Unify[T]): GoalWith[R] = for {
+    a <- fresh[A]
+    b <- fresh[B]
+    c <- fresh[C]
+    d <- fresh[D]
+    result = cons(a, b, c, d)
+    _ <- x === result
+  } yield result
+}
+
 implicit class VarOrForceApply[T](x: VarOr[T]) {
   @deprecated
   def forceApply[U](f: T => U)(implicit unifier: Unify[U]): Rel[U] = for {
@@ -182,7 +214,7 @@ inline def conda(xs: => (Goal, Goal)*): Goal = GoalDelay(GoalDisjA(xs))
 inline def condu(xs: => (Goal, Goal)*): Goal = GoalDelay(GoalDisjU(xs))
 
 @inline def conde[T](xs: => Rel[T]*)(implicit unifier: Unify[T]): Rel[T] = {
-  (result: VarOr[T]) => GoalDelay(GoalDisj(xs.map(_ (result))))
+  (result: VarOr[T]) => GoalDelay(GoalDisj(xs.map(_(result))))
 }
 
 // print((1 to 10).map(x=>s"inline def begin[T](${(1 to x).map(i=>s"p${i.toString}: =>GoalWith[_], ").reduce(_+_)}r: GoalWith[T]): GoalWith[T] = begin(${(1 to x).map(i=>s"p${i.toString}.goal, ").reduce(_+_)}r.goal) >> r\n").reduce(_+_))

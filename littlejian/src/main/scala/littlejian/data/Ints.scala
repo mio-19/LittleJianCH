@@ -130,9 +130,7 @@ abstract class VarOrIntNOps[T <: IntN[T]](self: VarOr[T], unifier: Unify[T]) {
 implicit class VarOrInt4Ops(self: VarOr[Int4]) extends VarOrIntNOps[Int4](self, implicitly[Unify[Int4]]) {
   override protected def consThis(x: VarOr[Int4]): VarOrInt4Ops = VarOrInt4Ops(x)
 
-  override def force: GoalWith[Int4] = for {
-    x <- self.is[Boolean, Boolean, Boolean, Boolean](Int4(_, _, _, _))
-  } yield Int4(x._1, x._2, x._3, x._4)
+  override def force: GoalWith[Int4] = self.as(Int4(_, _, _, _))
 }
 
 object Int4 {
@@ -467,25 +465,25 @@ object BinaryNat {
 
 implicit class VarOrBinaryNatOps(self: VarOr[BinaryNat])(using u: Unify[BinaryNat]) {
   def succ: Rel[BinaryNat] = for {
-    xs <- self.is[BinaryNatVal](BinaryNat(_))
-    result <- BinaryNat(xs).succ
+    xs <- self.as(BinaryNat(_))
+    result <- xs.succ
   } yield BinaryNat(result)
 
   def prev: Rel[BinaryNat] = for {
-    xs <- self.is[BinaryNatVal](BinaryNat(_))
-    result <- BinaryNat(xs).prev0
+    xs <- self.as(BinaryNat(_))
+    result <- xs.prev0
   } yield BinaryNat(result)
 
   def +(other: VarOr[BinaryNat]): Rel[BinaryNat] = for {
-    xs <- self.is[BinaryNatVal](BinaryNat(_))
+    xs <- self.as(BinaryNat(_))
     ys <- other.is[BinaryNatVal](BinaryNat(_))
-    result <- BinaryNat(xs).plus(ys)
+    result <- xs.plus(ys)
   } yield BinaryNat(result)
 
   def *(other: VarOr[BinaryNat]): Rel[BinaryNat] = for {
-    xs <- self.is[BinaryNatVal](BinaryNat(_))
+    xs <- self.as(BinaryNat(_))
     ys <- other.is[BinaryNatVal](BinaryNat(_))
-    result <- BinaryNat(xs).mul(ys)
+    result <- xs.mul(ys)
   } yield BinaryNat(result)
 
   def -(other: VarOr[BinaryNat]): Rel[BinaryNat] = for {

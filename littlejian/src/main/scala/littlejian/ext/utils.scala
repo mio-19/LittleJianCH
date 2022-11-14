@@ -162,20 +162,20 @@ implicit class VarOrCast[T](x: VarOr[T]) {
 }
 
 implicit class VarOrAsByCons[T](x: VarOr[T]) {
-  def as[A, R <: T](cons: VarOr[A] => R)(implicit unify: Unify[T]): GoalWith[R] = for {
+  def as[A, R <: T](cons: (_ >: VarOr[A]) => R)(implicit unify: Unify[T]): GoalWith[R] = for {
     a <- fresh[A]
     result = cons(a)
     _ <- x === result
   } yield result
 
-  def as[A, B, R <: T](cons: (VarOr[A], VarOr[B]) => R)(implicit unify: Unify[T]): GoalWith[R] = for {
+  def as[A, B, R <: T](cons: (_ >: VarOr[A], _ >: VarOr[B]) => R)(implicit unify: Unify[T]): GoalWith[R] = for {
     a <- fresh[A]
     b <- fresh[B]
     result = cons(a, b)
     _ <- x === result
   } yield result
 
-  def as[A, B, C, R <: T](cons: (VarOr[A], VarOr[B], VarOr[C]) => R)(implicit unify: Unify[T]): GoalWith[R] = for {
+  def as[A, B, C, R <: T](cons: (_ >: VarOr[A], _ >: VarOr[B], _ >: VarOr[C]) => R)(implicit unify: Unify[T]): GoalWith[R] = for {
     a <- fresh[A]
     b <- fresh[B]
     c <- fresh[C]
@@ -183,7 +183,7 @@ implicit class VarOrAsByCons[T](x: VarOr[T]) {
     _ <- x === result
   } yield result
 
-  def as[A, B, C, D, R <: T](cons: (VarOr[A], VarOr[B], VarOr[C], VarOr[D]) => R)(implicit unify: Unify[T]): GoalWith[R] = for {
+  def as[A, B, C, D, R <: T](cons: (_ >: VarOr[A], _ >: VarOr[B], _ >: VarOr[C], _ >: VarOr[D]) => R)(implicit unify: Unify[T]): GoalWith[R] = for {
     a <- fresh[A]
     b <- fresh[B]
     c <- fresh[C]

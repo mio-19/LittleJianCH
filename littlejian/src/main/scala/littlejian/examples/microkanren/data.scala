@@ -1,12 +1,14 @@
 package littlejian.examples.microkanren
 
-import littlejian._
-import littlejian.data._
-import littlejian.ext._
+import littlejian.*
+import littlejian.data.*
+import littlejian.ext.*
 
-type MKData = (Unit | String | MKPair) | (MKVar | MKGoal | MKThunk | MKMap) | (MKRec | MKReg)
+import scala.language.implicitConversions
 
-implicit val U$MKData: Unify[MKData] = U$Union[Unit, String, MKPair, MKVar, MKGoal, MKThunk, MKMap, MKRec, MKReg]
+type MKData = (Boolean | Unit | String | MKPair) | (MKVar | MKGoal | MKThunk | MKMap) | (MKRec | MKReg)
+
+implicit val U$MKData: Unify[MKData] = U$Union[Boolean, Unit, String, MKPair, MKVar, MKGoal, MKThunk, MKMap, MKRec, MKReg]
 
 final case class MKVar(id: VarOr[Nat]) extends Product1[VarOr[Nat]]
 
@@ -25,6 +27,9 @@ sealed trait MKMap
 final class MKMapEmpty extends MappingEmpty[MKData, MKData] with MKMap
 
 final class MKMapCons(key: VarOr[MKData], value: VarOr[MKData], tail: VarOr[mkMap]) extends MappingNonEmpty[MKData, MKData](key, value, tail.asInstanceOf) with MKMap
+
+implicit def VarOrMKMap2VarOrmkMap(x: VarOr[MKMap]): VarOr[mkMap] = x.asInstanceOf
+implicit def VarOrmkMap2VarOrMKMap(x: VarOr[mkMap]): VarOr[MKMap] = x.asInstanceOf
 
 implicit val U$MKMap: Unify[MKMap] = implicitly[Unify[Mapping[MKData, MKData]]].asInstanceOf
 

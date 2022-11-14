@@ -196,6 +196,44 @@ def U$Union[A, B, C, D, E, F, G, H, I](ar: => Unify[A], br: => Unify[B], cr: => 
   }
 }
 
+@targetName("U$Union_") def U$Union[A, B, C, D, E, F, G, H, I, J](implicit ar: => Unify[A], br: => Unify[B], cr: => Unify[C], dr: => Unify[D], er: => Unify[E], fr: => Unify[F], gr: => Unify[G], hr: => Unify[H], ir: => Unify[I], jr: => Unify[J], aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F], gev: ClassTag[G], hev: ClassTag[H], iev: ClassTag[I], jev: ClassTag[J]): Unify[A | B | C | D | E | F | G | H | I | J] = U$Union(ar, br, cr, dr, er, fr, gr, hr, ir, jr)(aev, bev, cev, dev, eev, fev, gev, hev, iev, jev)
+def U$Union[A, B, C, D, E, F, G, H, I, J](ar: => Unify[A], br: => Unify[B], cr: => Unify[C], dr: => Unify[D], er: => Unify[E], fr: => Unify[F], gr: => Unify[G], hr: => Unify[H], ir: => Unify[I], jr: => Unify[J])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F], gev: ClassTag[G], hev: ClassTag[H], iev: ClassTag[I], jev: ClassTag[J]): Unify[A | B | C | D | E | F | G | H | I | J] = {
+  lazy val a = ar
+  lazy val b = br
+  lazy val c = cr
+  lazy val d = dr
+  lazy val e = er
+  lazy val f = fr
+  lazy val g = gr
+  lazy val h = hr
+  lazy val i = ir
+  lazy val j = jr
+  val ac = aev.runtimeClass
+  val bc = bev.runtimeClass
+  val cc = cev.runtimeClass
+  val dc = dev.runtimeClass
+  val ec = eev.runtimeClass
+  val fc = fev.runtimeClass
+  val gc = gev.runtimeClass
+  val hc = hev.runtimeClass
+  val ic = iev.runtimeClass
+  val jc = jev.runtimeClass
+  if (Set(ac, bc, cc, dc, ec, fc, gc, hc, ic, jc).size != 10) throw new IllegalArgumentException("duplicate")
+  (x, y) => {
+    if (ac.isInstance(x) && ac.isInstance(y)) a.unify(x.asInstanceOf[A], y.asInstanceOf[A])
+    else if (bc.isInstance(x) && bc.isInstance(y)) b.unify(x.asInstanceOf[B], y.asInstanceOf[B])
+    else if (cc.isInstance(x) && cc.isInstance(y)) c.unify(x.asInstanceOf[C], y.asInstanceOf[C])
+    else if (dc.isInstance(x) && dc.isInstance(y)) d.unify(x.asInstanceOf[D], y.asInstanceOf[D])
+    else if (ec.isInstance(x) && ec.isInstance(y)) e.unify(x.asInstanceOf[E], y.asInstanceOf[E])
+    else if (fc.isInstance(x) && fc.isInstance(y)) f.unify(x.asInstanceOf[F], y.asInstanceOf[F])
+    else if (gc.isInstance(x) && gc.isInstance(y)) g.unify(x.asInstanceOf[G], y.asInstanceOf[G])
+    else if (hc.isInstance(x) && hc.isInstance(y)) h.unify(x.asInstanceOf[H], y.asInstanceOf[H])
+    else if (ic.isInstance(x) && ic.isInstance(y)) i.unify(x.asInstanceOf[I], y.asInstanceOf[I])
+    else if (jc.isInstance(x) && jc.isInstance(y)) j.unify(x.asInstanceOf[J], y.asInstanceOf[J])
+    else Unifying.failure
+  }
+}
+
 trait AtomUnify[T] extends Unify[T] {
   final override def concreteUnify(self: T, other: T): Unifying[Unit] = Unifying.guard(self == other)
 }

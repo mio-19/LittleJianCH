@@ -31,6 +31,7 @@ def bindo(xs: VarOr[MKData], g: VarOr[MKData]): Rel[MKData] = conde(
   for {
     (a, d) <- xs.is(MKPair(_, _))
     (aa, da) <- a.is(MKPair(_, _))
+    aa <- aa.cast[MKMap]
     xs1 <- runGoalo(g, aa, da)
     xs2 <- bindo(d, g)
     result <- mpluso(xs1, xs2)
@@ -39,7 +40,20 @@ def bindo(xs: VarOr[MKData], g: VarOr[MKData]): Rel[MKData] = conde(
 
 def mpluso(xs: VarOr[MKData], ys: VarOr[MKData]): Rel[MKData] = ???
 
-def runGoalo(g: VarOr[MKData], s: VarOr[MKData], c: VarOr[MKData]): Rel[MKData] = ???
+def runGoalo(goal: VarOr[MKData], subst: VarOr[mkMap], c: VarOr[MKData]): Rel[MKData] = conde(
+  for {
+    (u, v, env) <- goal.is[MKData, MKData, MKData](list("==-g", _, _, _))
+    env <- env.cast[MKMap]
+    u0 <- microo(u, env)
+    v0 <- microo(v, env)
+    subst0 <- unifyo(u0, v0, subst)
+    result <- subst0.elim {
+      list()
+    } { subst0 =>
+      cons(subst0.asInstanceOf, c)
+    }
+  } yield result
+)
 
 
 def microo(x: VarOr[MKData], env: VarOr[mkMap]): Rel[MKData] = ???
@@ -49,3 +63,5 @@ def walko(x: VarOr[MKData], subst: VarOr[mkMap]): Rel[MKData] = x.caseOnType(MKV
 } {
   x
 }
+
+def unifyo(x: VarOr[MKData], y: VarOr[MKData], subst: VarOr[mkMap]): Rel[Option[VarOr[mkMap]]] = ???

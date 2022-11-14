@@ -26,8 +26,8 @@ def applyEnvo(env: VarOr[mkMap], y: VarOr[MKData]): Rel[MKData] = for {
 def bindo(xs: VarOr[MKData], g: VarOr[MKData]): Rel[MKData] = conde(
   begin(xs === (), ()),
   for {
-    _ <- xs.is(MKThunk(_, _))
-  } yield MKThunk(MKThunkKind.Bind, Vector(xs, g)),
+    _ <- xs.cast[MKThunk]
+  } yield MKThunk.Bind(xs, g),
   for {
     (a, d) <- xs.is(MKPair(_, _))
     (aa, da) <- a.is(MKPair(_, _))
@@ -41,7 +41,7 @@ def bindo(xs: VarOr[MKData], g: VarOr[MKData]): Rel[MKData] = conde(
 def mpluso(xs: VarOr[MKData], ys: VarOr[MKData]): Rel[MKData] = conde(
   (xs === ()) >> ys,
   for {
-    xs <- xs.as(MKThunk(_, _))
+    xs <- xs.cast[MKThunk]
   } yield ???
 )
 

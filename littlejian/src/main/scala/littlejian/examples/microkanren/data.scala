@@ -33,16 +33,13 @@ implicit def VarOrmkMap2VarOrMKMap(x: VarOr[mkMap]): VarOr[MKMap] = x.asInstance
 
 implicit val U$MKMap: Unify[MKMap] = implicitly[Unify[Mapping[MKData, MKData]]].asInstanceOf
 
-enum MKThunkKind derives Unify :
-  case Top
-  case Bind
-  case MPlus
-
-val U$MKThunkKind: Unify[MKThunkKind] = implicitly[Unify[MKThunkKind]]
-
-final case class MKThunk(kind: VarOr[MKThunkKind], xs: VarOr[Vector[VarOr[MKData]]]) derives Unify
-
 val U$MKThunk: Unify[MKThunk] = implicitly[Unify[MKThunk]]
+
+enum MKThunk derives Unify:
+  case Top(env: VarOr[mkMap], rand: VarOr[MKData], s: VarOr[MKData], c: VarOr[MKData])
+  case Bind(xs: VarOr[MKData], g: VarOr[MKData])
+  case MPlus(xs: VarOr[MKData], ys: VarOr[MKData])
+
 
 sealed trait MKGoal derives Unify
 

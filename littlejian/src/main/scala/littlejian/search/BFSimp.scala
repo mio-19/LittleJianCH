@@ -16,6 +16,7 @@ final class SizedStream[T](val bucket: Vector[T], val thunk: Option[() => SizedS
     }
     new SizedStream(bucket ++ rest.bucket, rest.thunk)
   }
+
   @tailrec def forceN(n: Int): SizedStream[T] = {
     if (n <= 0) this
     else force1.forceN(n - 1)
@@ -50,6 +51,8 @@ final class SizedStream[T](val bucket: Vector[T], val thunk: Option[() => SizedS
 
 object SizedStream {
   def empty[T]: SizedStream[T] = new SizedStream(Vector.empty, None)
+
+  def build[T](xs: Vector[T], thunk: => SizedStream[T]): SizedStream[T] = new SizedStream[T](xs, Some(() => thunk))
 
   def apply[T](xs: T*): SizedStream[T] = new SizedStream[T](xs.toVector, None)
 

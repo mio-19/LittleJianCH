@@ -21,7 +21,7 @@ private class Xyh(depthFirst: Boolean) extends Searcher {
     case GoalReadSubst(g) => pursue(state, g(state.eq.subst))
     case goal: GoalDelay => Vector(Task(state, Vector(goal.get)))
     case GoalDisjU(gs) =>
-      if(gs.isEmpty)
+      if (gs.isEmpty)
         Vector.empty
       else {
         val ((cond, body) +: rest) = gs
@@ -31,7 +31,7 @@ private class Xyh(depthFirst: Boolean) extends Searcher {
         }
       }
     case GoalDisjA(gs) =>
-      if(gs.isEmpty)
+      if (gs.isEmpty)
         Vector.empty
       else {
         val ((cond, body) +: rest) = gs
@@ -44,6 +44,7 @@ private class Xyh(depthFirst: Boolean) extends Searcher {
 
   final case class Task(state: State, goals: Vector[Goal]) {
     def insertLast(x: Goal): Task = Task(state, goals :+ x)
+
     def step: Option[Vector[Task]] = if (goals.isEmpty)
       None
     else Some {

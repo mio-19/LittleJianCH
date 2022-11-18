@@ -12,7 +12,7 @@ implicit object XyhBreadthFirst extends Xyh(false)
 private class Xyh(depthFirst: Boolean) extends Searcher {
   def pursue(state: State, goal: Goal): Vector[Task] = goal match {
     case goal: GoalBasic => goal.execute(state).toVector.map(Task(_))
-    case GoalDisj(xs) => xs.map(g => Task(state, Vector(goal, g)))
+    case GoalDisj(xs) => xs.map(g => Task(state, Vector(g)))
     case GoalConj(xs) => if (xs.isEmpty) Vector(Task(state)) else {
       val g = xs.head
       val gs = xs.tail

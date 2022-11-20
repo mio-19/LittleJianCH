@@ -7,7 +7,7 @@ import scala.annotation.tailrec
 
 type SExp = Cons | Unit | String | BigDecimal | SExpVector
 
-final case class SExpVector(v: Vector[VarOr[SExp]]) derives Unify, SExpVectorInspect {
+final case class SExpVector(v: Vector[VarOr[SExp]]) derives Unify, Inspect {
   override def toString: String = s"#(${v.mkString(" ")})"
 }
 

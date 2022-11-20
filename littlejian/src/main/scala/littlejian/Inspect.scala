@@ -130,6 +130,10 @@ implicit object I$Integer extends AtomInspect[Integer]
 
 implicit object I$Unit extends AtomInspect[Unit]
 
+implicit def I$Seq[T](implicit i: Inspect[T]): Inspect[Seq[T]] = ???
+
+implicit def I$Vector[T](implicit i: Inspect[T]): Inspect[Vector[T]] = I$Seq.asInstanceOf
+
 @targetName("I$Union_") def I$Union[T, U](implicit tr: => Inspect[T], ur: => Inspect[U], tev: ClassTag[T], uev: ClassTag[U]): Inspect[T | U] = I$Union(tr, ur)(tev, uev)
 def I$Union[T, U](tr: => Inspect[T], ur: => Inspect[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Inspect[T | U] = {
   lazy val t = tr

@@ -5,11 +5,15 @@ import littlejian.data._
 import littlejian.ext.*
 import scala.annotation.tailrec
 
-type SExp = Cons | Unit | String | BigDecimal
+type SExp = Cons | Unit | String | BigDecimal | SExpVector
 
-implicit val U$SExp: Unify[SExp] = U$Union[Cons, Unit, String, BigDecimal]
+final case class SExpVector(v: Vector[VarOr[SExp]]) derives Unify, SExpVectorInspect {
+  override def toString: String = s"#(${v.mkString(" ")})"
+}
 
-implicit val I$SExp: Inspect[SExp] = I$Union[Cons, Unit, String, BigDecimal]
+implicit val U$SExp: Unify[SExp] = U$Union[Cons, Unit, String, BigDecimal, SExpVector]
+
+implicit val I$SExp: Inspect[SExp] = I$Union[Cons, Unit, String, BigDecimal, SExpVector]
 
 object SExp {
   def parse(s: String): SExp = {

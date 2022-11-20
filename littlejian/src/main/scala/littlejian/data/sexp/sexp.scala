@@ -11,6 +11,8 @@ final case class SExpVector(v: Vector[VarOr[SExp]]) derives Unify, Inspect {
   override def toString: String = s"#(${v.mkString(" ")})"
 }
 
+implicit def sExpVector(v: Vector[_ <: VarOr[SExp]]): SExpVector = SExpVector(v)
+
 implicit val U$SExp: Unify[SExp] = U$Union[Cons, Unit, String, BigDecimal, SExpVector]
 
 implicit val I$SExp: Inspect[SExp] = I$Union[Cons, Unit, String, BigDecimal, SExpVector]
@@ -77,6 +79,7 @@ object SExp {
           (s4, list("unquote", x))
         }
       }
+      case '#' => ??? // Vector
     }
   }
 }

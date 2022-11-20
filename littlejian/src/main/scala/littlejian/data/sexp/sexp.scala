@@ -37,20 +37,21 @@ object SExp {
     val c = s2.head
     val s3 = s2.tail
     c match {
-      case '(' => {
+      case begin@('(' | '[') => {
+        val end = if (begin == '(') ')' else ']'
         val xs = Seq.newBuilder[SExp]
         var rest = s3
-        while (!(rest.isEmpty || rest.head == ')' || rest.head == '.')) {
+        while (!(rest.isEmpty || rest.head == end || rest.head == '.')) {
           val (s4, x) = doParse(rest)
           xs += x
           rest = s4.strip()
         }
         rest.head match {
-          case ')' => (rest.tail, convertList(xs.result()))
+          case c if c == end => (rest.tail, convertList(xs.result()))
           case '.' => {
             val (s4, x) = doParse(rest.tail)
             val s5 = s4.strip()
-            if (s5.head != ')') throw new Exception("Invalid SExp")
+            if (s5.head != end) throw new Exception("Invalid SExp")
             (s5.tail, convertListDot(xs.result(), x))
           }
         }

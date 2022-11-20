@@ -60,6 +60,19 @@ object SExp {
         val (s4, x) = doParse(s3)
         (s4, list("quote", x))
       }
+      case '`' => {
+        val (s4, x) = doParse(s3)
+        (s4, list("quasiquote", x))
+      }
+      case ',' => {
+        if (s3.head == '@') {
+          val (s4, x) = doParse(s3.tail)
+          (s4, list("unquote-splicing", x))
+        } else {
+          val (s4, x) = doParse(s3)
+          (s4, list("unquote", x))
+        }
+      }
     }
   }
 }

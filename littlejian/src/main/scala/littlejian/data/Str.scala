@@ -20,9 +20,9 @@ final case class Str(xs: LList[Character]) derives Unify, Inspect, DeepWalk {
 }
 
 object Str {
-  def from(xs: LList[Character]): Str = Str(xs)
+  def from(xs: LList[Character]): Str = new Str(xs)
 
-  def from(xs: String): Str = Str(LList.from(xs.toList.map(Character.from)))
+  def apply(xs: String): Str = new Str(LList.from(xs.toList.map(Character.from)))
 }
 
-implicit def StrPack(x: String): Str = Str.from(x)
+implicit def StrPack(x: String): Str = Str(x)

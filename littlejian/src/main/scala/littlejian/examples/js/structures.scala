@@ -120,6 +120,6 @@ def jbrk(label: VarOr[JSData], value: VarOr[JSData]): JSData = LList("break", la
 def jfin(tryExp: VarOr[JSData], finExp: VarOr[JSData]): JSData = LList("finally", tryExp, finExp)
 def jcatch(label: VarOr[JSData], tryExp: VarOr[JSData], catchVar: VarOr[JSData], catchExp: VarOr[JSData]): JSData = LList("catch", label, tryExp, catchVar, catchExp)
 def jrawstr(str: VarOr[JSData]): JSData = LList("string", str)
-def jstr(str: String): JSData = LList("string", Str.from(str))
+def jstr(str: String): JSData = LList("string", Str(str))
 def jdelta(fun: VarOr[JSData], vals: VarOr[JSData]): JSData = LList("delta", fun, vals)
 def jpass(): JSData = LList("pass")

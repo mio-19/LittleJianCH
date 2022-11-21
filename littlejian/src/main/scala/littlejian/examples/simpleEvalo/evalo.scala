@@ -3,7 +3,6 @@ package littlejian.examples.simpleEvalo
 import littlejian._
 import littlejian.ext._
 import littlejian.data.sexp._
-import littlejian.data._
 
 // translated from section 4 of "miniKanren, Live and Untagged Quine Generation via Relational Interpreters (Programming Pearl)"
 
@@ -34,14 +33,14 @@ def evalExpo(exp: VarOr[SExp], env: VarOr[SExp]): Rel[SExp] = conde(
   for {
     v <- exp.is[SExp](list("quote", _))
     _ <- notInEnvo(env, "quote")
-    _ <- v.absent(Str("closure"))
+    _ <- v.absent("closure")
   } yield v,
   for {
     as <- exp.is[SExp](cons("list", _))
     _ <- notInEnvo(env, "list")
     result <- mapo(evalExpo(_, env), as)
   } yield result,
-  exp.isType[Str] >> lookupo(env, exp),
+  exp.isType[String] >> lookupo(env, exp),
   for {
     (rator, rand) <- exp.is(cons)
     f <- evalExpo(rator, env)
@@ -51,7 +50,7 @@ def evalExpo(exp: VarOr[SExp], env: VarOr[SExp]): Rel[SExp] = conde(
   } yield result,
   for {
     (x, body) <- exp.is[SExp, SExp]((x, body) => list("lambda", list(x), body))
-    _ <- x.isType[Str]
+    _ <- x.isType[String]
     _ <- notInEnvo(env, "lambda")
   } yield list("closure", x, body, env)
 )

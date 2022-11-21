@@ -5,7 +5,7 @@ import littlejian.data._
 import littlejian.ext.*
 import scala.annotation.tailrec
 
-type SExp = Cons | Unit | Str | BigDecimal | SExpVector
+type SExp = Cons | Unit | String | BigDecimal | SExpVector
 
 final case class SExpVector(v: Vector[VarOr[SExp]]) derives Unify, Inspect {
   override def toString: String = s"#(${v.mkString(" ")})"
@@ -13,9 +13,9 @@ final case class SExpVector(v: Vector[VarOr[SExp]]) derives Unify, Inspect {
 
 implicit def sExpVector(v: Vector[_ <: VarOr[SExp]]): SExpVector = SExpVector(v)
 
-implicit val U$SExp: Unify[SExp] = U$Union[Cons, Unit, Str, BigDecimal, SExpVector]
+implicit val U$SExp: Unify[SExp] = U$Union[Cons, Unit, String, BigDecimal, SExpVector]
 
-implicit val I$SExp: Inspect[SExp] = I$Union[Cons, Unit, Str, BigDecimal, SExpVector]
+implicit val I$SExp: Inspect[SExp] = I$Union[Cons, Unit, String, BigDecimal, SExpVector]
 
 object SExp {
   def parse(s: String): SExp = {
@@ -36,7 +36,7 @@ object SExp {
           case e: NumberFormatException => throw new IllegalArgumentException("Invalid Number", e)
         }
       } else {
-        (s2, Str(s1))
+        (s2, s1)
       }
     }
     if (s2.isEmpty) throw new IllegalArgumentException("Invalid SExp")

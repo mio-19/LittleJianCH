@@ -4,8 +4,6 @@ import littlejian._
 import littlejian.ext._
 import littlejian.data.sexp._
 
-import littlejian.data._
-
 
 def lookupo(env: VarOr[SExp], id: VarOr[SExp], v: VarOr[SExp]): Goal = conde(
   for {
@@ -59,7 +57,7 @@ def applyo(f: VarOr[SExp], args: VarOr[SExp], result: VarOr[SExp]): Goal = apply
 def evalo(env: VarOr[SExp], x: VarOr[SExp], result: VarOr[SExp]): Goal = evalo(env, x)(result)
 
 def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
-  x.isType[Str] >> lookupo(env, x),
+  x.isType[String] >> lookupo(env, x),
   for {
     (f, args) <- x.is(cons)
     result <- applyo app(evalo(env, f), mapo(evalo(env, _), args))
@@ -72,7 +70,7 @@ def evalo(env: VarOr[SExp], x: VarOr[SExp]): Rel[SExp] = conde(
     ignored <- notInEnvo(env, "quote")
     result <- x.is[SExp](list("quote", _))
     //ignored <- result.isType[String] // a hack to prevent run[SExp] { x => evalo((), x, x) }.head => "(quote #1=(quote #1))"
-    ignored <- result.absent(Str(ClosureTag))
+    ignored <- result.absent(ClosureTag)
   } yield result,
   for {
     ignored <- notInEnvo(env, "cons")

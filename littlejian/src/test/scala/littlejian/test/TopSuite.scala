@@ -103,25 +103,25 @@ $1 =/= a"""
     }
     test(name + "absent") {
       assertEquals(Set.from(run[SExp] { x =>
-        x === cons("a", "a") && x.absent(Str("a"))
+        x === cons("a", "a") && x.absent("a")
       }), Set())
       assertEquals(Set.from(run[SExp] { x =>
-        x.absent(Str("a")) && x === cons("a", "a")
+        x.absent("a") && x === cons("a", "a")
       }), Set())
       assertEquals(Set.from(run[SExp] { x =>
-        x.absent(Str("c")) && x === cons("a", "a")
+        x.absent("c") && x === cons("a", "a")
       }), Set("(a . a)"))
       assertEquals(Set.from(run[SExp] { x => {
         for {
           a <- fresh[SExp]
-          _ <- x.absent(Str("b")) && x === cons(a, "a") && a === "b"
+          _ <- x.absent("b") && x === cons(a, "a") && a === "b"
         } yield ()
       }
       }), Set())
       assertEquals(Set.from(run[SExp] { x => {
         for {
           a <- fresh[SExp]
-          _ <- x.absent(Str("c")) && x === cons(a, "a") && a === "b"
+          _ <- x.absent("c") && x === cons(a, "a") && a === "b"
         } yield ()
       }
       }), Set("(b . a)"))

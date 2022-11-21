@@ -79,7 +79,10 @@ object SExp {
           (s4, list("unquote", x))
         }
       }
-      case '#' => ??? // Vector
+      case '#' => doParse(s3) match {
+        case (s4, list(xs*)) => (s4, SExpVector(xs.toVector))
+        case _ => throw new Exception("Invalid SExp")
+      }
     }
   }
 }

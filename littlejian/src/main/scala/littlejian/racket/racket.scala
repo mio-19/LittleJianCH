@@ -1,8 +1,9 @@
 package littlejian.racket
 
-import littlejian._
+import littlejian.*
 import littlejian.data.sexp.*
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 
 type SExpr = VarOr[SExp]
@@ -56,7 +57,7 @@ object ARGS {
 
 def parseArgs(xs: List[String], rest: Option[String], args: Seq[SExpr], env: Env): Unit = (xs, rest) match {
   case (Nil, Some(id)) => env.update(id, list(args *))
-  case (Nil, None) if args.isEmpty => env
+  case (Nil, None) if args.isEmpty => {}
   case (x :: xs, rest) if args.nonEmpty => {
     env.update(x, args.head)
     parseArgs(xs, rest, args.tail, env)
@@ -69,16 +70,45 @@ def eval(env: Env, exp: SExpr): SExpr = exp match {
     env.update(name, eval(env, body))
     ()
   }
-  case LIST("begin", xs@_*) => evalBegin(env, xs.toList)
-  case LIST("lambda", args, body*) => args match {
+  case "define" => throw new IllegalStateException("Invalid define")
+  case list("begin", xs@_*) => evalBegin(env, xs)
+  case "begin" => throw new IllegalStateException("Invalid begin")
+  case list("lambda", args, body*) => args match {
     case ARGS(xs, rest) => SExpLambda(argVec => {
       val env0 = env.child
       parseArgs(xs, rest, argVec, env0)
+      evalBegin(env0, body)
     })
+    case _ => throw new IllegalArgumentException("Invalid arguments pattern")
   }
+  case "lambda" => throw new IllegalStateException("Invalid lambda")
+  case list("quote", x) => x
+  case "quote" => throw new IllegalStateException("Invalid quote")
+  case list("quasiquote", x) => quasiquote(env, x)
+  case "quasiquote" => throw new IllegalStateException("Invalid quasiquote")
+  case "unquote" => throw new IllegalStateException("Invalid unquote")
+  case "unquote-splicing" => throw new IllegalStateException("Invalid unquote-splicing")
+  case v: String => env.lookup(v).get
 }
 
-def evalBegin(env: Env, xs: List[SExpr]): SExpr = xs match {
+def quasiquote(env: Env, x: SExpr): SExpr = x match {
+  case list("unquote", x) => eval(env, x)
+  case "unquote" => throw new IllegalStateException("Invalid unquote")
+  case "unquote-splicing" => throw new IllegalStateException("Invalid unquote-splicing")
+  case Cons(list("unquote-splicing", xs), x) => append(eval(env, xs), quasiquote(env, x))
+  case Cons(x, list("unquote-splicing", xs)) => Cons(x, eval(env, xs))
+  case Cons(x, y) => Cons(quasiquote(env, x), quasiquote(env, y))
+  case a => a
+}
+
+def append(xs: SExpr, ys: SExpr): SExpr = xs match {
+  case Cons(x, xs) => Cons(x, append(xs, ys))
+  case () => ys
+  case _ => throw new IllegalStateException("Invalid append")
+}
+
+@tailrec
+def evalBegin(env: Env, xs: Seq[SExpr]): SExpr = xs.toList match {
   case Nil => ()
   case x :: Nil => eval(env, x)
   case x :: xs => {

@@ -5,17 +5,26 @@ import littlejian.data._
 import littlejian.ext.*
 import scala.annotation.tailrec
 
-type SExp = Cons | Unit | String | BigDecimal | SExpVector
+type SExp = Cons | Unit | String | BigDecimal | SExpVector | SExpLambda
 
 final case class SExpVector(v: Vector[VarOr[SExp]]) derives Unify, Inspect {
   override def toString: String = s"#(${v.mkString(" ")})"
 }
 
+val I$SExpVector= implicitly[Inspect[SExpVector]]
+
+final case class SExpLambda(fn:Seq[VarOr[SExp]]=>VarOr[SExp])
+
+implicit val U$SExpLambda: Unify[SExpLambda] = new AtomUnify[SExpLambda]() {}
+implicit val I$SExpLambda: Inspect[SExpLambda] = (rec, self, x) => InspectResult(self == x)
+
 implicit def sExpVector(v: Vector[_ <: VarOr[SExp]]): SExpVector = SExpVector(v)
 
-implicit val U$SExp: Unify[SExp] = U$Union[Cons, Unit, String, BigDecimal, SExpVector]
+implicit def sExpLambda(fn: ((xs: Seq[_ <: VarOr[SExp]]) => VarOr[SExp])): SExpLambda = SExpLambda(fn)
 
-implicit val I$SExp: Inspect[SExp] = I$Union[Cons, Unit, String, BigDecimal, SExpVector]
+implicit val U$SExp: Unify[SExp] = U$Union[Cons, Unit, String, BigDecimal, SExpVector, SExpLambda]
+
+implicit val I$SExp: Inspect[SExp] = I$Union(I$Cons, I$Unit, I$String, I$BigDecimal, I$SExpVector, I$SExpLambda)
 
 object SExp {
   def parse(s: String): SExp = {
@@ -90,6 +99,13 @@ object SExp {
 final class Cons(a: VarOr[SExp], d: VarOr[SExp]) extends Pair[SExp, SExp](a, d) {
 }
 
+object Cons {
+  def unapply(x: VarOr[SExp]): Option[(VarOr[SExp], VarOr[SExp])] = x match {
+    case Pair(a, b) => Some(a.asInstanceOf, b.asInstanceOf)
+    case _ => None
+  }
+}
+
 implicit val U$Cons: Unify[Cons] = implicitly[Unify[Pair[SExp, SExp]]].asInstanceOf[Unify[Cons]]
 
 implicit val I$Cons: Inspect[Cons] = implicitly[Inspect[Pair[SExp, SExp]]].asInstanceOf[Inspect[Cons]]
@@ -112,7 +128,7 @@ object list {
   def apply(xs: VarOr[SExp]*): SExp = convertList(xs)
 
   def unapplySeq(x: VarOr[SExp]): Option[Seq[VarOr[SExp]]] = x match {
-    case Pair(a, d) => unapplySeq(d).map(a +: _)
+    case Cons(a, d) => unapplySeq(d).map(a +: _)
     case () => Some(Seq())
     case _ => None
   }

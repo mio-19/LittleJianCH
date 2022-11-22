@@ -246,6 +246,8 @@ implicit object U$BigDecimal extends AtomUnify[BigDecimal]
 
 implicit object U$Unit extends AtomUnify[Unit]
 
+implicit object U$BoxedUnit extends AtomUnify[scala.runtime.BoxedUnit]
+
 implicit object U$Byte extends AtomUnify[Byte]
 
 implicit object U$Short extends AtomUnify[Short]

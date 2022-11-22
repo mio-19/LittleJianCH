@@ -130,6 +130,8 @@ implicit object I$Integer extends AtomInspect[Integer]
 
 implicit object I$Unit extends AtomInspect[Unit]
 
+implicit object I$BoxedUnit extends AtomInspect[scala.runtime.BoxedUnit]
+
 implicit def I$Seq[T](implicit i: Inspect[T]): Inspect[Seq[T]] = new Inspect[Seq[T]] {
   override def inspect(rec: Inspector, self: Seq[T], x: Any): InspectResult =
     if(self.isEmpty) InspectResult.NotContains

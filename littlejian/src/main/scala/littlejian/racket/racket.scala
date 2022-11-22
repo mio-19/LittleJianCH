@@ -39,4 +39,11 @@ def eval(env: Env, exp: SExp): SExp = exp match {
   case LIST("begin", xs@ _* ) => evalBegin(env, xs.toList)
 }
 
-def evalBegin(env: Env, xs: List[SExp]): SExp = ???
+def evalBegin(env: Env, xs: List[SExp]): SExp = xs match {
+  case Nil => ()
+  case x :: Nil => eval(env, x)
+  case x :: xs => {
+    eval(env, x)
+    evalBegin(env, xs)
+  }
+}

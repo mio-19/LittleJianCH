@@ -1,9 +1,12 @@
 package littlejian.data.sexp
 
 import littlejian.*
-import littlejian.data._
+import littlejian.data.*
 import littlejian.ext.*
+
 import scala.annotation.tailrec
+import scala.language.implicitConversions
+import scala.runtime.BoxedUnit
 
 type SExp = Cons | Unit | String | BigDecimal | SExpVector | SExpLambda
 
@@ -11,9 +14,9 @@ final case class SExpVector(v: Vector[VarOr[SExp]]) derives Unify, Inspect {
   override def toString: String = s"#(${v.mkString(" ")})"
 }
 
-val I$SExpVector= implicitly[Inspect[SExpVector]]
+val I$SExpVector = implicitly[Inspect[SExpVector]]
 
-final case class SExpLambda(fn:Seq[VarOr[SExp]]=>VarOr[SExp])
+final case class SExpLambda(fn: Seq[VarOr[SExp]] => VarOr[SExp])
 
 implicit val U$SExpLambda: Unify[SExpLambda] = new AtomUnify[SExpLambda]() {}
 implicit val I$SExpLambda: Inspect[SExpLambda] = (rec, self, x) => InspectResult(self == x)
@@ -22,9 +25,9 @@ implicit def sExpVector(v: Vector[_ <: VarOr[SExp]]): SExpVector = SExpVector(v)
 
 implicit def sExpLambda(fn: ((xs: Seq[_ <: VarOr[SExp]]) => VarOr[SExp])): SExpLambda = SExpLambda(fn)
 
-implicit val U$SExp: Unify[SExp] = U$Union[Cons, Unit, String, BigDecimal, SExpVector, SExpLambda]
+implicit val U$SExp: Unify[SExp] = U$Union[Cons, BoxedUnit, String, BigDecimal, SExpVector, SExpLambda].asInstanceOf
 
-implicit val I$SExp: Inspect[SExp] = I$Union(I$Cons, I$Unit, I$String, I$BigDecimal, I$SExpVector, I$SExpLambda)
+implicit val I$SExp: Inspect[SExp] = I$Union(I$Cons, I$BoxedUnit, I$String, I$BigDecimal, I$SExpVector, I$SExpLambda).asInstanceOf
 
 object SExp {
   def parse(s: String): SExp = {

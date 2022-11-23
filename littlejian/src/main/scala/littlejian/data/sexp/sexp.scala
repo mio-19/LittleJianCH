@@ -8,7 +8,7 @@ import scala.annotation.tailrec
 import scala.language.implicitConversions
 import scala.runtime.BoxedUnit
 
-type SExp = Cons | Unit | String | BigDecimal | SExpVector | SExpLambda
+type SExp = Cons | Unit | String | BigDecimal | SExpVector | SExpLambda | Boolean
 
 final case class SExpVector(v: Vector[VarOr[SExp]]) derives Unify, Inspect {
   override def toString: String = s"#(${v.mkString(" ")})"
@@ -40,9 +40,9 @@ implicit def sExpLambda3(fn: ((a: VarOr[SExp], b: VarOr[SExp], c: VarOr[SExp]) =
   case _ => throw new IllegalArgumentException("Not 3 arg")
 })
 
-implicit val U$SExp: Unify[SExp] = U$Union[Cons, BoxedUnit, String, BigDecimal, SExpVector, SExpLambda].asInstanceOf
+implicit val U$SExp: Unify[SExp] = U$Union[Cons, BoxedUnit, String, BigDecimal, SExpVector, SExpLambda, Boolean].asInstanceOf
 
-implicit val I$SExp: Inspect[SExp] = I$Union(I$Cons, I$BoxedUnit, I$String, I$BigDecimal, I$SExpVector, I$SExpLambda).asInstanceOf
+implicit val I$SExp: Inspect[SExp] = I$Union(I$Cons, I$BoxedUnit, I$String, I$BigDecimal, I$SExpVector, I$SExpLambda, I$Boolean).asInstanceOf
 
 object SExp {
   def parse(s: String): SExp = {
@@ -106,9 +106,13 @@ object SExp {
           (s4, list("unquote", x))
         }
       }
-      case '#' => doParse(s3) match {
-        case (s4, list(xs*)) => (s4, SExpVector(xs.toVector))
-        case _ => throw new Exception("Invalid SExp")
+      case '#' => {
+        if (s3.head == 't') return (s3.tail, true)
+        if (s3.head == 'f') return (s3.tail, false)
+        doParse(s3) match {
+          case (s4, list(xs*)) => (s4, SExpVector(xs.toVector))
+          case _ => throw new Exception("Invalid SExp")
+        }
       }
     }
   }

@@ -235,6 +235,33 @@ def I$Union[A, B, C, D, E, F](ar: => Inspect[A], br: => Inspect[B], cr: => Inspe
     else f.inspect(rec, self.asInstanceOf, x)
   }
 }
+@targetName("I$Union_") def I$Union[A, B, C, D, E, F, G](ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C], dr: => Inspect[D], er: => Inspect[E], fr: => Inspect[F], gr: => Inspect[G], aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F], gev: ClassTag[G]): Inspect[A | B | C | D | E | F | G] = I$Union(ar, br, cr, dr, er, fr, gr)(aev, bev, cev, dev, eev, fev, gev)
+def I$Union[A, B, C, D, E, F, G](ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C], dr: => Inspect[D], er: => Inspect[E], fr: => Inspect[F], gr: => Inspect[G])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F], gev: ClassTag[G]): Inspect[A | B | C | D | E | F | G] = {
+  lazy val a = ar
+  lazy val b = br
+  lazy val c = cr
+  lazy val d = dr
+  lazy val e = er
+  lazy val f = fr
+  lazy val g = gr
+  val ac = aev.runtimeClass
+  val bc = bev.runtimeClass
+  val cc = cev.runtimeClass
+  val dc = dev.runtimeClass
+  val ec = eev.runtimeClass
+  val fc = fev.runtimeClass
+  val gc = gev.runtimeClass
+  if (Set(ac, bc, cc, dc, ec, fc, gc).size != 7) throw new IllegalArgumentException("duplication")
+  (rec, self, x) => {
+    if (ac.isInstance(self)) a.inspect(rec, self.asInstanceOf, x)
+    else if (bc.isInstance(self)) b.inspect(rec, self.asInstanceOf, x)
+    else if (cc.isInstance(self)) c.inspect(rec, self.asInstanceOf, x)
+    else if (dc.isInstance(self)) d.inspect(rec, self.asInstanceOf, x)
+    else if (ec.isInstance(self)) e.inspect(rec, self.asInstanceOf, x)
+    else if (fc.isInstance(self)) f.inspect(rec, self.asInstanceOf, x)
+    else g.inspect(rec, self.asInstanceOf, x)
+  }
+}
 
 implicit def I$Product[T, R <: Product1[T]](implicit tr: => Inspect[T]): Inspect[R] = {
   lazy val t = tr

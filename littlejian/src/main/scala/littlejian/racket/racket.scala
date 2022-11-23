@@ -63,6 +63,13 @@ val globalEnv: Env = {
   globalEnv.update("append", sExpLambda { xs =>
     xs.fold(())(append)
   })
+  globalEnv.update("list", sExpLambda { xs =>
+    list(xs*)
+  })
+  globalEnv.update("list?", sExpLambda1 {
+    case list(_*) => true
+    case _ => false
+  })
   globalEnv
 }
 

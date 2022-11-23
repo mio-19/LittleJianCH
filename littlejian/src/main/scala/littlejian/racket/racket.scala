@@ -16,6 +16,7 @@ final case class Env(stack: List[Local] = List(new Local())) {
   def child: Env = Env(new Local() :: stack)
 
   def lookup(x: String): Option[SExpr] = {
+    if (lookupMacro(x).isDefined) throw new IllegalStateException("macro name conflict: " + x)
     var s = stack
     while (s.nonEmpty) {
       val head = s.head
@@ -30,7 +31,24 @@ final case class Env(stack: List[Local] = List(new Local())) {
     None
   }
 
+  def lookupMacro(x: String): Option[SExpLambda] = {
+    var s = stack
+    while (s.nonEmpty) {
+      val head = s.head
+      val tail = s.tail
+      head.macros.get(x) match {
+        case Some(r) => return Some(r)
+        case None => {
+          s = tail
+        }
+      }
+    }
+    None
+  }
+
   def update(key: String, value: SExpr): Unit = stack.head.vars.update(key, value)
+
+  def updateMacro(key: String, value: SExpLambda): Unit = stack.head.macros.update(key, value)
 }
 
 val globalEnv: Env = {
@@ -85,12 +103,19 @@ def parseArgs(xs: List[String], rest: Option[String], args: Seq[SExpr], env: Env
 }
 
 def eval(env: Env = globalEnv, exp: SExpr): SExpr = exp match {
-  case list("define", name: String, body: SExp) => {
+  case list("define", name: String, body) => {
     env.update(name, eval(env, body))
     ()
   }
+  case list("define", Cons(name, args), body*) => eval(env, list("define", name, append(list("lambda", args), list(body *))))
   case "define" => throw new IllegalStateException("Invalid define")
-  case list("begin", xs@_*) => evalBegin(env, xs)
+  case list("define-macro", name: String, body) => {
+    env.updateMacro(name, eval(env, body).asInstanceOf[SExpLambda])
+    ()
+  }
+  case list("define-macro", Cons(name, args), body*) => eval(env, list("define-macro", name, append(list("lambda", args), list(body *))))
+  case "define-macro" => throw new IllegalStateException("Invalid define-macro")
+  case list("begin", xs*) => evalBegin(env, xs)
   case "begin" => throw new IllegalStateException("Invalid begin")
   case list("lambda", args, body*) => args match {
     case ARGS(xs, rest) => SExpLambda(argVec => {
@@ -108,6 +133,13 @@ def eval(env: Env = globalEnv, exp: SExpr): SExpr = exp match {
   case "unquote" => throw new IllegalStateException("Invalid unquote")
   case "unquote-splicing" => throw new IllegalStateException("Invalid unquote-splicing")
   case v: String => env.lookup(v).get
+  case list(f, xs*) => {
+    if (f.isInstanceOf[String]) {
+      val maybeMacro = env.lookupMacro(f.asInstanceOf[String])
+      if (maybeMacro.isDefined) return eval(env, maybeMacro.get.apply(xs))
+    }
+    eval(env, f).asInstanceOf[SExpLambda].apply(xs.map(eval(env, _)))
+  }
 }
 
 def quasiquote(env: Env, x: SExpr): SExpr = x match {

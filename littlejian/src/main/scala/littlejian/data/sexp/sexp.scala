@@ -16,7 +16,9 @@ final case class SExpVector(v: Vector[VarOr[SExp]]) derives Unify, Inspect {
 
 val I$SExpVector = implicitly[Inspect[SExpVector]]
 
-final case class SExpLambda(fn: Seq[VarOr[SExp]] => VarOr[SExp])
+final case class SExpLambda(fn: Seq[VarOr[SExp]] => VarOr[SExp]) {
+  def apply(xs: Seq[VarOr[SExp]]) = fn(xs)
+}
 
 implicit val U$SExpLambda: Unify[SExpLambda] = new AtomUnify[SExpLambda]() {}
 implicit val I$SExpLambda: Inspect[SExpLambda] = (rec, self, x) => InspectResult(self == x)

@@ -33,7 +33,7 @@ final case class Env(stack: List[Local] = List(new Local())) {
   def update(key: String, value: SExpr): Unit = stack.head.vars.update(key, value)
 }
 
-val globalEnv = {
+val globalEnv: Env = {
   val globalEnv = Env()
   globalEnv.update("cons", Cons(_, _))
   globalEnv.update("car", sExpLambda1 {
@@ -45,6 +45,7 @@ val globalEnv = {
   globalEnv.update("append", sExpLambda { xs =>
     xs.fold(())(append)
   })
+  globalEnv
 }
 
 object LIST {
@@ -83,7 +84,7 @@ def parseArgs(xs: List[String], rest: Option[String], args: Seq[SExpr], env: Env
   case _ => throw new IllegalArgumentException("Invalid arguments")
 }
 
-def eval(env: Env, exp: SExpr): SExpr = exp match {
+def eval(env: Env = globalEnv, exp: SExpr): SExpr = exp match {
   case list("define", name: String, body: SExp) => {
     env.update(name, eval(env, body))
     ()

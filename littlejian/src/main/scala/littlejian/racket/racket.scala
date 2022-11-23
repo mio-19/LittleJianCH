@@ -60,6 +60,14 @@ val globalEnv: Env = {
   globalEnv.update("cdr", sExpLambda1 {
     case Cons(_, b) => b
   })
+  globalEnv.update("pair?", sExpLambda1 {
+    case Cons(_, _) => true
+    case _ => false
+  })
+  globalEnv.update("null?", sExpLambda1 {
+    case () => true
+    case _ => false
+  })
   globalEnv.update("append", sExpLambda { xs =>
     xs.fold(())(append)
   })
@@ -70,25 +78,16 @@ val globalEnv: Env = {
     case list(_*) => true
     case _ => false
   })
+  globalEnv.update("apply", sExpLambda2 {
+    case (f: SExpLambda, list(args*)) => f(args)
+    case _ => throw new IllegalArgumentException("apply: invalid arguments")
+  })
   globalEnv
 }
 
-object LIST {
-  def apply(xs: SExpr*) = list(xs *)
 
-  def unapplySeq(x: SExpr): Option[Seq[SExpr]] = x match {
-    case () => Some(Seq())
-    case Cons(x, xs) => unapplySeq(xs).map(x +: _)
-    case _ => None
-  }
-}
 
-object LISTrest {
-  def unapply(x: SExpr): Option[(List[SExpr], SExpr)] = x match {
-    case Cons(x, xs) => unapply(xs).map { case (ys, z) => (x +: ys, z) }
-    case other => Some((Nil, other))
-  }
-}
+
 
 object ARGS {
   def unapply(x: SExpr): Option[(List[String], Option[String])] = x match {

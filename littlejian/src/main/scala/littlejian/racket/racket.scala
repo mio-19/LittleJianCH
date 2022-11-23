@@ -8,15 +8,19 @@ import scala.collection.mutable
 
 type SExpr = VarOr[SExp]
 
-final case class Env(stack: List[mutable.HashMap[String, SExpr]]) {
-  def child: Env = Env(new mutable.HashMap[String, SExpr]() :: stack)
+final class Local(val vars: mutable.HashMap[String, SExpr] = new mutable.HashMap(), val macros: mutable.HashMap[String, SExpLambda] = new mutable.HashMap()) {
+
+}
+
+final case class Env(stack: List[Local] = List(new Local())) {
+  def child: Env = Env(new Local() :: stack)
 
   def lookup(x: String): Option[SExpr] = {
     var s = stack
     while (s.nonEmpty) {
       val head = s.head
       val tail = s.tail
-      head.get(x) match {
+      head.vars.get(x) match {
         case Some(r) => return Some(r)
         case None => {
           s = tail
@@ -26,7 +30,21 @@ final case class Env(stack: List[mutable.HashMap[String, SExpr]]) {
     None
   }
 
-  def update(key: String, value: SExpr): Unit = stack.head.update(key, value)
+  def update(key: String, value: SExpr): Unit = stack.head.vars.update(key, value)
+}
+
+val globalEnv = {
+  val globalEnv = Env()
+  globalEnv.update("cons", Cons(_, _))
+  globalEnv.update("car", sExpLambda1 {
+    case Cons(a, _) => a
+  })
+  globalEnv.update("cdr", sExpLambda1 {
+    case Cons(_, b) => b
+  })
+  globalEnv.update("append", sExpLambda { xs =>
+    xs.fold(())(append)
+  })
 }
 
 object LIST {

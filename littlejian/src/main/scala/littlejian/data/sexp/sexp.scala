@@ -123,7 +123,7 @@ final class Cons(a: VarOr[SExp], d: VarOr[SExp]) extends Pair[SExp, SExp](a, d) 
 
 object Cons {
   def unapply(x: VarOr[SExp]): Option[(VarOr[SExp], VarOr[SExp])] = x match {
-    case Pair(a, b) => Some(a.asInstanceOf, b.asInstanceOf)
+    case Pair(a, b) => Some(a.asInstanceOf[VarOr[SExp]], b.asInstanceOf[VarOr[SExp]])
     case _ => None
   }
 }

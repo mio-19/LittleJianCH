@@ -115,7 +115,8 @@ def parseArgs(xs: List[String], rest: Option[String], args: Seq[SExpr], env: Env
   case _ => throw new IllegalArgumentException("Invalid arguments")
 }
 
-def eval(env: Env = globalEnv, exp: SExpr): SExpr = exp match {
+def eval(exp: SExpr): SExpr = eval(globalEnv, exp)
+def eval(env: Env, exp: SExpr): SExpr = exp match {
   case list("define", name: String, body) => {
     env.update(name, eval(env, body))
     ()

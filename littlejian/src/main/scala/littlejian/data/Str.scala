@@ -4,6 +4,8 @@ import littlejian.*
 
 import scala.language.implicitConversions
 
+val I$Str = implicitly[Inspect[Str]]
+
 final case class Str(xs: LList[Character]) derives Unify, Inspect, DeepWalk {
   override def toString: String = xs.getStrings match {
     case s: String => s"Str($s)"

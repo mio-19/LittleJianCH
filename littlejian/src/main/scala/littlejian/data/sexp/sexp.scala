@@ -8,7 +8,7 @@ import scala.annotation.tailrec
 import scala.language.implicitConversions
 import scala.runtime.BoxedUnit
 
-type SExp = Cons | Unit | String | BigDecimal | SExpVector | SExpLambda | Boolean
+type SExp = Cons | Unit | String | Str | Character | BigDecimal | SExpVector | SExpLambda | Boolean
 
 final case class SExpVector(v: Vector[VarOr[SExp]]) derives Unify, Inspect {
   override def toString: String = s"#(${v.mkString(" ")})"
@@ -40,9 +40,10 @@ implicit def sExpLambda3(fn: ((a: VarOr[SExp], b: VarOr[SExp], c: VarOr[SExp]) =
   case _ => throw new IllegalArgumentException("Not 3 arg")
 })
 
-implicit val U$SExp: Unify[SExp] = U$Union[Cons, BoxedUnit, String, BigDecimal, SExpVector, SExpLambda, Boolean].asInstanceOf
+// TODO: remove BoxedUnit hack
+implicit val U$SExp: Unify[SExp] = U$Union[Cons, BoxedUnit, String, Str, Character, BigDecimal, SExpVector, SExpLambda, Boolean].asInstanceOf
 
-implicit val I$SExp: Inspect[SExp] = I$Union(I$Cons, I$BoxedUnit, I$String, I$BigDecimal, I$SExpVector, I$SExpLambda, I$Boolean).asInstanceOf
+implicit val I$SExp: Inspect[SExp] = I$Union(I$Cons, I$BoxedUnit, I$String, I$Str, I$Character, I$BigDecimal, I$SExpVector, I$SExpLambda, I$Boolean).asInstanceOf
 
 object SExp {
   def parse(s: String): SExp = {
@@ -134,7 +135,7 @@ implicit val I$Cons: Inspect[Cons] = implicitly[Inspect[Pair[SExp, SExp]]].asIns
 
 def cons(a: VarOr[SExp], d: VarOr[SExp]): SExp = Cons(a, d)
 def car(x: VarOr[SExp]): VarOr[SExp] = x match {
-  case Pair(v, _) => v
+  case Cons(v, _) => v
   case _ => throw new IllegalArgumentException("car: not a cons cell")
 }
 

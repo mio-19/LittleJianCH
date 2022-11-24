@@ -262,6 +262,69 @@ def I$Union[A, B, C, D, E, F, G](ar: => Inspect[A], br: => Inspect[B], cr: => In
     else g.inspect(rec, self.asInstanceOf, x)
   }
 }
+@targetName("I$Union_") def I$Union[A, B, C, D, E, F, G, H](ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C], dr: => Inspect[D], er: => Inspect[E], fr: => Inspect[F], gr: => Inspect[G], hr: => Inspect[H], aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F], gev: ClassTag[G], hev: ClassTag[H]): Inspect[A | B | C | D | E | F | G | H] = I$Union(ar, br, cr, dr, er, fr, gr, hr)(aev, bev, cev, dev, eev, fev, gev, hev)
+def I$Union[A, B, C, D, E, F, G, H](ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C], dr: => Inspect[D], er: => Inspect[E], fr: => Inspect[F], gr: => Inspect[G], hr: => Inspect[H])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F], gev: ClassTag[G], hev: ClassTag[H]): Inspect[A | B | C | D | E | F | G | H] = {
+  lazy val a = ar
+  lazy val b = br
+  lazy val c = cr
+  lazy val d = dr
+  lazy val e = er
+  lazy val f = fr
+  lazy val g = gr
+  lazy val h = hr
+  val ac = aev.runtimeClass
+  val bc = bev.runtimeClass
+  val cc = cev.runtimeClass
+  val dc = dev.runtimeClass
+  val ec = eev.runtimeClass
+  val fc = fev.runtimeClass
+  val gc = gev.runtimeClass
+  val hc = hev.runtimeClass
+  if (Set(ac, bc, cc, dc, ec, fc, gc, hc).size != 8) throw new IllegalArgumentException("duplication")
+  (rec, self, x) => {
+    if (ac.isInstance(self)) a.inspect(rec, self.asInstanceOf, x)
+    else if (bc.isInstance(self)) b.inspect(rec, self.asInstanceOf, x)
+    else if (cc.isInstance(self)) c.inspect(rec, self.asInstanceOf, x)
+    else if (dc.isInstance(self)) d.inspect(rec, self.asInstanceOf, x)
+    else if (ec.isInstance(self)) e.inspect(rec, self.asInstanceOf, x)
+    else if (fc.isInstance(self)) f.inspect(rec, self.asInstanceOf, x)
+    else if (gc.isInstance(self)) g.inspect(rec, self.asInstanceOf, x)
+    else h.inspect(rec, self.asInstanceOf, x)
+  }
+}
+@targetName("I$Union_") def I$Union[A, B, C, D, E, F, G, H, I](ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C], dr: => Inspect[D], er: => Inspect[E], fr: => Inspect[F], gr: => Inspect[G], hr: => Inspect[H], ir: => Inspect[I], aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F], gev: ClassTag[G], hev: ClassTag[H], iev: ClassTag[I]): Inspect[A | B | C | D | E | F | G | H | I] = I$Union(ar, br, cr, dr, er, fr, gr, hr, ir)(aev, bev, cev, dev, eev, fev, gev, hev, iev)
+def I$Union[A, B, C, D, E, F, G, H, I](ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C], dr: => Inspect[D], er: => Inspect[E], fr: => Inspect[F], gr: => Inspect[G], hr: => Inspect[H], ir: => Inspect[I])(implicit aev: ClassTag[A], bev: ClassTag[B], cev: ClassTag[C], dev: ClassTag[D], eev: ClassTag[E], fev: ClassTag[F], gev: ClassTag[G], hev: ClassTag[H], iev: ClassTag[I]): Inspect[A | B | C | D | E | F | G | H | I] = {
+  lazy val a = ar
+  lazy val b = br
+  lazy val c = cr
+  lazy val d = dr
+  lazy val e = er
+  lazy val f = fr
+  lazy val g = gr
+  lazy val h = hr
+  lazy val i = ir
+  val ac = aev.runtimeClass
+  val bc = bev.runtimeClass
+  val cc = cev.runtimeClass
+  val dc = dev.runtimeClass
+  val ec = eev.runtimeClass
+  val fc = fev.runtimeClass
+  val gc = gev.runtimeClass
+  val hc = hev.runtimeClass
+  val ic = iev.runtimeClass
+  if (Set(ac, bc, cc, dc, ec, fc, gc, hc, ic).size != 9) throw new IllegalArgumentException("duplication")
+  (rec, self, x) => {
+    if (ac.isInstance(self)) a.inspect(rec, self.asInstanceOf, x)
+    else if (bc.isInstance(self)) b.inspect(rec, self.asInstanceOf, x)
+    else if (cc.isInstance(self)) c.inspect(rec, self.asInstanceOf, x)
+    else if (dc.isInstance(self)) d.inspect(rec, self.asInstanceOf, x)
+    else if (ec.isInstance(self)) e.inspect(rec, self.asInstanceOf, x)
+    else if (fc.isInstance(self)) f.inspect(rec, self.asInstanceOf, x)
+    else if (gc.isInstance(self)) g.inspect(rec, self.asInstanceOf, x)
+    else if (hc.isInstance(self)) h.inspect(rec, self.asInstanceOf, x)
+    else i.inspect(rec, self.asInstanceOf, x)
+  }
+}
 
 implicit def I$Product[T, R <: Product1[T]](implicit tr: => Inspect[T]): Inspect[R] = {
   lazy val t = tr

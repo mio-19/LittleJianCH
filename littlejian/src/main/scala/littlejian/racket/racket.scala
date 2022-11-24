@@ -110,6 +110,14 @@ val globalEnv: Env = {
     case _: SExpLambda => true
     case _ => false
   })
+  globalEnv.update("symbol?", sExpLambda1 {
+    case _: String => true
+    case _ => false
+  })
+  globalEnv.update("var?", sExpLambda1 {
+    case _: Var[_] => true
+    case _ => false
+  })
   globalEnv
 }
 

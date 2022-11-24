@@ -48,6 +48,12 @@ final case class Env(stack: List[Local] = List(new Local())) {
 
   def update(key: String, value: SExpr): Unit = stack.head.vars.update(key, value)
 
+  def update(ks: Seq[(String, SExpr)]): Unit = {
+    for ((k, v) <- ks) {
+      update(k, v)
+    }
+  }
+
   def updateMacro(key: String, value: SExpLambda): Unit = stack.head.macros.update(key, value)
 }
 
@@ -89,6 +95,10 @@ val globalEnv: Env = {
     case _: SExpVector => true
     case _ => false
   })
+  globalEnv.update("procedure?", sExpLambda1 {
+    case _: SExpLambda => true
+    case _ => false
+  })
   globalEnv
 }
 
@@ -113,6 +123,14 @@ def parseArgs(xs: List[String], rest: Option[String], args: Seq[SExpr], env: Env
     parseArgs(xs, rest, args.tail, env)
   }
   case _ => throw new IllegalArgumentException("Invalid arguments")
+}
+
+object LISTPair {
+  def unapply(x: SExpr): Option[Vector[(String, SExpr)]] = x match {
+    case () => Some(Vector())
+    case Cons(list(a: String, b), rest) => unapply(rest).map { xs => (a, b) +: xs }
+    case _ => None
+  }
 }
 
 def eval(exp: SExpr): SExpr = eval(globalEnv, exp)
@@ -146,13 +164,23 @@ def eval(env: Env, exp: SExpr): SExpr = exp match {
   case "quasiquote" => throw new IllegalStateException("Invalid quasiquote")
   case "unquote" => throw new IllegalStateException("Invalid unquote")
   case "unquote-splicing" => throw new IllegalStateException("Invalid unquote-splicing")
+  case list("let", LISTPair(clauses), body*) => {
+    val env0 = env.child
+    val news = clauses.map({case (name, value) => (name, eval(env, value))})
+    env0.update(news)
+    evalBegin(env0, body)
+  }
+  case "let" => throw new IllegalStateException("Invalid let")
   case v: String => env.lookup(v).get
   case list(f, xs*) => {
     if (f.isInstanceOf[String]) {
       val maybeMacro = env.lookupMacro(f.asInstanceOf[String])
       if (maybeMacro.isDefined) return eval(env, maybeMacro.get.apply(xs))
     }
-    eval(env, f).asInstanceOf[SExpLambda].apply(xs.map(eval(env, _)))
+    eval(env, f) match {
+      case f: SExpLambda => f(xs.map(eval(env, _)))
+      case _ => throw new IllegalArgumentException("Invalid function")
+    }
   }
 }
 

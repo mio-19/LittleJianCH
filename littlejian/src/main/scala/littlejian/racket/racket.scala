@@ -22,6 +22,7 @@ final case class Env(stack: List[Local] = List(new Local())) {
       val head = s.head
       val tail = s.tail
       head.vars.get(x) match {
+        case Some(null) => throw new IllegalStateException("var in letrec not defined yet: " + x)
         case Some(r) => return Some(r)
         case None => {
           s = tail
@@ -54,6 +55,16 @@ final case class Env(stack: List[Local] = List(new Local())) {
     }
   }
 
+  def registerUndef(key: String): Unit = {
+    update(key, null)
+  }
+
+  def registerUndef(key: Seq[String]): Unit = {
+    for (k <- key) {
+      registerUndef(k)
+    }
+  }
+
   def updateMacro(key: String, value: SExpLambda): Unit = stack.head.macros.update(key, value)
 }
 
@@ -78,7 +89,7 @@ val globalEnv: Env = {
     xs.fold(())(append)
   })
   globalEnv.update("list", sExpLambda { xs =>
-    list(xs*)
+    list(xs *)
   })
   globalEnv.update("list?", sExpLambda1 {
     case list(_*) => true
@@ -89,7 +100,7 @@ val globalEnv: Env = {
     case _ => throw new IllegalArgumentException("apply: invalid arguments")
   })
   globalEnv.update("vector", sExpLambda { xs =>
-    Vector(xs*)
+    Vector(xs *)
   })
   globalEnv.update("vector?", sExpLambda1 {
     case _: SExpVector => true
@@ -101,9 +112,6 @@ val globalEnv: Env = {
   })
   globalEnv
 }
-
-
-
 
 
 object ARGS {
@@ -125,9 +133,10 @@ def parseArgs(xs: List[String], rest: Option[String], args: Seq[SExpr], env: Env
   case _ => throw new IllegalArgumentException("Invalid arguments")
 }
 
-object LISTPair {
+object LetPattern {
   def unapply(x: SExpr): Option[Vector[(String, SExpr)]] = x match {
     case () => Some(Vector())
+    case Cons(Cons(Cons(f, args), body), rest) => unapply(Cons(list(f, Cons("lambda", Cons(args, body))), rest))
     case Cons(list(a: String, b), rest) => unapply(rest).map { xs => (a, b) +: xs }
     case _ => None
   }
@@ -164,15 +173,16 @@ def eval(env: Env, exp: SExpr): SExpr = exp match {
   case "quasiquote" => throw new IllegalStateException("Invalid quasiquote")
   case "unquote" => throw new IllegalStateException("Invalid unquote")
   case "unquote-splicing" => throw new IllegalStateException("Invalid unquote-splicing")
-  case list("let" | "let*", LISTPair(clauses), body*) => {
+  case list("let" | "let*", LetPattern(clauses), body*) => {
     val env0 = env.child
-    val news = clauses.map({case (name, value) => (name, eval(env, value))})
+    val news = clauses.map({ case (name, value) => (name, eval(env, value)) })
     env0.update(news)
     evalBegin(env0, body)
   }
   case "let" | "let*" => throw new IllegalStateException("Invalid let")
-  case list("letrec", LISTPair(clauses), body*) => {
+  case list("letrec", LetPattern(clauses), body*) => {
     val env0 = env.child
+    env0.registerUndef(clauses.map(_._1))
     val news = clauses.map({ case (name, value) => (name, eval(env0, value)) })
     env0.update(news)
     evalBegin(env0, body)

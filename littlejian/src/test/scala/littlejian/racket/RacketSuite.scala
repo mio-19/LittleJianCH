@@ -10,6 +10,7 @@ class RacketSuite extends munit.FunSuite {
       ("(append (list 'a 'b) (list 'c))", "(a b c)"),
       ("(append (list 'a 'b) 'c)", "(a b . c)"),
       ("(let ([a list]) (a 'a))", "(a)"),
+      ("(letrec ([(a) (b)] [(b) 'a]) (a))", "a"),
     )) {
       assertEquals(eval(parse(code)), parse(result))
     }

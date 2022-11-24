@@ -164,13 +164,20 @@ def eval(env: Env, exp: SExpr): SExpr = exp match {
   case "quasiquote" => throw new IllegalStateException("Invalid quasiquote")
   case "unquote" => throw new IllegalStateException("Invalid unquote")
   case "unquote-splicing" => throw new IllegalStateException("Invalid unquote-splicing")
-  case list("let", LISTPair(clauses), body*) => {
+  case list("let" | "let*", LISTPair(clauses), body*) => {
     val env0 = env.child
     val news = clauses.map({case (name, value) => (name, eval(env, value))})
     env0.update(news)
     evalBegin(env0, body)
   }
-  case "let" => throw new IllegalStateException("Invalid let")
+  case "let" | "let*" => throw new IllegalStateException("Invalid let")
+  case list("letrec", LISTPair(clauses), body*) => {
+    val env0 = env.child
+    val news = clauses.map({ case (name, value) => (name, eval(env0, value)) })
+    env0.update(news)
+    evalBegin(env0, body)
+  }
+  case "letrec" => throw new IllegalStateException("Invalid letrec")
   case v: String => env.lookup(v).get
   case list(f, xs*) => {
     if (f.isInstanceOf[String]) {

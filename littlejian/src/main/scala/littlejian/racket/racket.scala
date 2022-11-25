@@ -1,6 +1,7 @@
 package littlejian.racket
 
 import littlejian.*
+import littlejian.data.Str
 import littlejian.data.sexp.*
 
 import scala.annotation.tailrec
@@ -196,6 +197,21 @@ def eval(env: Env, exp: SExpr): SExpr = exp match {
     evalBegin(env0, body)
   }
   case "letrec" => throw new IllegalStateException("Invalid letrec")
+  case list("if", cond, whenTrue) => {
+    if (eval(env, cond) != false) {
+      eval(env, whenTrue)
+    } else {
+      ()
+    }
+  }
+  case list("if", cond, whenTrue, whenFalse) => {
+    if (eval(env, cond) != false) {
+      eval(env, whenTrue)
+    } else {
+      eval(env, whenFalse)
+    }
+  }
+  case "if" => throw new IllegalStateException("Invalid if")
   case v: String => env.lookup(v).get
   case list(f, xs*) => {
     if (f.isInstanceOf[String]) {
@@ -207,6 +223,7 @@ def eval(env: Env, exp: SExpr): SExpr = exp match {
       case _ => throw new IllegalArgumentException("Invalid function")
     }
   }
+  case _: BigDecimal | _: Boolean | _: Str | _: Character => exp
 }
 
 def quasiquote(env: Env, x: SExpr): SExpr = x match {

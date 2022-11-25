@@ -138,6 +138,16 @@ val globalEnv: Env = {
   globalEnv.update("=/=", sExpLambda2 {
     (a, b) => SExpGoal(a =/= b)
   })
+  globalEnv.update("call/fresh", sExpLambda1 {
+    case SExpLambda(f) => SExpGoal(for {
+      v <- fresh[SExp]
+      _ <- f(Seq(v)) match {
+        case SExpGoal(goal) => goal
+        case _ => throw new IllegalArgumentException("call/fresh: f returned non-goal")
+      }
+    } yield ())
+    case _ => throw new IllegalArgumentException("call/fresh: invalid arguments")
+  })
 
   globalEnv
 }

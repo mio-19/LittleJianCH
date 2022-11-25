@@ -4,6 +4,8 @@ import littlejian.*
 import littlejian.data.*
 import littlejian.ext.*
 
+import scala.language.implicitConversions
+
 sealed trait RacketAny derives Unify, Inspect
 
 val I$RacketAny = implicitly[Inspect[RacketAny]]
@@ -37,3 +39,13 @@ implicit def sExpLambda3(fn: ((a: VarOr[SExp], b: VarOr[SExp], c: VarOr[SExp]) =
   case Seq(a, b, c) => fn(a, b, c)
   case _ => throw new IllegalArgumentException("Not 3 arg")
 })
+
+final case class SExpGoal(x: Goal) extends RacketAny {
+  override def toString: String = x.toString
+}
+
+implicit def sExpGoal(x: Goal): SExpGoal = SExpGoal(x)
+
+implicit object U$SExpGoal extends AtomUnify[SExpGoal] {}
+
+implicit object I$SExpGoal extends AtomInspect[SExpGoal] {}

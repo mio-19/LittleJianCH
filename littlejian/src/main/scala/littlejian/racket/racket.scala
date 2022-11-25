@@ -3,6 +3,7 @@ package littlejian.racket
 import littlejian.*
 import littlejian.data.Str
 import littlejian.data.sexp.*
+import littlejian.ext._
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -119,16 +120,24 @@ val globalEnv: Env = {
     case _: Var[_] => true
     case _ => false
   })
-  // TODO: Support Goal
   globalEnv.update("goal?", sExpLambda1 {
-    case _: Goal => true
+    case SExpGoal(_) => true
     case _ => false
   })
   globalEnv.update("conj", sExpLambda2 {
-    case (a: Goal, b: Goal) => GoalConj(Vector(a, b)).asInstanceOf
+    case (SExpGoal(a), SExpGoal(b)) => GoalConj(Vector(a, b))
     case _ => throw new IllegalArgumentException("conj: invalid arguments")
   })
-
+  globalEnv.update("disj", sExpLambda2 {
+    case (SExpGoal(a), SExpGoal(b)) => GoalDisj(Vector(a, b))
+    case _ => throw new IllegalArgumentException("disj: invalid arguments")
+  })
+  globalEnv.update("===", sExpLambda2 {
+    (a, b) => SExpGoal(a === b)
+  })
+  globalEnv.update("=/=", sExpLambda2 {
+    (a, b) => SExpGoal(a =/= b)
+  })
 
   globalEnv
 }

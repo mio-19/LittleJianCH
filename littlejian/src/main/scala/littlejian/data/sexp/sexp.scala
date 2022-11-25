@@ -106,9 +106,18 @@ object SExp {
           (s4, list("unquote", x))
         }
       }
+      case '"' => {
+        val (s4, s5) = s3.span(_ != '"') // TODO: support escape
+        if (s5.isEmpty) throw new IllegalArgumentException("Invalid SExp")
+        (s5.tail, Str(s4))
+      }
       case '#' => {
         if (s3.head == 't') return (s3.tail, true)
         if (s3.head == 'f') return (s3.tail, false)
+        if(s3.head == '\\') {
+          val s4 = s3.tail
+          return (s4.tail, Character(s4.head))
+        }
         doParse(s3) match {
           case (s4, list(xs*)) => (s4, SExpVector(xs.toVector))
           case _ => throw new Exception("Invalid SExp")

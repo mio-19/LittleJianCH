@@ -9,7 +9,7 @@ object Character {
 
   def apply(code: Short): Character = ChrShort(code)
 
-  def from(c: Char): Character = ChrShort.from(c)
+  def apply(c: Char): Character = ChrShort.from(c)
 }
 
 final case class Chr16(chr: Int16) extends Character derives Unify, Inspect, DeepWalk {

@@ -119,6 +119,17 @@ val globalEnv: Env = {
     case _: Var[_] => true
     case _ => false
   })
+  // TODO: Support Goal
+  globalEnv.update("goal?", sExpLambda1 {
+    case _: Goal => true
+    case _ => false
+  })
+  globalEnv.update("conj", sExpLambda2 {
+    case (a: Goal, b: Goal) => GoalConj(Vector(a, b)).asInstanceOf
+    case _ => throw new IllegalArgumentException("conj: invalid arguments")
+  })
+
+
   globalEnv
 }
 

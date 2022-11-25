@@ -101,6 +101,7 @@ val globalEnv: Env = {
     case (f: SExpLambda, list(args*)) => f(args)
     case _ => throw new IllegalArgumentException("apply: invalid arguments")
   })
+  globalEnv.update("eval", eval(_))
   globalEnv.update("vector", sExpLambda { xs =>
     Vector(xs *)
   })

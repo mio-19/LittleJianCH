@@ -151,6 +151,8 @@ object LetPattern {
   }
 }
 
+// TODO: add https://github.com/scheme-requests-for-implementation/srfi-46/blob/master/alexpander.scm or support define-syntax
+
 def eval(exp: SExpr): SExpr = eval(globalEnv, exp)
 def eval(env: Env, exp: SExpr): SExpr = exp match {
   case list("define", name: String, body) => {

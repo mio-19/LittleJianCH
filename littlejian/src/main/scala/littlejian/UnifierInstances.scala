@@ -4,14 +4,15 @@ implicit def U$VarOr[T](implicit unifier: Unify[T]): Unify[VarOr[T]] = unifier.a
 
 import scala.annotation.targetName
 import scala.reflect.ClassTag
+import littlejian.utils._
 
 @targetName("U$Union_") def U$Union[T, U](implicit tr: => Unify[T], ur: => Unify[U], tev: ClassTag[T], uev: ClassTag[U]): Unify[T | U] = U$Union(tr, ur)(tev, uev)
 
 def U$Union[T, U](tr: => Unify[T], ur: => Unify[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Unify[T | U] = {
   lazy val t = tr
   lazy val u = ur
-  val tc = tev.runtimeClass
-  val uc = uev.runtimeClass
+  val tc = tev.toClass
+  val uc = uev.toClass
   if (Set(tc, uc).size != 2) throw new IllegalArgumentException("duplicate")
   (x, y) => {
     if (tc.isInstance(x) && tc.isInstance(y)) t.unify(x.asInstanceOf[T], y.asInstanceOf[T])
@@ -25,9 +26,9 @@ def U$Union[T, U, V](tr: => Unify[T], ur: => Unify[U], vr: => Unify[V])(implicit
   lazy val t = tr
   lazy val u = ur
   lazy val v = vr
-  val tc = tev.runtimeClass
-  val uc = uev.runtimeClass
-  val vc = vev.runtimeClass
+  val tc = tev.toClass
+  val uc = uev.toClass
+  val vc = vev.toClass
   if (Set(tc, uc, vc).size != 3) throw new IllegalArgumentException("duplicate")
   (x, y) => {
     if (tc.isInstance(x) && tc.isInstance(y)) t.unify(x.asInstanceOf[T], y.asInstanceOf[T])
@@ -42,10 +43,10 @@ def U$Union[T, U, V, W](tr: => Unify[T], ur: => Unify[U], vr: => Unify[V], wr: =
   lazy val u = ur
   lazy val v = vr
   lazy val w = wr
-  val tc = tev.runtimeClass
-  val uc = uev.runtimeClass
-  val vc = vev.runtimeClass
-  val wc = wev.runtimeClass
+  val tc = tev.toClass
+  val uc = uev.toClass
+  val vc = vev.toClass
+  val wc = wev.toClass
   if (Set(tc, uc, vc, wc).size != 4) throw new IllegalArgumentException("duplicate")
   (x, y) => {
     if (tc.isInstance(x) && tc.isInstance(y)) t.unify(x.asInstanceOf[T], y.asInstanceOf[T])
@@ -62,11 +63,11 @@ def U$Union[A, B, C, D, E](ar: => Unify[A], br: => Unify[B], cr: => Unify[C], dr
   lazy val c = cr
   lazy val d = dr
   lazy val e = er
-  val ac = aev.runtimeClass
-  val bc = bev.runtimeClass
-  val cc = cev.runtimeClass
-  val dc = dev.runtimeClass
-  val ec = eev.runtimeClass
+  val ac = aev.toClass
+  val bc = bev.toClass
+  val cc = cev.toClass
+  val dc = dev.toClass
+  val ec = eev.toClass
   if (Set(ac, bc, cc, dc, ec).size != 5) throw new IllegalArgumentException("duplicate")
   (x, y) => {
     if (ac.isInstance(x) && ac.isInstance(y)) a.unify(x.asInstanceOf[A], y.asInstanceOf[A])
@@ -85,12 +86,12 @@ def U$Union[A, B, C, D, E, F](ar: => Unify[A], br: => Unify[B], cr: => Unify[C],
   lazy val d = dr
   lazy val e = er
   lazy val f = fr
-  val ac = aev.runtimeClass
-  val bc = bev.runtimeClass
-  val cc = cev.runtimeClass
-  val dc = dev.runtimeClass
-  val ec = eev.runtimeClass
-  val fc = fev.runtimeClass
+  val ac = aev.toClass
+  val bc = bev.toClass
+  val cc = cev.toClass
+  val dc = dev.toClass
+  val ec = eev.toClass
+  val fc = fev.toClass
   if (Set(ac, bc, cc, dc, ec, fc).size != 6) throw new IllegalArgumentException("duplicate")
   (x, y) => {
     if (ac.isInstance(x) && ac.isInstance(y)) a.unify(x.asInstanceOf[A], y.asInstanceOf[A])
@@ -111,13 +112,13 @@ def U$Union[A, B, C, D, E, F, G](ar: => Unify[A], br: => Unify[B], cr: => Unify[
   lazy val e = er
   lazy val f = fr
   lazy val g = gr
-  val ac = aev.runtimeClass
-  val bc = bev.runtimeClass
-  val cc = cev.runtimeClass
-  val dc = dev.runtimeClass
-  val ec = eev.runtimeClass
-  val fc = fev.runtimeClass
-  val gc = gev.runtimeClass
+  val ac = aev.toClass
+  val bc = bev.toClass
+  val cc = cev.toClass
+  val dc = dev.toClass
+  val ec = eev.toClass
+  val fc = fev.toClass
+  val gc = gev.toClass
   if (Set(ac, bc, cc, dc, ec, fc, gc).size != 7) throw new IllegalArgumentException("duplicate")
   (x, y) => {
     if (ac.isInstance(x) && ac.isInstance(y)) a.unify(x.asInstanceOf[A], y.asInstanceOf[A])
@@ -140,14 +141,14 @@ def U$Union[A, B, C, D, E, F, G, H](ar: => Unify[A], br: => Unify[B], cr: => Uni
   lazy val f = fr
   lazy val g = gr
   lazy val h = hr
-  val ac = aev.runtimeClass
-  val bc = bev.runtimeClass
-  val cc = cev.runtimeClass
-  val dc = dev.runtimeClass
-  val ec = eev.runtimeClass
-  val fc = fev.runtimeClass
-  val gc = gev.runtimeClass
-  val hc = hev.runtimeClass
+  val ac = aev.toClass
+  val bc = bev.toClass
+  val cc = cev.toClass
+  val dc = dev.toClass
+  val ec = eev.toClass
+  val fc = fev.toClass
+  val gc = gev.toClass
+  val hc = hev.toClass
   if (Set(ac, bc, cc, dc, ec, fc, gc, hc).size != 8) throw new IllegalArgumentException("duplicate")
   (x, y) => {
     if (ac.isInstance(x) && ac.isInstance(y)) a.unify(x.asInstanceOf[A], y.asInstanceOf[A])
@@ -172,15 +173,15 @@ def U$Union[A, B, C, D, E, F, G, H, I](ar: => Unify[A], br: => Unify[B], cr: => 
   lazy val g = gr
   lazy val h = hr
   lazy val i = ir
-  val ac = aev.runtimeClass
-  val bc = bev.runtimeClass
-  val cc = cev.runtimeClass
-  val dc = dev.runtimeClass
-  val ec = eev.runtimeClass
-  val fc = fev.runtimeClass
-  val gc = gev.runtimeClass
-  val hc = hev.runtimeClass
-  val ic = iev.runtimeClass
+  val ac = aev.toClass
+  val bc = bev.toClass
+  val cc = cev.toClass
+  val dc = dev.toClass
+  val ec = eev.toClass
+  val fc = fev.toClass
+  val gc = gev.toClass
+  val hc = hev.toClass
+  val ic = iev.toClass
   if (Set(ac, bc, cc, dc, ec, fc, gc, hc, ic).size != 9) throw new IllegalArgumentException("duplicate")
   (x, y) => {
     if (ac.isInstance(x) && ac.isInstance(y)) a.unify(x.asInstanceOf[A], y.asInstanceOf[A])
@@ -208,16 +209,16 @@ def U$Union[A, B, C, D, E, F, G, H, I, J](ar: => Unify[A], br: => Unify[B], cr: 
   lazy val h = hr
   lazy val i = ir
   lazy val j = jr
-  val ac = aev.runtimeClass
-  val bc = bev.runtimeClass
-  val cc = cev.runtimeClass
-  val dc = dev.runtimeClass
-  val ec = eev.runtimeClass
-  val fc = fev.runtimeClass
-  val gc = gev.runtimeClass
-  val hc = hev.runtimeClass
-  val ic = iev.runtimeClass
-  val jc = jev.runtimeClass
+  val ac = aev.toClass
+  val bc = bev.toClass
+  val cc = cev.toClass
+  val dc = dev.toClass
+  val ec = eev.toClass
+  val fc = fev.toClass
+  val gc = gev.toClass
+  val hc = hev.toClass
+  val ic = iev.toClass
+  val jc = jev.toClass
   if (Set(ac, bc, cc, dc, ec, fc, gc, hc, ic, jc).size != 10) throw new IllegalArgumentException("duplicate")
   (x, y) => {
     if (ac.isInstance(x) && ac.isInstance(y)) a.unify(x.asInstanceOf[A], y.asInstanceOf[A])

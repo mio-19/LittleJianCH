@@ -41,9 +41,9 @@ implicit def sExpLambda3(fn: ((a: VarOr[SExp], b: VarOr[SExp], c: VarOr[SExp]) =
 })
 
 // TODO: remove BoxedUnit hack
-implicit val U$SExp: Unify[SExp] = U$Union[Cons, BoxedUnit, String, Str, Character, BigDecimal, SExpVector, SExpLambda, Boolean].asInstanceOf
+implicit val U$SExp: Unify[SExp] = U$Union[Cons, Unit, String, Str, Character, BigDecimal, SExpVector, SExpLambda, Boolean]
 
-implicit val I$SExp: Inspect[SExp] = I$Union(I$Cons, I$BoxedUnit, I$String, I$Str, I$Character, I$BigDecimal, I$SExpVector, I$SExpLambda, I$Boolean).asInstanceOf
+implicit val I$SExp: Inspect[SExp] = I$Union(I$Cons, I$Unit, I$String, I$Str, I$Character, I$BigDecimal, I$SExpVector, I$SExpLambda, I$Boolean)
 
 object SExp {
   def parse(s: String): SExp = {

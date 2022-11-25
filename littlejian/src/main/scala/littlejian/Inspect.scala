@@ -146,8 +146,8 @@ implicit def I$List[T](implicit i: Inspect[T]): Inspect[List[T]] = I$Seq.asInsta
 def I$Union[T, U](tr: => Inspect[T], ur: => Inspect[U])(implicit tev: ClassTag[T], uev: ClassTag[U]): Inspect[T | U] = {
   lazy val t = tr
   lazy val u = ur
-  val tc = tev.runtimeClass
-  val uc = uev.runtimeClass
+  val tc = tev.toClass
+  val uc = uev.toClass
   if (Set(tc, uc).size != 2) throw new IllegalArgumentException("duplication")
   (rec, self, x) => {
     if (tc.isInstance(self)) t.inspect(rec, self.asInstanceOf, x)
@@ -160,9 +160,9 @@ def I$Union[A, B, C](ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C])(im
   lazy val a = ar
   lazy val b = br
   lazy val c = cr
-  val ac = aev.runtimeClass
-  val bc = bev.runtimeClass
-  val cc = cev.runtimeClass
+  val ac = aev.toClass
+  val bc = bev.toClass
+  val cc = cev.toClass
   if (Set(ac, bc, cc).size != 3) throw new IllegalArgumentException("duplication")
   (rec, self, x) => {
     if (ac.isInstance(self)) a.inspect(rec, self.asInstanceOf, x)
@@ -177,10 +177,10 @@ def I$Union[A, B, C, D](ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[C],
   lazy val b = br
   lazy val c = cr
   lazy val d = dr
-  val ac = aev.runtimeClass
-  val bc = bev.runtimeClass
-  val cc = cev.runtimeClass
-  val dc = dev.runtimeClass
+  val ac = aev.toClass
+  val bc = bev.toClass
+  val cc = cev.toClass
+  val dc = dev.toClass
   if (Set(ac, bc, cc, dc).size != 4) throw new IllegalArgumentException("duplication")
   (rec, self, x) => {
     if (ac.isInstance(self)) a.inspect(rec, self.asInstanceOf, x)
@@ -197,11 +197,11 @@ def I$Union[A, B, C, D, E](ar: => Inspect[A], br: => Inspect[B], cr: => Inspect[
   lazy val c = cr
   lazy val d = dr
   lazy val e = er
-  val ac = aev.runtimeClass
-  val bc = bev.runtimeClass
-  val cc = cev.runtimeClass
-  val dc = dev.runtimeClass
-  val ec = eev.runtimeClass
+  val ac = aev.toClass
+  val bc = bev.toClass
+  val cc = cev.toClass
+  val dc = dev.toClass
+  val ec = eev.toClass
   if (Set(ac, bc, cc, dc, ec).size != 5) throw new IllegalArgumentException("duplication")
   (rec, self, x) => {
     if (ac.isInstance(self)) a.inspect(rec, self.asInstanceOf, x)
@@ -219,12 +219,12 @@ def I$Union[A, B, C, D, E, F](ar: => Inspect[A], br: => Inspect[B], cr: => Inspe
   lazy val d = dr
   lazy val e = er
   lazy val f = fr
-  val ac = aev.runtimeClass
-  val bc = bev.runtimeClass
-  val cc = cev.runtimeClass
-  val dc = dev.runtimeClass
-  val ec = eev.runtimeClass
-  val fc = fev.runtimeClass
+  val ac = aev.toClass
+  val bc = bev.toClass
+  val cc = cev.toClass
+  val dc = dev.toClass
+  val ec = eev.toClass
+  val fc = fev.toClass
   if (Set(ac, bc, cc, dc, ec, fc).size != 6) throw new IllegalArgumentException("duplication")
   (rec, self, x) => {
     if (ac.isInstance(self)) a.inspect(rec, self.asInstanceOf, x)
@@ -244,13 +244,13 @@ def I$Union[A, B, C, D, E, F, G](ar: => Inspect[A], br: => Inspect[B], cr: => In
   lazy val e = er
   lazy val f = fr
   lazy val g = gr
-  val ac = aev.runtimeClass
-  val bc = bev.runtimeClass
-  val cc = cev.runtimeClass
-  val dc = dev.runtimeClass
-  val ec = eev.runtimeClass
-  val fc = fev.runtimeClass
-  val gc = gev.runtimeClass
+  val ac = aev.toClass
+  val bc = bev.toClass
+  val cc = cev.toClass
+  val dc = dev.toClass
+  val ec = eev.toClass
+  val fc = fev.toClass
+  val gc = gev.toClass
   if (Set(ac, bc, cc, dc, ec, fc, gc).size != 7) throw new IllegalArgumentException("duplication")
   (rec, self, x) => {
     if (ac.isInstance(self)) a.inspect(rec, self.asInstanceOf, x)
@@ -272,14 +272,14 @@ def I$Union[A, B, C, D, E, F, G, H](ar: => Inspect[A], br: => Inspect[B], cr: =>
   lazy val f = fr
   lazy val g = gr
   lazy val h = hr
-  val ac = aev.runtimeClass
-  val bc = bev.runtimeClass
-  val cc = cev.runtimeClass
-  val dc = dev.runtimeClass
-  val ec = eev.runtimeClass
-  val fc = fev.runtimeClass
-  val gc = gev.runtimeClass
-  val hc = hev.runtimeClass
+  val ac = aev.toClass
+  val bc = bev.toClass
+  val cc = cev.toClass
+  val dc = dev.toClass
+  val ec = eev.toClass
+  val fc = fev.toClass
+  val gc = gev.toClass
+  val hc = hev.toClass
   if (Set(ac, bc, cc, dc, ec, fc, gc, hc).size != 8) throw new IllegalArgumentException("duplication")
   (rec, self, x) => {
     if (ac.isInstance(self)) a.inspect(rec, self.asInstanceOf, x)
@@ -303,15 +303,15 @@ def I$Union[A, B, C, D, E, F, G, H, I](ar: => Inspect[A], br: => Inspect[B], cr:
   lazy val g = gr
   lazy val h = hr
   lazy val i = ir
-  val ac = aev.runtimeClass
-  val bc = bev.runtimeClass
-  val cc = cev.runtimeClass
-  val dc = dev.runtimeClass
-  val ec = eev.runtimeClass
-  val fc = fev.runtimeClass
-  val gc = gev.runtimeClass
-  val hc = hev.runtimeClass
-  val ic = iev.runtimeClass
+  val ac = aev.toClass
+  val bc = bev.toClass
+  val cc = cev.toClass
+  val dc = dev.toClass
+  val ec = eev.toClass
+  val fc = fev.toClass
+  val gc = gev.toClass
+  val hc = hev.toClass
+  val ic = iev.toClass
   if (Set(ac, bc, cc, dc, ec, fc, gc, hc, ic).size != 9) throw new IllegalArgumentException("duplication")
   (rec, self, x) => {
     if (ac.isInstance(self)) a.inspect(rec, self.asInstanceOf, x)

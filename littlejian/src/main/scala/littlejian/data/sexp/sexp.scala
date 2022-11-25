@@ -6,7 +6,6 @@ import littlejian.ext.*
 
 import scala.annotation.tailrec
 import scala.language.implicitConversions
-import scala.runtime.BoxedUnit
 
 type SExp = Cons | Unit | String | Str | Character | BigDecimal | SExpVector | SExpLambda | Boolean
 
